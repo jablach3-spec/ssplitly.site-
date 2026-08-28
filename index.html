@@ -5,8 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#7c3aed" />
     <title>Splitly – Cloud</title>
+
+    <!-- ===== SITE DESCRIPTION & SOCIAL PREVIEW (OG TAGS) ===== -->
+    <meta name="description" content="Splitly Cloud - Split expenses effortlessly with friends. Track shared costs, manage group trips, and settle up in one place. Perfect for TRIP PLAN, food, and daily life." />
     
-    <!-- ===== FAVICON ===== -->
+    <!-- Open Graph / Facebook / WhatsApp / Telegram -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://ssplitly.site/" />
+    <meta property="og:title" content="Splitly Cloud – Smart Expense Sharing" />
+    <meta property="og:description" content="Create groups, add expenses, and let Splitly calculate who owes whom. Perfect for trips, dinners, and daily life." />
+    <meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c3aed'/%3E%3Cstop offset='100%25' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='630' rx='40' fill='url(%23g)'/%3E%3Ctext x='600' y='240' font-family='Arial, sans-serif' font-size='140' font-weight='bold' fill='white' text-anchor='middle'%3E÷%3C/text%3E%3Ctext x='600' y='380' font-family='Arial, sans-serif' font-size='80' font-weight='bold' fill='white' text-anchor='middle'%3ESplitly%3C/text%3E%3Ctext x='600' y='460' font-family='Arial, sans-serif' font-size='40' fill='%23e0d4ff' text-anchor='middle'%3ECloud Expense Sharing%3C/text%3E%3C/svg%3E" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Splitly Cloud" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="http://ssplitly.site/" />
+    <meta name="twitter:title" content="Splitly Cloud – Smart Expense Sharing" />
+    <meta name="twitter:description" content="Create groups, add expenses, and let Splitly calculate who owes whom. Perfect for trips, dinners, and daily life." />
+    <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c3aed'/%3E%3Cstop offset='100%25' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='630' rx='40' fill='url(%23g)'/%3E%3Ctext x='600' y='240' font-family='Arial, sans-serif' font-size='140' font-weight='bold' fill='white' text-anchor='middle'%3E÷%3C/text%3E%3Ctext x='600' y='380' font-family='Arial, sans-serif' font-size='80' font-weight='bold' fill='white' text-anchor='middle'%3ESplitly%3C/text%3E%3Ctext x='600' y='460' font-family='Arial, sans-serif' font-size='40' fill='%23e0d4ff' text-anchor='middle'%3ECloud Expense Sharing%3C/text%3E%3C/svg%3E" />
+
+    <!-- ===== FAVICON (Browser Tab Icon) ===== -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237c3aed'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E÷%3C/text%3E%3C/svg%3E" type="image/svg+xml" />
     
     <!-- ===== MONETAG / PROPELLERADS VERIFICATION TAG ===== -->
@@ -543,67 +563,6 @@
             transform: translateY(-2px);
         }
 
-        /* ===== INSTALL BANNER (PERSISTENT BROWSER AREA) ===== */
-        .install-banner {
-            position: sticky;
-            top: 0;
-            z-index: 9999;
-            background: var(--accent-gradient);
-            color: #fff;
-            padding: 12px 24px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 8px;
-            animation: slideDown 0.5s ease;
-        }
-        .install-banner .banner-text {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .install-banner .banner-text i {
-            font-size: 24px;
-        }
-        .install-banner .banner-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .install-banner .btn-install-now {
-            background: #fff;
-            border: none;
-            padding: 8px 22px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 14px;
-            color: var(--accent-1);
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-        }
-        .install-banner .btn-install-now:hover {
-            transform: scale(1.05);
-            background: #f0f0ff;
-        }
-        .install-banner .btn-dismiss {
-            background: transparent;
-            border: none;
-            color: rgba(255,255,255,0.8);
-            font-size: 22px;
-            cursor: pointer;
-            padding: 0 8px;
-        }
-        .install-banner .btn-dismiss:hover {
-            color: #fff;
-        }
-
         /* ===== HEADER ===== */
         .header {
             display: flex;
@@ -731,49 +690,6 @@
         }
         .whatsapp-btn i {
             font-size: 24px;
-        }
-
-        /* ===== LARGER FONT FOR HELP & INSTALL (DESKTOP) ===== */
-        .whatsapp-btn .label {
-            font-size: 16px;
-            font-weight: 600;
-            margin-left: 4px;
-        }
-        .install-header-btn .label {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        /* ===== INSTALL HEADER BUTTON - ALWAYS VISIBLE ===== */
-        .install-header-btn {
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 30px;
-            color: #fff;
-            padding: 0 18px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--font);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition);
-            box-shadow: 0 4px 20px var(--glow-color);
-            text-decoration: none;
-            white-space: nowrap;
-        }
-        .install-header-btn:hover {
-            transform: translateY(-2px) scale(1.03);
-            box-shadow: 0 8px 32px var(--glow-color);
-        }
-        .install-header-btn.show {
-            display: flex;
-        }
-        /* Always show on all platforms - we'll control visibility via JS */
-        .install-header-btn {
-            display: flex;
         }
 
         .btn {
@@ -2160,7 +2076,7 @@
             opacity: 0.6;
         }
 
-        /* ===== INSTALL OVERLAY ===== */
+        /* ===== INSTALL OVERLAY (still used for help) ===== */
         .install-overlay {
             position: fixed;
             inset: 0;
@@ -2283,21 +2199,10 @@
             .header-user .user-name {
                 display: none;
             }
-            .whatsapp-btn .label {
-                display: none;
-            }
             .whatsapp-btn {
                 width: 44px;
                 padding: 0;
                 justify-content: center;
-            }
-            .install-header-btn {
-                font-size: 13px;
-                padding: 0 14px;
-                height: 38px;
-            }
-            .install-header-btn span.label {
-                display: none;
             }
             .overall-summary .summary-header {
                 flex-direction: column;
@@ -2314,16 +2219,6 @@
             }
             .app-footer .footer-links a {
                 font-size: 12px;
-            }
-
-            /* Mobile banner */
-            .install-banner {
-                font-size: 13px;
-                padding: 10px 16px;
-            }
-            .install-banner .btn-install-now {
-                padding: 6px 16px;
-                font-size: 13px;
             }
         }
     </style>
@@ -2400,18 +2295,6 @@
     <!-- ===== APP ===== -->
     <div class="app-container" id="app">
         
-        <!-- ===== INSTALL BANNER (Browser Open Area) ===== -->
-        <div class="install-banner" id="installBanner">
-            <span class="banner-text">
-                <i class="fas fa-download"></i>
-                <span>🚀 Get the Splitly app – faster and offline!</span>
-            </span>
-            <span class="banner-actions">
-                <button class="btn-install-now" onclick="handleInstallClick()">📲 Install Now</button>
-                <button class="btn-dismiss" onclick="dismissInstallBanner()">✕</button>
-            </span>
-        </div>
-
         <header class="header animate-in">
             <div class="header-left"><div class="logo-icon">÷</div><div class="logo-text">Split<span>ly</span></div></div>
             <div class="header-actions">
@@ -2419,11 +2302,9 @@
                     <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
                     <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
                 </div>
-                <button class="install-header-btn" id="installHeaderBtn" onclick="handleInstallClick()">
-                    <span>📲</span> <span class="label">Install</span>
-                </button>
+                <!-- WhatsApp icon only – no "Help line" text -->
                 <a href="https://wa.me/971566412245?text=Hi" target="_blank" class="whatsapp-btn" title="Help line - WhatsApp">
-                    <i class="fab fa-whatsapp"></i><span class="label">Help line</span>
+                    <i class="fab fa-whatsapp"></i>
                 </a>
                 <button class="view-toggle" id="viewToggleBtn" onclick="toggleViewMode()" title="Toggle View">📋</button>
                 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
@@ -2625,7 +2506,7 @@
         </div>
     </div>
 
-    <!-- ===== INSTALL OVERLAY ===== -->
+    <!-- ===== INSTALL OVERLAY (optional help) ===== -->
     <div class="install-overlay" id="installOverlay">
         <div class="install-card">
             <div class="install-icon">📲</div>
@@ -2805,9 +2686,6 @@
             renderPanelAvatar();
             const savedTheme = localStorage.getItem('splitwise_color_theme') || 'purple';
             selectColorTheme(savedTheme, true);
-            
-            // Show install banner after login
-            setTimeout(showInstallBanner, 1000);
         }
 
         function lockApp() {
@@ -4008,98 +3886,9 @@
         function closePanel() { document.getElementById('accountPanel').classList.remove('active'); }
 
         // ================================================================
-        // INSTALL BANNER LOGIC
+        // INSTALL OVERLAY (kept as help)
         // ================================================================
-        function showInstallBanner() {
-            const banner = document.getElementById('installBanner');
-            if (!banner) return;
-            // Don't show if already installed as standalone
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-                banner.style.display = 'none';
-                return;
-            }
-            // Check if user dismissed it before
-            if (localStorage.getItem('splitly_install_dismissed') === 'true') {
-                banner.style.display = 'none';
-                return;
-            }
-            // Show the banner
-            banner.style.display = 'flex';
-        }
-
-        function dismissInstallBanner() {
-            const banner = document.getElementById('installBanner');
-            if (banner) banner.style.display = 'none';
-            localStorage.setItem('splitly_install_dismissed', 'true');
-        }
-
-        // ================================================================
-        // INSTALL
-        // ================================================================
-        function handleInstallClick() {
-            if (deferredPrompt) {
-                try {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(({ outcome }) => {
-                        if (outcome === 'accepted') {
-                            showToast('✅ Installing Splitly...');
-                            // Hide the banner after successful install
-                            dismissInstallBanner();
-                        } else {
-                            showToast('Installation cancelled.');
-                        }
-                        deferredPrompt = null;
-                    });
-                } catch (err) {
-                    showToast('⚠️ Could not start install.', 'error');
-                    showInstallOverlay();
-                }
-                return;
-            }
-
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-                showToast('✅ App already installed!');
-                return;
-            }
-
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            if (isIOS) { showInstallOverlay(); return; }
-            showInstallOverlay();
-        }
-
-        function showInstallOverlay() {
-            const overlay = document.getElementById('installOverlay');
-            overlay.classList.add('active');
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-            const steps = document.getElementById('installSteps');
-            if (isIOS) {
-                steps.innerHTML =
-                    `<strong>iOS / Safari:</strong> Tap the share icon 📤 → "Add to Home Screen"<br />Then open Splitly from your home screen.`;
-            } else if (isAndroid) {
-                steps.innerHTML =
-                    `<strong>Android / Chrome:</strong> Tap the menu ⋮ → "Add to Home screen"<br />Or use the install prompt that appears in the address bar.`;
-            } else {
-                steps.innerHTML =
-                    `<strong>Desktop:</strong> Look for the install icon in the address bar or browser menu.<br />For Chrome: click the install icon ⬇️ in the address bar.`;
-            }
-        }
-
         function closeInstallOverlay() { document.getElementById('installOverlay').classList.remove('active'); }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('📲 Install prompt captured');
-            // Show the banner now that we can prompt
-            setTimeout(showInstallBanner, 500);
-        });
-
-        window.addEventListener('appinstalled', () => {
-            deferredPrompt = null;
-            showToast('✅ Splitly installed successfully!');
-            dismissInstallBanner();
-        });
 
         // ================================================================
         // PARTICLES
@@ -4140,14 +3929,6 @@
 
             const savedTheme = localStorage.getItem('splitwise_color_theme') || 'purple';
             selectColorTheme(savedTheme, true);
-
-            // Try to show install banner on load if not logged in (or if logged in, will be called in unlockApp)
-            // For public visitors, we show it after splash.
-            setTimeout(() => {
-                if (!currentUser) {
-                    showInstallBanner();
-                }
-            }, 2000);
 
             // Autocomplete
             const nameInput = document.getElementById('personNameInput');
