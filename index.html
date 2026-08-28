@@ -7,11 +7,11 @@
     <title>Splitly – Cloud</title>
 
     <!-- ===== SITE DESCRIPTION & SOCIAL PREVIEW (OG TAGS) ===== -->
-    <meta name="description" content="Splitly Cloud - Split expenses effortlessly with friends. Track shared costs, manage group trips, and settle up in one place. Perfect for TRIP PLAN, food, and daily life." />
+    <meta name="description" content="Splitly Cloud - Split expenses effortlessly with friends. Track shared costs, manage group trips, and settle up in one place." />
     
     <!-- Open Graph / Facebook / WhatsApp / Telegram -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="http://ssplitly.site/" />
+    <meta property="og:url" content="https://ssplitly.site/" />
     <meta property="og:title" content="Splitly Cloud – Smart Expense Sharing" />
     <meta property="og:description" content="Create groups, add expenses, and let Splitly calculate who owes whom. Perfect for trips, dinners, and daily life." />
     <meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c3aed'/%3E%3Cstop offset='100%25' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='630' rx='40' fill='url(%23g)'/%3E%3Ctext x='600' y='240' font-family='Arial, sans-serif' font-size='140' font-weight='bold' fill='white' text-anchor='middle'%3E÷%3C/text%3E%3Ctext x='600' y='380' font-family='Arial, sans-serif' font-size='80' font-weight='bold' fill='white' text-anchor='middle'%3ESplitly%3C/text%3E%3Ctext x='600' y='460' font-family='Arial, sans-serif' font-size='40' fill='%23e0d4ff' text-anchor='middle'%3ECloud Expense Sharing%3C/text%3E%3C/svg%3E" />
@@ -21,9 +21,9 @@
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="http://ssplitly.site/" />
+    <meta name="twitter:url" content="https://ssplitly.site/" />
     <meta name="twitter:title" content="Splitly Cloud – Smart Expense Sharing" />
-    <meta name="twitter:description" content="Create groups, add expenses, and let Splitly calculate who owes whom. Perfect for trips, dinners, and daily life." />
+    <meta name="twitter:description" content="Create groups, add expenses, and let Splitly calculate who owes whom." />
     <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c3aed'/%3E%3Cstop offset='100%25' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='630' rx='40' fill='url(%23g)'/%3E%3Ctext x='600' y='240' font-family='Arial, sans-serif' font-size='140' font-weight='bold' fill='white' text-anchor='middle'%3E÷%3C/text%3E%3Ctext x='600' y='380' font-family='Arial, sans-serif' font-size='80' font-weight='bold' fill='white' text-anchor='middle'%3ESplitly%3C/text%3E%3Ctext x='600' y='460' font-family='Arial, sans-serif' font-size='40' fill='%23e0d4ff' text-anchor='middle'%3ECloud Expense Sharing%3C/text%3E%3C/svg%3E" />
 
     <!-- ===== FAVICON (Browser Tab Icon) ===== -->
@@ -2076,7 +2076,7 @@
             opacity: 0.6;
         }
 
-        /* ===== INSTALL OVERLAY (still used for help) ===== */
+        /* ===== INSTALL OVERLAY (kept as help) ===== */
         .install-overlay {
             position: fixed;
             inset: 0;
@@ -2302,7 +2302,7 @@
                     <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
                     <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
                 </div>
-                <!-- WhatsApp icon only – no "Help line" text -->
+                <!-- WhatsApp icon only – no text -->
                 <a href="https://wa.me/971566412245?text=Hi" target="_blank" class="whatsapp-btn" title="Help line - WhatsApp">
                     <i class="fab fa-whatsapp"></i>
                 </a>
@@ -2506,7 +2506,7 @@
         </div>
     </div>
 
-    <!-- ===== INSTALL OVERLAY (optional help) ===== -->
+    <!-- ===== INSTALL OVERLAY (kept as info) ===== -->
     <div class="install-overlay" id="installOverlay">
         <div class="install-card">
             <div class="install-icon">📲</div>
@@ -2680,7 +2680,6 @@
             showToast(`👋 Welcome, ${user.name}!`);
             history.pushState({ view: 'subjects' }, '');
             resetInactivityTimer();
-            // Update panel
             document.getElementById('panelName').textContent = user.name || 'User';
             document.getElementById('panelUsername').textContent = user.username || '—';
             renderPanelAvatar();
@@ -3930,7 +3929,6 @@
             const savedTheme = localStorage.getItem('splitwise_color_theme') || 'purple';
             selectColorTheme(savedTheme, true);
 
-            // Autocomplete
             const nameInput = document.getElementById('personNameInput');
             nameInput.addEventListener('input', function() { showNameSuggestions(this); });
             nameInput.addEventListener('blur', function() {
@@ -3961,7 +3959,6 @@
                 } else if (e.key === 'Escape') { list.style.display = 'none'; }
             });
 
-            // Pin dots
             ['accPin', 'accPinConfirm', 'loginPin'].forEach(id => {
                 const input = document.getElementById(id);
                 if (input) {
@@ -3974,7 +3971,6 @@
                 }
             });
 
-            // Load settings
             try {
                 const raw = localStorage.getItem('splitwise_settings');
                 if (raw) { const parsed = JSON.parse(raw);
