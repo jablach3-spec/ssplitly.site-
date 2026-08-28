@@ -6,7 +6,10 @@
     <meta name="theme-color" content="#7c3aed" />
     <title>Splitly – Cloud</title>
     
-    <!-- ===== MONETAG / PROPELLERADS VERIFICATION TAG (നിങ്ങളുടെ Tag) ===== -->
+    <!-- ===== FAVICON ===== -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237c3aed'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E÷%3C/text%3E%3C/svg%3E" type="image/svg+xml" />
+    
+    <!-- ===== MONETAG / PROPELLERADS VERIFICATION TAG ===== -->
     <meta name="monetag" content="62490f1645df15c69b351412597a730a" />
 
     <link rel="manifest" id="manifestLink" href="#" />
@@ -540,6 +543,67 @@
             transform: translateY(-2px);
         }
 
+        /* ===== INSTALL BANNER (PERSISTENT BROWSER AREA) ===== */
+        .install-banner {
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            background: var(--accent-gradient);
+            color: #fff;
+            padding: 12px 24px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 8px;
+            animation: slideDown 0.5s ease;
+        }
+        .install-banner .banner-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .install-banner .banner-text i {
+            font-size: 24px;
+        }
+        .install-banner .banner-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .install-banner .btn-install-now {
+            background: #fff;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent-1);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        }
+        .install-banner .btn-install-now:hover {
+            transform: scale(1.05);
+            background: #f0f0ff;
+        }
+        .install-banner .btn-dismiss {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+        .install-banner .btn-dismiss:hover {
+            color: #fff;
+        }
+
         /* ===== HEADER ===== */
         .header {
             display: flex;
@@ -667,6 +731,17 @@
         }
         .whatsapp-btn i {
             font-size: 24px;
+        }
+
+        /* ===== LARGER FONT FOR HELP & INSTALL (DESKTOP) ===== */
+        .whatsapp-btn .label {
+            font-size: 16px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .install-header-btn .label {
+            font-size: 18px;
+            font-weight: 700;
         }
 
         /* ===== INSTALL HEADER BUTTON - ALWAYS VISIBLE ===== */
@@ -2240,6 +2315,16 @@
             .app-footer .footer-links a {
                 font-size: 12px;
             }
+
+            /* Mobile banner */
+            .install-banner {
+                font-size: 13px;
+                padding: 10px 16px;
+            }
+            .install-banner .btn-install-now {
+                padding: 6px 16px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -2314,6 +2399,19 @@
 
     <!-- ===== APP ===== -->
     <div class="app-container" id="app">
+        
+        <!-- ===== INSTALL BANNER (Browser Open Area) ===== -->
+        <div class="install-banner" id="installBanner">
+            <span class="banner-text">
+                <i class="fas fa-download"></i>
+                <span>🚀 Get the Splitly app – faster and offline!</span>
+            </span>
+            <span class="banner-actions">
+                <button class="btn-install-now" onclick="handleInstallClick()">📲 Install Now</button>
+                <button class="btn-dismiss" onclick="dismissInstallBanner()">✕</button>
+            </span>
+        </div>
+
         <header class="header animate-in">
             <div class="header-left"><div class="logo-icon">÷</div><div class="logo-text">Split<span>ly</span></div></div>
             <div class="header-actions">
@@ -2707,6 +2805,9 @@
             renderPanelAvatar();
             const savedTheme = localStorage.getItem('splitwise_color_theme') || 'purple';
             selectColorTheme(savedTheme, true);
+            
+            // Show install banner after login
+            setTimeout(showInstallBanner, 1000);
         }
 
         function lockApp() {
@@ -3907,6 +4008,32 @@
         function closePanel() { document.getElementById('accountPanel').classList.remove('active'); }
 
         // ================================================================
+        // INSTALL BANNER LOGIC
+        // ================================================================
+        function showInstallBanner() {
+            const banner = document.getElementById('installBanner');
+            if (!banner) return;
+            // Don't show if already installed as standalone
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                banner.style.display = 'none';
+                return;
+            }
+            // Check if user dismissed it before
+            if (localStorage.getItem('splitly_install_dismissed') === 'true') {
+                banner.style.display = 'none';
+                return;
+            }
+            // Show the banner
+            banner.style.display = 'flex';
+        }
+
+        function dismissInstallBanner() {
+            const banner = document.getElementById('installBanner');
+            if (banner) banner.style.display = 'none';
+            localStorage.setItem('splitly_install_dismissed', 'true');
+        }
+
+        // ================================================================
         // INSTALL
         // ================================================================
         function handleInstallClick() {
@@ -3914,8 +4041,13 @@
                 try {
                     deferredPrompt.prompt();
                     deferredPrompt.userChoice.then(({ outcome }) => {
-                        if (outcome === 'accepted') showToast('✅ Installing Splitly...');
-                        else showToast('Installation cancelled.');
+                        if (outcome === 'accepted') {
+                            showToast('✅ Installing Splitly...');
+                            // Hide the banner after successful install
+                            dismissInstallBanner();
+                        } else {
+                            showToast('Installation cancelled.');
+                        }
                         deferredPrompt = null;
                     });
                 } catch (err) {
@@ -3959,11 +4091,14 @@
             e.preventDefault();
             deferredPrompt = e;
             console.log('📲 Install prompt captured');
+            // Show the banner now that we can prompt
+            setTimeout(showInstallBanner, 500);
         });
 
         window.addEventListener('appinstalled', () => {
             deferredPrompt = null;
             showToast('✅ Splitly installed successfully!');
+            dismissInstallBanner();
         });
 
         // ================================================================
@@ -4005,6 +4140,14 @@
 
             const savedTheme = localStorage.getItem('splitwise_color_theme') || 'purple';
             selectColorTheme(savedTheme, true);
+
+            // Try to show install banner on load if not logged in (or if logged in, will be called in unlockApp)
+            // For public visitors, we show it after splash.
+            setTimeout(() => {
+                if (!currentUser) {
+                    showInstallBanner();
+                }
+            }, 2000);
 
             // Autocomplete
             const nameInput = document.getElementById('personNameInput');
@@ -4065,17 +4208,5 @@
         });
     </script>
 
-    <!-- ================================================================ -->
-    <!-- ===== PROPELLERADS / MONETAG AD CODE (നിങ്ങളുടെ കോഡ് ഇവിടെ) ===== -->
-    <!-- ================================================================ -->
-    <script type="text/javascript">
-        // Monetag / PropellerAds ഡാഷ്ബോർഡിൽ നിന്ന് ലഭിക്കുന്ന JavaScript കോഡ് ഇവിടെ ഒട്ടിക്കുക.
-        // ഇത് <body> ടാഗിന്റെ അവസാനത്തിൽ ആയിരിക്കണം.
-        // ഉദാഹരണ ഘടന (നിങ്ങളുടെ യഥാർത്ഥ കോഡ് ഉപയോഗിക്കുക):
-        // <script type="text/javascript" src="//YOUR_MONETAG_SCRIPT_URL.js"></script>
-        // അല്ലെങ്കിൽ അവർ നൽകുന്ന മുഴുവൻ <script> ബ്ലോക്കും ഇവിടെ പേസ്റ്റ് ചെയ്യുക.
-
-        console.log("✅ Monetag/PropellerAds placeholder loaded. Replace with actual ad script.");
-    </script>
 </body>
 </html>
