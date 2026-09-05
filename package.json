@@ -1,0 +1,1 @@
+{"name":"portfolio-os","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"dotenv":"^16.4.5","express":"^4.21.2"}}
