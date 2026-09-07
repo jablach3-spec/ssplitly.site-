@@ -755,6 +755,10 @@
             position: relative;
             user-select: none;
         }
+        /* desktop fit: scale to panel width */
+        .preview-scroll .a4-preview {
+            transform: scale(1);
+        }
 
         @media(max-width:768px) {
             .preview-scroll {
@@ -2857,6 +2861,68 @@
             color: var(--site-primary);
             transform: translateY(-2px);
         }
+
+        /* ── View‑only mode: hide editor elements ── */
+        .view-only .builder-topbar .back-btn,
+        .view-only .builder-topbar .tab-group,
+        .view-only .builder-topbar .theme-controls,
+        .view-only .form-panel,
+        .view-only .preview-panel {
+            display: none !important;
+        }
+        .view-only .builder-container {
+            justify-content: center;
+            align-items: center;
+        }
+        .view-only .builder-topbar .view-only-badge {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .view-only-badge {
+            display: none !important;
+        }
+        .view-only .view-only-badge {
+            display: inline-flex !important;
+        }
+
+        /* ── Make preview scale to fit desktop panel ── */
+        .preview-scroll .a4-preview {
+            transform: scale(1);
+            transition: transform 0.3s ease;
+        }
+        .preview-scroll .a4-preview.scaled-fit {
+            transform: scale(0.55);
+            transform-origin: top center;
+        }
+        @media(max-width:1300px) {
+            .preview-scroll .a4-preview.scaled-fit {
+                transform: scale(0.50);
+            }
+        }
+        @media(max-width:1100px) {
+            .preview-scroll .a4-preview.scaled-fit {
+                transform: scale(0.45);
+            }
+        }
+        @media(max-width:900px) {
+            .preview-scroll .a4-preview.scaled-fit {
+                transform: scale(0.60);
+            }
+        }
+        @media(max-width:700px) {
+            .preview-scroll .a4-preview.scaled-fit {
+                transform: scale(0.45);
+            }
+        }
+        @media(max-width:500px) {
+            .preview-scroll .a4-preview.scaled-fit {
+                transform: scale(0.35);
+            }
+        }
     </style>
 </head>
 <body>
@@ -2902,6 +2968,7 @@
                 </select>
                 <button class="toggle-preview-btn" id="togglePreviewBtn" onclick="toggleMobilePreview()"><i class="fas fa-eye"></i> Preview</button>
             </div>
+            <span class="view-only-badge"><i class="fas fa-eye"></i> View‑only</span>
         </div>
 
         <div class="builder-container">
@@ -3009,7 +3076,6 @@
                     </div>
                     <div class="form-group">
                         <label>Finished Projects</label>
-                        <!-- removed readonly so user can edit -->
                         <input type="number" id="portfolioFinishedProjects" min="0" placeholder="Auto">
                     </div>
                     <hr>
@@ -3085,7 +3151,6 @@
                 </button>
             </div>
 
-            <!-- ===== ALL OPTIONS MOVED TO SITE-ACTIONS (RIGHT SIDE) ===== -->
             <div class="site-actions">
                 <button class="site-theme-toggle" id="siteThemeToggle" onclick="toggleSiteTheme()" aria-label="Toggle theme">
                     <i class="fas fa-adjust" id="themeIcon"></i>
@@ -4314,7 +4379,6 @@
             const cards = document.querySelectorAll('.project-card');
             const finished = Array.from(cards).filter(c => c.querySelector('.proj-finished')?.checked).length;
             const finishedInput = document.getElementById('portfolioFinishedProjects');
-            // Only set if empty – user can manually override
             if (finishedInput && !finishedInput.value) finishedInput.value = finished;
             const totalInput = document.getElementById('portfolioTotalProjects');
             if (totalInput && !totalInput.value) totalInput.value = cards.length;
@@ -4586,7 +4650,7 @@
                     <p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p>
                     <button class="site-btn solid" onclick="window.location.href='mailto:${escapeHTML(email)}'"><i class="fas fa-paper-plane"></i> Get In Touch</button>
                 </div>
-            
+
 <div class="ssplitly-footer-links">
     <button onclick="openSsplitlyInfo('about')">About</button>
     <button onclick="openSsplitlyInfo('contact')">Contact Us</button>
@@ -4762,7 +4826,6 @@
             const label = document.getElementById('builderThemeLabel');
             if (label) label.textContent = isNightMode ? 'Night' : 'Day';
             saveToLocalStorage();
-            // Update icon
             const icon = document.getElementById('themeIcon');
             if (icon) {
                 icon.className = isNightMode ? 'fas fa-moon' : 'fas fa-sun';
@@ -4772,14 +4835,12 @@
         function updateThemeLabel() {
             const page3 = document.getElementById('page3');
             const isLight = page3.classList.contains('light-mode');
-            // Update icon
             const icon = document.getElementById('themeIcon');
             if (icon) {
                 icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
             }
             const select = document.getElementById('siteColorTheme');
             if (select) select.value = colorTheme;
-            // Also update builder theme label if visible
             const builderLabel = document.getElementById('builderThemeLabel');
             if (builderLabel) builderLabel.textContent = isNightMode ? 'Night' : 'Day';
         }
@@ -4825,20 +4886,109 @@
         }
 
         // ============================================================
-        //  SHARE LINK
+        //  SHARE LINK — with name + random number, view‑only
         // ============================================================
         function generateShareLink() {
             const data = buildShareData();
+            const name = (data.name || 'portfolio').trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+            const rand = Math.floor(10000 + Math.random() * 90000);
+            const slug = name ? name + '-' + rand : 'portfolio-' + rand;
             try {
                 const json = JSON.stringify(data);
                 const encoded = btoa(encodeURIComponent(json));
-                const url = window.location.href.split('#')[0] + '#' + encoded;
+                const url = window.location.href.split('#')[0] + '#/portfolio/' + slug + '/' + encoded;
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(url).then(() => {
-                        alert('✅ Share link copied!');
+                        alert('✅ Share link copied!\nThe link includes your name and a unique number.\nAnyone who opens it will see only your portfolio (view‑only).');
                     }).catch(() => { prompt('Copy link:', url); });
                 } else { prompt('Copy link:', url); }
             } catch (e) { alert('Error generating link.'); }
+        }
+
+        // ============================================================
+        //  VIEW-ONLY MODE DETECTION
+        // ============================================================
+        function detectViewOnly() {
+            const hash = window.location.hash;
+            // Format: #/portfolio/name-12345/encodedData
+            const match = hash.match(/^#\/portfolio\/[^\/]+\/(.+)$/);
+            if (match) {
+                isViewOnly = true;
+                try {
+                    const encoded = match[1];
+                    const json = decodeURIComponent(atob(encoded));
+                    const data = JSON.parse(json);
+                    // restore data
+                    document.getElementById('fullName').value = data.name || '';
+                    document.getElementById('profTitle').value = data.title || '';
+                    document.getElementById('email').value = data.email || '';
+                    document.getElementById('phone').value = data.phone || '';
+                    document.getElementById('location').value = data.location || '';
+                    document.getElementById('linkedinUrl').value = data.linkedin || '';
+                    document.getElementById('behanceUrl').value = data.behance || '';
+                    document.getElementById('instagramUrl').value = data.instagram || '';
+                    document.getElementById('whatsappUrl').value = data.whatsapp || '';
+                    document.getElementById('aboutInput').value = data.about || '';
+                    if (data.showLinkedIn !== undefined) document.getElementById('showLinkedIn').checked = data
+                        .showLinkedIn;
+                    if (data.showBehance !== undefined) document.getElementById('showBehance').checked = data
+                        .showBehance;
+                    if (data.showInstagram !== undefined) document.getElementById('showInstagram').checked = data
+                        .showInstagram;
+                    if (data.showWhatsApp !== undefined) document.getElementById('showWhatsApp').checked = data
+                        .showWhatsApp;
+                    if (data.skills) document.getElementById('skillsInput').value = data.skills;
+                    if (data.customSoftwareIcons) customSoftwareIcons = data.customSoftwareIcons;
+                    if (data.colorTheme) colorTheme = data.colorTheme;
+                    if (data.photo) { window.croppedImageData = data.photo;
+                        document.getElementById('picPreviewSmall').src = data.photo; }
+                    if (data.totalProjects !== undefined) document.getElementById('portfolioTotalProjects').value = data
+                        .totalProjects;
+                    if (data.totalExperience !== undefined) document.getElementById('portfolioTotalExperience').value =
+                        data.totalExperience;
+                    if (data.finishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value =
+                        data.finishedProjects;
+                    // projects
+                    const container = document.getElementById('projectContainer');
+                    container.innerHTML = '';
+                    projectCounter = 0;
+                    projectImages = {};
+                    (data.projects || []).forEach(p => {
+                        projectCounter++;
+                        container.insertAdjacentHTML('beforeend', createProjectHTML(p.title || '', p.desc || '',
+                            p.tools || [], [], !!p.finished));
+                        const card = container.lastElementChild;
+                        const idx = card.dataset.projectIndex;
+                        projectImages[idx] = (p.images || []).filter(Boolean);
+                        refreshProjectImagePreviews(card, idx);
+                    });
+                    updateProjectCount();
+                    updateProjectStats();
+                    renderSoftwareManagerFromInput();
+                    applySavedAppearance();
+                    generateCV();
+                    generateCoverLetter();
+                    updateLivePreview();
+
+                    // activate view-only mode
+                    document.body.classList.add('view-only');
+                    // show portfolio directly
+                    document.getElementById('page1').classList.remove('active');
+                    document.getElementById('page2').classList.remove('active');
+                    document.getElementById('page3').classList.add('active');
+                    renderPortfolioWebsite(data);
+
+                    // hide landing and builder entirely
+                    document.getElementById('page1').style.display = 'none';
+                    document.getElementById('page2').style.display = 'none';
+
+                    // push state
+                    pushPageState({ page: 'site' });
+                    return true;
+                } catch (e) { console.warn('View-only data parse error:', e); }
+            }
+            return false;
         }
 
         // ============================================================
@@ -5026,28 +5176,48 @@
         function downloadPDF() { showPDFOptions('cv'); }
 
         // ============================================================
-        //  MOBILE A4 FIT
+        //  MOBILE A4 FIT + DESKTOP SCALE
         // ============================================================
         function fitA4MobilePreview() {
             const viewport = document.querySelector('.preview-scroll');
             if (!viewport) return;
             const page = viewport.querySelector('.a4-preview');
             if (!page) return;
-            if (window.innerWidth > 768) {
-                page.style.transform = 'none';
-                page.style.marginBottom = '0';
-                page.style.marginRight = '0';
-                return;
-            }
+
+            // Always start with no transform
             page.style.transform = 'none';
+            page.style.marginBottom = '0';
+            page.style.marginRight = '0';
+            page.classList.remove('scaled-fit');
+
             const w = page.offsetWidth;
             const h = page.offsetHeight;
             if (!w || !h) return;
-            const available = Math.max(1, viewport.clientWidth - 12);
-            const scale = Math.min(1, available / w);
-            page.style.transform = `scale(${scale})`;
-            page.style.marginBottom = `${-(h - h * scale)}px`;
-            page.style.marginRight = `${-(w - w * scale)}px`;
+
+            // Desktop: scale to fit panel width
+            const availableW = viewport.clientWidth - 20;
+            const scaleW = availableW / w;
+            const maxScale = 0.92;
+            let scale = Math.min(maxScale, scaleW);
+
+            // On mobile (width <= 768) use more aggressive scaling
+            if (window.innerWidth <= 768) {
+                scale = Math.min(0.85, scaleW);
+            }
+            if (window.innerWidth <= 500) {
+                scale = Math.min(0.65, scaleW);
+            }
+
+            if (scale < 1) {
+                page.style.transform = `scale(${scale})`;
+                page.style.transformOrigin = 'top center';
+                page.style.marginBottom = `${-(h - h * scale)}px`;
+                page.style.marginRight = `${-(w - w * scale)}px`;
+            } else {
+                page.style.transform = 'scale(1)';
+                page.style.marginBottom = '0';
+                page.style.marginRight = '0';
+            }
         }
         window.addEventListener('resize', () => requestAnimationFrame(fitA4MobilePreview));
         window.addEventListener('orientationchange', () => setTimeout(fitA4MobilePreview, 250));
@@ -5064,7 +5234,6 @@
             modal.querySelectorAll('.ssplitly-info-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab ===
                 tab));
 
-            // Update contact icons with current email and phone
             if (tab === 'contact') {
                 const email = document.getElementById('email').value || 'salihchnr65@gmail.com';
                 const phone = document.getElementById('phone').value || '+971566412245';
@@ -5100,6 +5269,14 @@
         //  INIT
         // ============================================================
         window.onload = function() {
+            // First, detect view-only mode from URL hash
+            const viewOnlyDetected = detectViewOnly();
+            if (viewOnlyDetected) {
+                // View-only mode is active — skip normal init
+                return;
+            }
+
+            // Normal mode: load from localStorage
             currentPageState = { page: 'landing' };
             history.replaceState(currentPageState, '');
 
@@ -5163,7 +5340,6 @@
             const id = e.target.id;
             if (id === 'portfolioTotalProjects' || id === 'portfolioTotalExperience' || id === 'portfolioFinishedProjects') {
                 saveToLocalStorage();
-                // If portfolio tab is active, refresh the live website preview
                 if (activeTab === 'portfolio') {
                     setTimeout(() => renderPortfolioWebsite(buildShareData()), 120);
                 }
