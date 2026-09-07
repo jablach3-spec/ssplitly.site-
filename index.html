@@ -13,6 +13,8 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js">
+    </script>
     <style>
         /* ── Reset & Root ── */
         * {
@@ -4886,7 +4888,7 @@
         }
 
         // ============================================================
-        //  SHARE LINK — with name + random number, view‑only
+        //  SHARE LINK — with compressed data, short slug
         // ============================================================
         function generateShareLink() {
             const data = buildShareData();
@@ -4896,28 +4898,28 @@
             const slug = name ? name + '-' + rand : 'portfolio-' + rand;
             try {
                 const json = JSON.stringify(data);
-                const encoded = btoa(encodeURIComponent(json));
-                const url = window.location.href.split('#')[0] + '#/portfolio/' + slug + '/' + encoded;
+                const compressed = LZString.compressToBase64(json);
+                const url = window.location.href.split('#')[0] + '#/portfolio/' + slug + '/' + compressed;
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(url).then(() => {
-                        alert('✅ Share link copied!\nThe link includes your name and a unique number.\nAnyone who opens it will see only your portfolio (view‑only).');
+                        alert('✅ Share link copied!\nThe link is now much shorter and includes your name + a random number.\nAnyone who opens it will see only your portfolio (view‑only).');
                     }).catch(() => { prompt('Copy link:', url); });
                 } else { prompt('Copy link:', url); }
-            } catch (e) { alert('Error generating link.'); }
+            } catch (e) { alert('Error generating link: ' + e.message); }
         }
 
         // ============================================================
-        //  VIEW-ONLY MODE DETECTION
+        //  VIEW-ONLY MODE DETECTION (with decompression)
         // ============================================================
         function detectViewOnly() {
             const hash = window.location.hash;
-            // Format: #/portfolio/name-12345/encodedData
             const match = hash.match(/^#\/portfolio\/[^\/]+\/(.+)$/);
             if (match) {
                 isViewOnly = true;
                 try {
-                    const encoded = match[1];
-                    const json = decodeURIComponent(atob(encoded));
+                    const compressed = match[1];
+                    const json = LZString.decompressFromBase64(compressed);
+                    if (!json) throw new Error('Decompression failed');
                     const data = JSON.parse(json);
                     // restore data
                     document.getElementById('fullName').value = data.name || '';
@@ -4957,7 +4959,7 @@
                     (data.projects || []).forEach(p => {
                         projectCounter++;
                         container.insertAdjacentHTML('beforeend', createProjectHTML(p.title || '', p.desc || '',
-                            p.tools || [], [], !!p.finished));
+                            p.tools || '', [], !!p.finished));
                         const card = container.lastElementChild;
                         const idx = card.dataset.projectIndex;
                         projectImages[idx] = (p.images || []).filter(Boolean);
@@ -4986,7 +4988,13 @@
                     // push state
                     pushPageState({ page: 'site' });
                     return true;
-                } catch (e) { console.warn('View-only data parse error:', e); }
+                } catch (e) {
+                    console.warn('View-only data parse error:', e);
+                    // fallback: treat as invalid, show landing
+                    isViewOnly = false;
+                    // remove the hash to avoid confusion
+                    window.location.hash = '';
+                }
             }
             return false;
         }
@@ -5272,7 +5280,7 @@
             // First, detect view-only mode from URL hash
             const viewOnlyDetected = detectViewOnly();
             if (viewOnlyDetected) {
-                // View-only mode is active — skip normal init
+                // View-only mode is active — skip normal init (and splash)
                 return;
             }
 
@@ -5380,10 +5388,13 @@
             if (e.key === 'Escape') closeSsplitlyInfo();
         });
 
+        // Only start splash if not in view-only
         window.addEventListener('DOMContentLoaded', function() {
-            window.setTimeout(function() {
-                playSsplitlySplash();
-            }, 120);
+            if (!isViewOnly) {
+                window.setTimeout(function() {
+                    playSsplitlySplash();
+                }, 120);
+            }
         });
     </script>
 
