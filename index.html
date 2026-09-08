@@ -15,6 +15,7 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js">
     </script>
+
     <style>
         /* ── Reset & Root ── */
         * {
@@ -2925,9 +2926,156 @@
                 transform: scale(0.35);
             }
         }
+
+        /* ── Login Overlay ── */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.92);
+            backdrop-filter: blur(12px);
+            transition: opacity 0.6s ease;
+        }
+        #loginOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .login-box {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+        .login-box .ssplitly-logo-mark {
+            margin: 0 auto 16px;
+            width: 56px;
+            height: 56px;
+            flex-basis: 56px;
+        }
+        .login-box .ssplitly-logo-mark span {
+            font-size: 30px;
+        }
+        .login-box h2 {
+            font-family: var(--font-head);
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .login-box p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .login-box .form-group {
+            text-align: left;
+        }
+        .login-box .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+        .login-box .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        .login-box .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-soft);
+        }
+        .login-box .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            margin-top: 8px;
+        }
+        .login-box .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--primary-glow);
+        }
+        .login-box .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+        .login-box .login-loader {
+            display: none;
+            margin: 8px auto 0;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .login-box .login-loader.active {
+            display: block;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        /* Logout button */
+        .logout-btn {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 13px;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+        .logout-btn:hover {
+            background: #fecaca;
+            border-color: #ef4444;
+        }
     </style>
 </head>
 <body>
+
+    <!-- ===== LOGIN OVERLAY ===== -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <div class="ssplitly-logo-mark"><span>S</span><span>S</span></div>
+            <h2>Welcome to Ssplitly</h2>
+            <p>Enter your 12‑digit serial and password</p>
+            <div class="form-group">
+                <label>Serial Number</label>
+                <input type="text" id="loginSerial" placeholder="000000000001" maxlength="12">
+            </div>
+            <div class="form-group" style="margin-top:14px;">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••">
+            </div>
+            <button class="btn-login" id="loginBtn">Log In</button>
+            <div class="error-msg" id="loginError"></div>
+            <div class="login-loader" id="loginLoader"></div>
+            <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">💡 Use one of the provided credentials.</p>
+        </div>
+    </div>
 
     <!-- ===== PAGE 1: LANDING ===== -->
     <div id="page1" class="page active">
@@ -2969,6 +3117,7 @@
                     <option value="blue">Blue</option><option value="purple">Purple</option><option value="green">Green</option><option value="orange">Orange</option><option value="pink">Pink</option>
                 </select>
                 <button class="toggle-preview-btn" id="togglePreviewBtn" onclick="toggleMobilePreview()"><i class="fas fa-eye"></i> Preview</button>
+                <button class="logout-btn" id="logoutBtn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
             <span class="view-only-badge"><i class="fas fa-eye"></i> View‑only</span>
         </div>
@@ -3188,6 +3337,215 @@
     <div id="cvOutput" style="display:none;"></div>
     <div id="coverOutput" style="display:none;"></div>
 
+    <!-- ── Firebase Module ── -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // ── Firebase config ──
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, set, get, update, child } from "firebase/database";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0feRzkZ-6k87cr5_6rdvJBLqWEMHnH7M",
+            authDomain: "splitwise-e3111.firebaseapp.com",
+            projectId: "splitwise-e3111",
+            storageBucket: "splitwise-e3111.firebasestorage.app",
+            messagingSenderId: "992417120470",
+            appId: "1:992417120470:web:0e107b9e636debfe2d8977",
+            measurementId: "G-L9MVKMVPKS"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ── Expose Firebase functions globally ──
+        window.__firebase = { db, ref, set, get, update, child };
+
+        // ── FIXED CREDENTIALS – only these two accounts exist ──
+        const FIXED_CREDENTIALS = {
+            '467321943310': 'sam1k3#',
+            '564279006743': 'ghr1#kq'
+        };
+
+        // ── Seed only the two fixed accounts if they don't exist ──
+        async function seedUsers() {
+            const usersRef = ref(db, 'users');
+            try {
+                const snapshot = await get(usersRef);
+                const existing = snapshot.exists() ? snapshot.val() : {};
+                const updates = {};
+                for (const [serial, password] of Object.entries(FIXED_CREDENTIALS)) {
+                    if (!existing[serial]) {
+                        updates[`users/${serial}`] = {
+                            password: password,
+                            active: false,
+                            lastActive: null
+                        };
+                    }
+                }
+                if (Object.keys(updates).length > 0) {
+                    await update(ref(db), updates);
+                    console.log('✅ Two accounts seeded.');
+                    console.table(FIXED_CREDENTIALS);
+                } else {
+                    console.log('Accounts already exist.');
+                }
+            } catch (e) {
+                console.error('Seed error:', e);
+            }
+        }
+        seedUsers();
+
+        // ── Login function ──
+        window.loginUser = async function(serial, password) {
+            const errorEl = document.getElementById('loginError');
+            const loader = document.getElementById('loginLoader');
+            errorEl.textContent = '';
+            loader.classList.add('active');
+
+            try {
+                // First check if serial exists in our fixed list
+                if (!FIXED_CREDENTIALS[serial]) {
+                    errorEl.textContent = '❌ Serial number not found.';
+                    loader.classList.remove('active');
+                    return false;
+                }
+
+                const userRef = ref(db, `users/${serial}`);
+                const snapshot = await get(userRef);
+                if (!snapshot.exists()) {
+                    errorEl.textContent = '❌ Account not initialized. Please contact support.';
+                    loader.classList.remove('active');
+                    return false;
+                }
+                const data = snapshot.val();
+                if (data.password !== password) {
+                    errorEl.textContent = '❌ Incorrect password.';
+                    loader.classList.remove('active');
+                    return false;
+                }
+                if (data.active === true) {
+                    errorEl.textContent = '❌ This account is already in use.';
+                    loader.classList.remove('active');
+                    return false;
+                }
+                // Set active
+                await update(ref(db), {
+                    [`users/${serial}/active`]: true,
+                    [`users/${serial}/lastActive`]: Date.now()
+                });
+                // Store session in localStorage
+                localStorage.setItem('ssplitly_session', JSON.stringify({
+                    serial,
+                    timestamp: Date.now()
+                }));
+                loader.classList.remove('active');
+                return true;
+            } catch (e) {
+                errorEl.textContent = '⚠️ Server error. Please try again.';
+                loader.classList.remove('active');
+                console.error(e);
+                return false;
+            }
+        };
+
+        // ── Logout function ──
+        window.logout = async function() {
+            const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
+            if (session.serial) {
+                try {
+                    await update(ref(db), {
+                        [`users/${session.serial}/active`]: false
+                    });
+                } catch (e) {}
+            }
+            localStorage.removeItem('ssplitly_session');
+            location.reload();
+        };
+
+        // ── Check existing session ──
+        window.checkSession = async function() {
+            const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
+            if (!session.serial) return false;
+            try {
+                const userRef = ref(db, `users/${session.serial}`);
+                const snapshot = await get(userRef);
+                if (!snapshot.exists()) return false;
+                const data = snapshot.val();
+                if (data.active === true) {
+                    await update(ref(db), {
+                        [`users/${session.serial}/lastActive`]: Date.now()
+                    });
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (e) {
+                return false;
+            }
+        };
+
+        // ── On page load, check view-only first ──
+        window.__viewOnlyDetected = false;
+        window.__loginRequired = true;
+
+        window.hideLogin = function() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+        };
+
+        window.showLogin = function() {
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        };
+
+        // Handle login button click
+        document.getElementById('loginBtn').addEventListener('click', async function() {
+            const serial = document.getElementById('loginSerial').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if (!serial || !password) {
+                document.getElementById('loginError').textContent = 'Please fill in both fields.';
+                return;
+            }
+            if (serial.length !== 12 || !/^\d{12}$/.test(serial)) {
+                document.getElementById('loginError').textContent = 'Serial must be exactly 12 digits.';
+                return;
+            }
+            const success = await window.loginUser(serial, password);
+            if (success) {
+                window.hideLogin();
+                if (!window.__viewOnlyDetected) {
+                    window.playSsplitlySplash && window.playSsplitlySplash();
+                }
+                document.getElementById('page1').classList.add('active');
+                document.getElementById('page2').classList.remove('active');
+                document.getElementById('page3').classList.remove('active');
+                document.getElementById('loginOverlay').style.display = 'none';
+            }
+        });
+
+        document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+        document.getElementById('loginSerial').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+
+        window.markViewOnly = function() {
+            window.__viewOnlyDetected = true;
+            document.getElementById('loginOverlay').style.display = 'none';
+            window.playSsplitlySplash = function() {};
+        };
+
+        console.log('Firebase module loaded.');
+    </script>
+
+    <!-- ===== MAIN SCRIPT ===== -->
     <script>
         // ============================================================
         //  STATE
@@ -4990,9 +5348,7 @@
                     return true;
                 } catch (e) {
                     console.warn('View-only data parse error:', e);
-                    // fallback: treat as invalid, show landing
                     isViewOnly = false;
-                    // remove the hash to avoid confusion
                     window.location.hash = '';
                 }
             }
@@ -5274,14 +5630,55 @@
         }
 
         // ============================================================
+        //  SPLASH — will be called after login
+        // ============================================================
+        function playSsplitlySplash() {
+            const splash = document.getElementById('ssplitlySplash');
+            if (!splash) return;
+            splash.classList.remove('leaving');
+            void splash.offsetWidth;
+            splash.classList.add('active');
+            window.setTimeout(() => {
+                splash.classList.add('leaving');
+                window.setTimeout(() => splash.classList.remove('active'), 650);
+            }, 1900);
+        }
+        window.playSsplitlySplash = playSsplitlySplash;
+
+        // ============================================================
         //  INIT
         // ============================================================
-        window.onload = function() {
+        window.onload = async function() {
             // First, detect view-only mode from URL hash
             const viewOnlyDetected = detectViewOnly();
             if (viewOnlyDetected) {
-                // View-only mode is active — skip normal init (and splash)
+                // View-only mode: mark and skip login
+                if (window.markViewOnly) window.markViewOnly();
+                // Skip splash
+                window.playSsplitlySplash = function() {};
                 return;
+            }
+
+            // Not view-only: check session
+            // Wait for Firebase module to be ready
+            if (window.checkSession) {
+                const valid = await window.checkSession();
+                if (valid) {
+                    // Session valid: hide login, show landing
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    // Play splash
+                    setTimeout(playSsplitlySplash, 200);
+                    // Ensure page1 active
+                    document.getElementById('page1').classList.add('active');
+                    document.getElementById('page2').classList.remove('active');
+                    document.getElementById('page3').classList.remove('active');
+                } else {
+                    // Show login
+                    document.getElementById('loginOverlay').style.display = 'flex';
+                }
+            } else {
+                // Fallback: show login
+                document.getElementById('loginOverlay').style.display = 'flex';
             }
 
             // Normal mode: load from localStorage
@@ -5371,30 +5768,8 @@
             setTimeout(fitA4MobilePreview, 50);
         };
 
-        /* ── Ssplitly splash ── */
-        function playSsplitlySplash() {
-            const splash = document.getElementById('ssplitlySplash');
-            if (!splash) return;
-            splash.classList.remove('leaving');
-            void splash.offsetWidth;
-            splash.classList.add('active');
-            window.setTimeout(() => {
-                splash.classList.add('leaving');
-                window.setTimeout(() => splash.classList.remove('active'), 650);
-            }, 1900);
-        }
-
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSsplitlyInfo();
-        });
-
-        // Only start splash if not in view-only
-        window.addEventListener('DOMContentLoaded', function() {
-            if (!isViewOnly) {
-                window.setTimeout(function() {
-                    playSsplitlySplash();
-                }, 120);
-            }
         });
     </script>
 
