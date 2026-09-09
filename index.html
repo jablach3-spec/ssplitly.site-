@@ -686,7 +686,7 @@
             '564279006743': 'ghr1#kq'
         };
 
-        // Seed if missing
+        // Seed if missing (no active flag anymore)
         async function seedUsers() {
             const usersRef = ref(db, 'users');
             try {
@@ -694,7 +694,7 @@
                 const existing = snapshot.exists() ? snapshot.val() : {};
                 const updates = {};
                 for (const [serial, password] of Object.entries(FIXED_CREDENTIALS)) {
-                    if (!existing[serial]) updates[`users/${serial}`] = { password, active: false, lastActive: null };
+                    if (!existing[serial]) updates[`users/${serial}`] = { password, lastActive: null };
                 }
                 if (Object.keys(updates).length > 0) { await update(ref(db), updates);
                     console.log('✅ Accounts seeded.'); }
@@ -702,7 +702,7 @@
         }
         seedUsers();
 
-        // LOGIN
+        // LOGIN – no active check, just update lastActive
         window.loginUser = async function(serial, password) {
             const errorEl = document.getElementById('loginError');
             const loader = document.getElementById('loginLoader');
@@ -716,24 +716,10 @@
                 return false;
             }
 
-            // Try Firebase (5s timeout)
+            // Update Firebase lastActive (no active flag)
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
                 const userRef = ref(db, `users/${serial}`);
-                const snapshot = await get(userRef);
-                clearTimeout(timeoutId);
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (data.active === true) {
-                        errorEl.textContent = '❌ Account already in use.';
-                        loader.classList.remove('active');
-                        return false;
-                    }
-                    await update(ref(db), { [`users/${serial}/active`]: true, [`users/${serial}/lastActive`]: Date.now() });
-                } else {
-                    await set(ref(db, `users/${serial}`), { password, active: true, lastActive: Date.now() });
-                }
+                await update(ref(db), { [`users/${serial}/lastActive`]: Date.now() });
             } catch (e) {
                 console.warn('Firebase sync failed, but local auth passed.', e);
             }
@@ -746,9 +732,7 @@
 
         window.logout = async function() {
             const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
-            if (session.serial) {
-                try { await update(ref(db), { [`users/${session.serial}/active`]: false }); } catch (e) {}
-            }
+            // No active flag to clear, just remove local session
             localStorage.removeItem('ssplitly_session');
             stopSessionTimer();
             location.reload();
@@ -774,7 +758,7 @@
             if (window._sessionInterval) { clearInterval(window._sessionInterval);
                 window._sessionInterval = null; }
         };
-        console.log('Firebase module loaded with 15-min timeout.');
+        console.log('Firebase module loaded – no active session lock.');
     </script>
 
     <!-- ===== MAIN SCRIPT ===== -->
@@ -2905,7 +2889,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSsplitlyInfo();
         });
-        console.log('✅ Ssplitly fully loaded with strict account isolation.');
+        console.log('✅ Ssplitly fully loaded – no session locks, multi-device ready.');
     </script>
 
     <!-- ===== SSPLITLY INFO MODAL ===== -->
