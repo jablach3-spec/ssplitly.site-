@@ -828,19 +828,85 @@
         };
 
         // ============================================================
-        //  STORAGE – PER ACCOUNT
+        //  STORAGE – PER ACCOUNT (FIXED: strict isolation)
         // ============================================================
         function getStorageKey() {
             const raw = localStorage.getItem('ssplitly_session');
             if (!raw) return STORAGE_BASE + 'default';
             try {
                 const session = JSON.parse(raw);
-                return STORAGE_BASE + (session.serial || 'default');
-            } catch (e) { return STORAGE_BASE + 'default'; }
+                if (session.serial && session.serial.length === 12) {
+                    return STORAGE_BASE + session.serial;
+                }
+                return STORAGE_BASE + 'default';
+            } catch (e) {
+                return STORAGE_BASE + 'default';
+            }
+        }
+
+        function getCurrentSerial() {
+            const raw = localStorage.getItem('ssplitly_session');
+            if (!raw) return null;
+            try {
+                const session = JSON.parse(raw);
+                return session.serial || null;
+            } catch (e) { return null; }
+        }
+
+        // Reset all global state before loading a different account
+        function resetBuilderState() {
+            // Clear global data
+            customSoftwareIcons = {};
+            projectImages = {};
+            window.croppedImageData = '';
+            window.expCounter = 0;
+            window.eduCounter = 0;
+            window.projectCounter = 0;
+
+            // Clear DOM containers
+            document.getElementById('experienceContainer').innerHTML = '';
+            document.getElementById('educationContainer').innerHTML = '';
+            document.getElementById('projectContainer').innerHTML = '';
+            document.getElementById('softwareManager').innerHTML = '';
+            document.getElementById('picPreviewSmall').src = '';
+            document.getElementById('cvOutput').innerHTML = '';
+            document.getElementById('coverOutput').innerHTML = '';
+            document.getElementById('livePreviewContent').innerHTML = '';
+
+            // Reset form fields to defaults (will be overridden by load)
+            document.getElementById('fullName').value = 'Salih Muhammed';
+            document.getElementById('profTitle').value = 'EXTERIOR VISUALIZER';
+            document.getElementById('email').value = 'salihchnr65@gmail.com';
+            document.getElementById('phone').value = '+971566412245';
+            document.getElementById('location').value = 'Al ain, United Arab Emirates';
+            document.getElementById('linkedinUrl').value = 'https://linkedin.com/in/ssalih-muhammed';
+            document.getElementById('behanceUrl').value = 'https://behance.net/salihmuhammed';
+            document.getElementById('instagramUrl').value = 'https://instagram.com/salih_muhammed';
+            document.getElementById('whatsappUrl').value = 'https://wa.me/971566412245';
+            document.getElementById('aboutInput').value = '';
+            document.getElementById('skillsInput').value = '';
+            document.getElementById('applyJob').value = '';
+            document.getElementById('applyCompany').value = '';
+            document.getElementById('portfolioTotalProjects').value = '';
+            document.getElementById('portfolioTotalExperience').value = '';
+            document.getElementById('portfolioFinishedProjects').value = '';
+            document.getElementById('showLinkedIn').checked = true;
+            document.getElementById('showBehance').checked = true;
+            document.getElementById('showInstagram').checked = true;
+            document.getElementById('showWhatsApp').checked = true;
+
+            // Reset preview
+            document.getElementById('livePreviewContent').innerHTML = '';
         }
 
         function saveToLocalStorage() {
+            // Only save if we have a valid serial (not default)
+            const serial = getCurrentSerial();
+            if (!serial) return;
+
             const key = getStorageKey();
+            if (key === STORAGE_BASE + 'default') return;
+
             const data = {
                 fullName: document.getElementById('fullName').value,
                 profTitle: document.getElementById('profTitle').value,
@@ -905,11 +971,22 @@
         }
 
         function loadFromLocalStorage() {
+            const serial = getCurrentSerial();
+            if (!serial) return false;
+
             const key = getStorageKey();
+            if (key === STORAGE_BASE + 'default') return false;
+
             const saved = localStorage.getItem(key);
             if (!saved) return false;
+
             try {
+                // Reset state before loading new data
+                resetBuilderState();
+
                 const d = JSON.parse(saved);
+
+                // Restore all fields
                 if (d.fullName) document.getElementById('fullName').value = d.fullName;
                 if (d.profTitle) document.getElementById('profTitle').value = d.profTitle;
                 if (d.email) document.getElementById('email').value = d.email;
@@ -939,6 +1016,7 @@
                 if (d.portfolioFinishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value =
                     d.portfolioFinishedProjects;
 
+                // Experience
                 const expC = document.getElementById('experienceContainer');
                 expC.innerHTML = '';
                 window.expCounter = 0;
@@ -954,6 +1032,7 @@
                 }
                 initExpPresentListeners();
 
+                // Education
                 const eduC = document.getElementById('educationContainer');
                 eduC.innerHTML = '';
                 window.eduCounter = 0;
@@ -969,6 +1048,7 @@
                 }
                 initEduPresentListeners();
 
+                // Projects
                 const projC = document.getElementById('projectContainer');
                 projC.innerHTML = '';
                 window.projectCounter = 0;
@@ -1011,7 +1091,10 @@
                 generateCoverLetter();
                 updateLivePreview();
                 return true;
-            } catch (e) { return false; }
+            } catch (e) {
+                console.error('Load error:', e);
+                return false;
+            }
         }
 
         // ============================================================
@@ -2760,7 +2843,52 @@
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
                 startSessionTimer();
-                loadFromLocalStorage();
+                const loaded = loadFromLocalStorage();
+                if (!loaded) {
+                    // First-time user: load defaults but save them to their key
+                    resetBuilderState();
+                    // Load defaults
+                    const expC = document.getElementById('experienceContainer');
+                    expC.innerHTML = '';
+                    window.expCounter = 0;
+                    defaultExperiences.forEach(exp => { window.expCounter++;
+                        expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp
+                            .end, exp.present, exp.bullets, exp.location)); });
+                    initExpPresentListeners();
+                    const eduC = document.getElementById('educationContainer');
+                    eduC.innerHTML = '';
+                    window.eduCounter = 0;
+                    defaultEducations.forEach(edu => { window.eduCounter++;
+                        eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start,
+                            edu.end, edu.present, edu.location)); });
+                    initEduPresentListeners();
+                    const container = document.getElementById('projectContainer');
+                    container.innerHTML = '';
+                    window.projectCounter = 0;
+                    const defaults = [
+                        { title: 'Luxury Villa Exterior',
+                            desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.',
+                            tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
+                        { title: 'Commercial Tower Visualization',
+                            desc: 'High-end visualization for a mixed-use commercial tower.',
+                            tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
+                        { title: 'Interior Design Concept',
+                            desc: 'Detailed interior visualization for a modern penthouse.',
+                            tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
+                    ];
+                    defaults.forEach(p => { window.projectCounter++;
+                        container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p
+                            .finished)); });
+                    updateProjectCount();
+                    updateProjectStats();
+                    document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
+                    renderSoftwareManagerFromInput();
+                    applySavedAppearance();
+                    generateCV();
+                    generateCoverLetter();
+                    updateLivePreview();
+                    saveToLocalStorage();
+                }
             } else {
                 document.getElementById('loginOverlay').style.display = 'flex';
                 document.getElementById('loginOverlay').classList.remove('hidden');
@@ -2770,52 +2898,6 @@
                 localStorage.removeItem('ssplitly_session');
                 stopSessionTimer();
             }
-
-            // Ensure default data if nothing loaded
-            if (!loadFromLocalStorage()) {
-                // fallback defaults
-                const expC = document.getElementById('experienceContainer');
-                expC.innerHTML = '';
-                window.expCounter = 0;
-                defaultExperiences.forEach(exp => { window.expCounter++;
-                    expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp
-                        .end, exp.present, exp.bullets, exp.location)); });
-                initExpPresentListeners();
-                const eduC = document.getElementById('educationContainer');
-                eduC.innerHTML = '';
-                window.eduCounter = 0;
-                defaultEducations.forEach(edu => { window.eduCounter++;
-                    eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start,
-                        edu.end, edu.present, edu.location)); });
-                initEduPresentListeners();
-                const container = document.getElementById('projectContainer');
-                container.innerHTML = '';
-                window.projectCounter = 0;
-                const defaults = [
-                    { title: 'Luxury Villa Exterior',
-                        desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.',
-                        tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
-                    { title: 'Commercial Tower Visualization',
-                        desc: 'High-end visualization for a mixed-use commercial tower.',
-                        tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
-                    { title: 'Interior Design Concept',
-                        desc: 'Detailed interior visualization for a modern penthouse.',
-                        tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
-                ];
-                defaults.forEach(p => { window.projectCounter++;
-                    container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p
-                        .finished)); });
-                updateProjectCount();
-                updateProjectStats();
-                if (!document.getElementById('portfolioTotalExperience').value) document.getElementById(
-                    'portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
-                renderSoftwareManagerFromInput();
-                applySavedAppearance();
-                generateCV();
-                generateCoverLetter();
-                updateLivePreview();
-                saveToLocalStorage();
-            }
             setTimeout(fitA4MobilePreview, 400);
             setTimeout(updateThemeLabel, 100);
         };
@@ -2823,7 +2905,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSsplitlyInfo();
         });
-        console.log('✅ Ssplitly fully loaded with 15-min auto-lock and separated accounts.');
+        console.log('✅ Ssplitly fully loaded with strict account isolation.');
     </script>
 
     <!-- ===== SSPLITLY INFO MODAL ===== -->
