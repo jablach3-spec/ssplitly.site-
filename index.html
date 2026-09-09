@@ -787,7 +787,9 @@
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
                 // Load the builder data
-                loadFromLocalStorage();
+                if (typeof loadFromFirebase === 'function') {
+                    await loadFromFirebase();
+                }
             }
             return success;
         };
@@ -846,25 +848,10 @@
         let projectImages = {};
         let cropper = null;
         let pdfPendingType = 'cv';
-        const STORAGE_BASE = 'builderData_';
 
         // ============================================================
-        //  STORAGE – PER ACCOUNT (strict isolation)
+        //  FIREBASE HELPERS
         // ============================================================
-        function getStorageKey() {
-            const raw = sessionStorage.getItem('ssplitly_session');
-            if (!raw) return STORAGE_BASE + 'default';
-            try {
-                const session = JSON.parse(raw);
-                if (session.serial && session.serial.length === 12) {
-                    return STORAGE_BASE + session.serial;
-                }
-                return STORAGE_BASE + 'default';
-            } catch (e) {
-                return STORAGE_BASE + 'default';
-            }
-        }
-
         function getCurrentSerial() {
             const raw = sessionStorage.getItem('ssplitly_session');
             if (!raw) return null;
@@ -874,51 +861,14 @@
             } catch (e) { return null; }
         }
 
-        function resetBuilderState() {
-            customSoftwareIcons = {};
-            projectImages = {};
-            window.croppedImageData = '';
-            window.expCounter = 0;
-            window.eduCounter = 0;
-            window.projectCounter = 0;
-
-            document.getElementById('experienceContainer').innerHTML = '';
-            document.getElementById('educationContainer').innerHTML = '';
-            document.getElementById('projectContainer').innerHTML = '';
-            document.getElementById('softwareManager').innerHTML = '';
-            document.getElementById('picPreviewSmall').src = '';
-            document.getElementById('cvOutput').innerHTML = '';
-            document.getElementById('coverOutput').innerHTML = '';
-            document.getElementById('livePreviewContent').innerHTML = '';
-
-            document.getElementById('fullName').value = 'Salih Muhammed';
-            document.getElementById('profTitle').value = 'EXTERIOR VISUALIZER';
-            document.getElementById('email').value = 'salihchnr65@gmail.com';
-            document.getElementById('phone').value = '+971566412245';
-            document.getElementById('location').value = 'Al ain, United Arab Emirates';
-            document.getElementById('linkedinUrl').value = 'https://linkedin.com/in/ssalih-muhammed';
-            document.getElementById('behanceUrl').value = 'https://behance.net/salihmuhammed';
-            document.getElementById('instagramUrl').value = 'https://instagram.com/salih_muhammed';
-            document.getElementById('whatsappUrl').value = 'https://wa.me/971566412245';
-            document.getElementById('aboutInput').value = '';
-            document.getElementById('skillsInput').value = '';
-            document.getElementById('applyJob').value = '';
-            document.getElementById('applyCompany').value = '';
-            document.getElementById('portfolioTotalProjects').value = '';
-            document.getElementById('portfolioTotalExperience').value = '';
-            document.getElementById('portfolioFinishedProjects').value = '';
-            document.getElementById('showLinkedIn').checked = true;
-            document.getElementById('showBehance').checked = true;
-            document.getElementById('showInstagram').checked = true;
-            document.getElementById('showWhatsApp').checked = true;
-            document.getElementById('livePreviewContent').innerHTML = '';
-        }
-
-        function saveToLocalStorage() {
+        // ── SAVE TO FIREBASE ──
+        async function saveToFirebase() {
             const serial = getCurrentSerial();
-            if (!serial) return;
-            const key = getStorageKey();
-            if (key === STORAGE_BASE + 'default') return;
+            if (!serial) {
+                console.warn('No serial found, cannot save.');
+                return;
+            }
+            const { db, ref, set } = window.__firebase;
 
             const data = {
                 fullName: document.getElementById('fullName').value,
@@ -949,6 +899,7 @@
                 educations: [],
                 projects: []
             };
+
             document.querySelectorAll('#experienceContainer .entry-card').forEach(c => {
                 data.experiences.push({
                     company: c.querySelector('.exp-company').value,
@@ -980,20 +931,38 @@
                     finished: !!c.querySelector('.proj-finished')?.checked
                 });
             });
-            try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
-        }
-
-        function loadFromLocalStorage() {
-            const serial = getCurrentSerial();
-            if (!serial) return false;
-            const key = getStorageKey();
-            if (key === STORAGE_BASE + 'default') return false;
-            const saved = localStorage.getItem(key);
-            if (!saved) return false;
 
             try {
+                await set(ref(db, `users/${serial}/builderData`), data);
+                console.log('✅ Data saved to Firebase');
+            } catch (e) {
+                console.error('Failed to save to Firebase:', e);
+            }
+        }
+
+        // ── LOAD FROM FIREBASE ──
+        async function loadFromFirebase() {
+            const serial = getCurrentSerial();
+            if (!serial) {
+                console.warn('No serial found, cannot load.');
+                return false;
+            }
+            const { db, ref, get } = window.__firebase;
+
+            try {
+                const snapshot = await get(ref(db, `users/${serial}/builderData`));
+                if (!snapshot.exists()) {
+                    console.log('No data in Firebase, loading defaults...');
+                    resetBuilderState();
+                    populateDefaultData();
+                    await saveToFirebase();
+                    return true;
+                }
+
+                const d = snapshot.val();
                 resetBuilderState();
-                const d = JSON.parse(saved);
+
+                // Apply data
                 if (d.fullName) document.getElementById('fullName').value = d.fullName;
                 if (d.profTitle) document.getElementById('profTitle').value = d.profTitle;
                 if (d.email) document.getElementById('email').value = d.email;
@@ -1023,7 +992,7 @@
                 if (d.portfolioFinishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value =
                     d.portfolioFinishedProjects;
 
-                // Experience
+                // Experiences
                 const expC = document.getElementById('experienceContainer');
                 expC.innerHTML = '';
                 window.expCounter = 0;
@@ -1082,8 +1051,8 @@
                             tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
                     ];
                     defaults.forEach(p => { window.projectCounter++;
-                        document.getElementById('projectContainer').insertAdjacentHTML('beforeend', createProjectHTML(
-                            p.title, p.desc, p.tools, [], !!p.finished)); });
+                        document.getElementById('projectContainer').insertAdjacentHTML('beforeend',
+                            createProjectHTML(p.title, p.desc, p.tools, [], !!p.finished)); });
                 }
                 updateProjectCount();
                 updateProjectStats();
@@ -1102,6 +1071,91 @@
                 console.error('Load error:', e);
                 return false;
             }
+        }
+
+        // ── RESET ──
+        function resetBuilderState() {
+            customSoftwareIcons = {};
+            projectImages = {};
+            window.croppedImageData = '';
+            window.expCounter = 0;
+            window.eduCounter = 0;
+            window.projectCounter = 0;
+
+            document.getElementById('experienceContainer').innerHTML = '';
+            document.getElementById('educationContainer').innerHTML = '';
+            document.getElementById('projectContainer').innerHTML = '';
+            document.getElementById('softwareManager').innerHTML = '';
+            document.getElementById('picPreviewSmall').src = '';
+            document.getElementById('cvOutput').innerHTML = '';
+            document.getElementById('coverOutput').innerHTML = '';
+            document.getElementById('livePreviewContent').innerHTML = '';
+
+            document.getElementById('fullName').value = 'Salih Muhammed';
+            document.getElementById('profTitle').value = 'EXTERIOR VISUALIZER';
+            document.getElementById('email').value = 'salihchnr65@gmail.com';
+            document.getElementById('phone').value = '+971566412245';
+            document.getElementById('location').value = 'Al ain, United Arab Emirates';
+            document.getElementById('linkedinUrl').value = 'https://linkedin.com/in/ssalih-muhammed';
+            document.getElementById('behanceUrl').value = 'https://behance.net/salihmuhammed';
+            document.getElementById('instagramUrl').value = 'https://instagram.com/salih_muhammed';
+            document.getElementById('whatsappUrl').value = 'https://wa.me/971566412245';
+            document.getElementById('aboutInput').value = '';
+            document.getElementById('skillsInput').value = '';
+            document.getElementById('applyJob').value = '';
+            document.getElementById('applyCompany').value = '';
+            document.getElementById('portfolioTotalProjects').value = '';
+            document.getElementById('portfolioTotalExperience').value = '';
+            document.getElementById('portfolioFinishedProjects').value = '';
+            document.getElementById('showLinkedIn').checked = true;
+            document.getElementById('showBehance').checked = true;
+            document.getElementById('showInstagram').checked = true;
+            document.getElementById('showWhatsApp').checked = true;
+            document.getElementById('livePreviewContent').innerHTML = '';
+        }
+
+        function populateDefaultData() {
+            const expC = document.getElementById('experienceContainer');
+            expC.innerHTML = '';
+            window.expCounter = 0;
+            defaultExperiences.forEach(exp => { window.expCounter++;
+                expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end,
+                    exp.present, exp.bullets, exp.location)); });
+            initExpPresentListeners();
+
+            const eduC = document.getElementById('educationContainer');
+            eduC.innerHTML = '';
+            window.eduCounter = 0;
+            defaultEducations.forEach(edu => { window.eduCounter++;
+                eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu
+                    .end, edu.present, edu.location)); });
+            initEduPresentListeners();
+
+            const container = document.getElementById('projectContainer');
+            container.innerHTML = '';
+            window.projectCounter = 0;
+            const defaults = [
+                { title: 'Luxury Villa Exterior',
+                    desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.',
+                    tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
+                { title: 'Commercial Tower Visualization',
+                    desc: 'High-end visualization for a mixed-use commercial tower.',
+                    tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
+                { title: 'Interior Design Concept',
+                    desc: 'Detailed interior visualization for a modern penthouse.',
+                    tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
+            ];
+            defaults.forEach(p => { window.projectCounter++;
+                container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p
+                    .finished)); });
+            updateProjectCount();
+            updateProjectStats();
+            document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
+            renderSoftwareManagerFromInput();
+            applySavedAppearance();
+            generateCV();
+            generateCoverLetter();
+            updateLivePreview();
         }
 
         // ============================================================
@@ -1145,9 +1199,6 @@
         function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;',
                 '"': '&quot;', "'": '&#39;' })[m]); }
 
-        // ============================================================
-        //  DATE FORMAT HELPER (YYYY-MM → MM/YYYY)
-        // ============================================================
         function formatMonthYear(dateStr) {
             if (!dateStr) return '';
             const parts = dateStr.split('-');
@@ -1164,7 +1215,7 @@
             const names = Array.from(document.querySelectorAll('#softwareManager .software-name'))
                 .map(i => i.value.trim()).filter(Boolean);
             document.getElementById('skillsInput').value = names.join(', ');
-            saveToLocalStorage();
+            saveToFirebase();
             refreshAllOutputs();
         }
 
@@ -1456,7 +1507,7 @@
             document.getElementById('picPreviewSmall').src = dataUrl;
             window.croppedImageData = dataUrl;
             closeCrop();
-            saveToLocalStorage();
+            saveToFirebase();
             if (activeTab === 'cv' || activeTab === 'cover') { generateCV();
                 generateCoverLetter();
                 updateLivePreview(); }
@@ -1467,7 +1518,7 @@
             document.getElementById('profilePicInput').value = '';
             document.getElementById('picPreviewSmall').src = '';
             window.croppedImageData = '';
-            saveToLocalStorage();
+            saveToFirebase();
             if (activeTab === 'cv' || activeTab === 'cover') { generateCV();
                 generateCoverLetter();
                 updateLivePreview(); }
@@ -1547,7 +1598,7 @@
                     endInput.placeholder = 'Present'; } else { endInput.disabled = false;
                     endInput.placeholder = 'YYYY-MM'; }
             });
-            saveToLocalStorage();
+            saveToFirebase();
             if (activeTab === 'cv') { generateCV();
                 updateLivePreview(); }
         }
@@ -1557,7 +1608,7 @@
             const card = btn.closest('.entry-card');
             if (card.parentElement.children.length > 1) card.remove();
             else alert('Minimum one entry required.');
-            saveToLocalStorage();
+            saveToFirebase();
             if (activeTab === 'cv') { generateCV();
                 updateLivePreview(); }
         }
@@ -1571,7 +1622,7 @@
             item.innerHTML =
                 `<input type="text" class="bullet-input" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button>`;
             list.appendChild(item);
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         function removeBullet(btn) {
@@ -1579,7 +1630,7 @@
             const list = item.parentElement;
             if (list.children.length > 1) item.remove();
             else alert('At least one achievement is required.');
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         // ============================================================
@@ -1632,7 +1683,7 @@
                     endInput.placeholder = 'Present'; } else { endInput.disabled = false;
                     endInput.placeholder = 'YYYY-MM'; }
             });
-            saveToLocalStorage();
+            saveToFirebase();
             if (activeTab === 'cv') { generateCV();
                 updateLivePreview(); }
         }
@@ -1692,7 +1743,6 @@
                 });
 
                 let html = `<div class="a4-preview cv-clean">`;
-                // Header: Photo LEFT, Name/Title RIGHT
                 html += `<div class="header">`;
                 if (photo) html +=
                     `<img src="${photo}" class="profile-photo" alt="Profile Photo" onerror="this.style.display='none';">`;
@@ -1701,11 +1751,9 @@
                 html += `<div class="title">${escapeHTML(title)}</div>`;
                 html += `</div>`;
                 html += `</div>`;
-                
-                // Summary (About) comes next
+
                 if (summary) html += `<div class="summary">${escapeHTML(summary)}</div>`;
-                
-                // Contact row
+
                 html += `<div class="contact-row">`;
                 html += `<span><i class="fas fa-envelope"></i> <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a></span>`;
                 html +=
@@ -1717,7 +1765,6 @@
                 }
                 html += `</div>`;
 
-                // Social row (Behance, Instagram, WhatsApp)
                 const socialItems = [];
                 if (showBehance && behanceUrl && behanceUrl !== '#') socialItems.push({ icon: 'fab fa-behance',
                     label: 'Behance', url: behanceUrl });
@@ -1734,7 +1781,6 @@
                     html += `</div>`;
                 }
 
-                // Work Experience
                 if (experiences.length > 0) {
                     html += `<div class="section"><div class="section-heading">WORK EXPERIENCE</div>`;
                     experiences.forEach(exp => {
@@ -1760,7 +1806,6 @@
                     html += `</div>`;
                 }
 
-                // Technical Skills
                 if (skills.length > 0) {
                     html += `<div class="section"><div class="section-heading">TECHNICAL SKILLS</div>`;
                     html += `<div class="skills-row">`;
@@ -1769,7 +1814,6 @@
                     html += `</div></div>`;
                 }
 
-                // Education
                 if (educations.length > 0) {
                     html += `<div class="section"><div class="section-heading">EDUCATION</div>`;
                     educations.forEach(edu => {
@@ -1853,7 +1897,7 @@
                 if (company && !document.getElementById('applyCompany').value) document.getElementById('applyCompany')
                     .value = company;
             }
-            saveToLocalStorage();
+            saveToFirebase();
             generateCoverLetter();
             updateLivePreview();
             if (activeTab !== 'cover') switchTab('cover');
@@ -1879,7 +1923,7 @@
                 defaults.forEach(p => { window.projectCounter++;
                     container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, []));
                     updateProjectCount();
-                    saveToLocalStorage(); });
+                    saveToFirebase(); });
                 alert('✅ Portfolio synced with your CV! New projects added.');
             } else {
                 alert('ℹ️ Your portfolio already has projects. Use "Add Project" to add more.');
@@ -1933,7 +1977,7 @@
                     if (loaded === files.length) {
                         projectImages[idx] = (projectImages[idx] || []).concat(newImages);
                         refreshProjectImagePreviews(card, idx);
-                        saveToLocalStorage();
+                        saveToFirebase();
                     }
                 };
                 reader.readAsDataURL(f);
@@ -1993,7 +2037,7 @@
             images.splice(targetIndex, 0, moved);
             projectImages[projectIdx] = images;
             refreshProjectImagePreviews(card, projectIdx);
-            saveToLocalStorage();
+            saveToFirebase();
             cleanDragState(card);
         }
 
@@ -2016,7 +2060,7 @@
             images.unshift(images.splice(idx, 1)[0]);
             projectImages[projectIdx] = images;
             refreshProjectImagePreviews(card, projectIdx);
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         function updateProjectStats() {
@@ -2026,7 +2070,7 @@
             if (finishedInput && !finishedInput.value) finishedInput.value = finished;
             const totalInput = document.getElementById('portfolioTotalProjects');
             if (totalInput && !totalInput.value) totalInput.value = cards.length;
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         function calculatePortfolioExperienceYears() {
@@ -2055,7 +2099,7 @@
             if (idx >= 0 && idx < images.length) { images.splice(idx, 1);
                 projectImages[projectIdx] = images;
                 refreshProjectImagePreviews(card, projectIdx);
-                saveToLocalStorage(); }
+                saveToFirebase(); }
         }
 
         function addProject() {
@@ -2064,7 +2108,7 @@
             window.projectCounter++;
             container.insertAdjacentHTML('beforeend', createProjectHTML('', '', '', []));
             updateProjectCount();
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         function removeProject(btn) {
@@ -2075,7 +2119,7 @@
             card.remove();
             updateProjectCount();
             updateProjectStats();
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         function updateProjectCount() {
@@ -2458,7 +2502,7 @@
             document.body.classList.toggle('app-dark', isNightMode);
             updateThemeLabel();
             document.getElementById('builderThemeLabel').textContent = isNightMode ? 'Night' : 'Day';
-            saveToLocalStorage();
+            saveToFirebase();
             document.getElementById('themeIcon').className = isNightMode ? 'fas fa-moon' : 'fas fa-sun';
         }
 
@@ -2477,7 +2521,7 @@
                 page3.classList.add('theme-' + colorTheme); }
             document.getElementById('builderColorTheme').value = colorTheme;
             document.getElementById('siteColorTheme').value = colorTheme;
-            saveToLocalStorage();
+            saveToFirebase();
             if (page3 && page3.classList.contains('active')) renderPortfolioWebsite(buildShareData());
         }
 
@@ -2487,7 +2531,7 @@
             document.getElementById('page3').classList.toggle('light-mode', !isNightMode);
             document.getElementById('builderThemeLabel').textContent = isNightMode ? 'Night' : 'Day';
             updateThemeLabel();
-            saveToLocalStorage();
+            saveToFirebase();
         }
 
         function applySavedAppearance() {
@@ -2809,17 +2853,17 @@
         const autoSaveIds = ['fullName', 'profTitle', 'email', 'phone', 'location', 'linkedinUrl', 'behanceUrl',
             'instagramUrl', 'whatsappUrl', 'aboutInput', 'skillsInput', 'applyJob', 'applyCompany'
         ];
-        autoSaveIds.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { saveToLocalStorage(); if (activeTab === 'cv' || activeTab === 'cover') setTimeout(updateLivePreview, 200); }); });
-        ['showLinkedIn', 'showBehance', 'showInstagram', 'showWhatsApp'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => { saveToLocalStorage(); if (activeTab === 'cv' || activeTab === 'cover') setTimeout(updateLivePreview, 200); }); });
+        autoSaveIds.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { saveToFirebase(); if (activeTab === 'cv' || activeTab === 'cover') setTimeout(updateLivePreview, 200); }); });
+        ['showLinkedIn', 'showBehance', 'showInstagram', 'showWhatsApp'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => { saveToFirebase(); if (activeTab === 'cv' || activeTab === 'cover') setTimeout(updateLivePreview, 200); }); });
         document.addEventListener('input', function(e) {
             const id = e.target.id;
             if (id === 'portfolioTotalProjects' || id === 'portfolioTotalExperience' || id === 'portfolioFinishedProjects') {
-                saveToLocalStorage();
+                saveToFirebase();
                 if (activeTab === 'portfolio') setTimeout(() => renderPortfolioWebsite(buildShareData()), 120);
             }
             if (e.target.closest('#experienceContainer') || e.target.closest('#educationContainer') || e.target
                 .closest('#projectContainer')) {
-                saveToLocalStorage();
+                saveToFirebase();
                 if (activeTab === 'cv' || activeTab === 'cover') {
                     setTimeout(() => { if (activeTab === 'cv') generateCV();
                         else generateCoverLetter();
@@ -2842,7 +2886,6 @@
             const errorEl = document.getElementById('loginError');
             const forceBtn = document.getElementById('forceLogoutBtn');
 
-            // Hide force logout button initially
             forceBtn.style.display = 'none';
 
             if (!serial || !password) { errorEl.textContent = 'Please fill both fields.'; return; }
@@ -2853,27 +2896,23 @@
 
             const success = await window.loginUser(serial, password);
             if (!success) {
-                // Check if error message indicates account in use
                 if (errorEl.textContent.includes('already in use')) {
                     forceBtn.style.display = 'block';
-                    // Attach click handler (only once)
                     forceBtn.onclick = function() {
                         forceBtn.style.display = 'none';
                         window.forceLogoutAndLogin(serial, password);
                     };
                 }
             } else {
-                // Login successful – hide force button just in case
                 forceBtn.style.display = 'none';
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
-                loadFromLocalStorage();
+                await loadFromFirebase();
             }
         });
 
-        // Enter key support
         document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document
                 .getElementById('loginBtn').click(); });
         document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document
@@ -2882,7 +2921,7 @@
         // ============================================================
         //  WINDOW ONLOAD
         // ============================================================
-        window.onload = function() {
+        window.onload = async function() {
             const viewOnlyDetected = detectViewOnly();
             if (viewOnlyDetected) {
                 if (window.markViewOnly) window.markViewOnly();
@@ -2895,49 +2934,11 @@
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
-                const loaded = loadFromLocalStorage();
+                const loaded = await loadFromFirebase();
                 if (!loaded) {
                     resetBuilderState();
-                    const expC = document.getElementById('experienceContainer');
-                    expC.innerHTML = '';
-                    window.expCounter = 0;
-                    defaultExperiences.forEach(exp => { window.expCounter++;
-                        expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp
-                            .end, exp.present, exp.bullets, exp.location)); });
-                    initExpPresentListeners();
-                    const eduC = document.getElementById('educationContainer');
-                    eduC.innerHTML = '';
-                    window.eduCounter = 0;
-                    defaultEducations.forEach(edu => { window.eduCounter++;
-                        eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start,
-                            edu.end, edu.present, edu.location)); });
-                    initEduPresentListeners();
-                    const container = document.getElementById('projectContainer');
-                    container.innerHTML = '';
-                    window.projectCounter = 0;
-                    const defaults = [
-                        { title: 'Luxury Villa Exterior',
-                            desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.',
-                            tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
-                        { title: 'Commercial Tower Visualization',
-                            desc: 'High-end visualization for a mixed-use commercial tower.',
-                            tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
-                        { title: 'Interior Design Concept',
-                            desc: 'Detailed interior visualization for a modern penthouse.',
-                            tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
-                    ];
-                    defaults.forEach(p => { window.projectCounter++;
-                        container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p
-                            .finished)); });
-                    updateProjectCount();
-                    updateProjectStats();
-                    document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
-                    renderSoftwareManagerFromInput();
-                    applySavedAppearance();
-                    generateCV();
-                    generateCoverLetter();
-                    updateLivePreview();
-                    saveToLocalStorage();
+                    populateDefaultData();
+                    await saveToFirebase();
                 }
             } else {
                 document.getElementById('loginOverlay').style.display = 'flex';
@@ -2954,7 +2955,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSsplitlyInfo();
         });
-        console.log('✅ Ssplitly fully loaded – 20 accounts, sessionStorage, phone icon updated, force logout added, dates MM/YYYY, photo LEFT side.');
+        console.log('✅ Ssplitly fully loaded – Firebase sync enabled. No localStorage used for data.');
     </script>
 
     <!-- ===== SSPLITLY INFO MODAL ===== -->
@@ -2973,7 +2974,7 @@
             </div>
             <div class="ssplitly-info-panel" data-panel="about">
                 <h3>About Ssplitly</h3>
-                <p>Secure career builder with <strong>20 accounts</strong>, isolated data, and account locking – no auto‑logout timer. Closing the tab logs you out.</p>
+                <p>Secure career builder with <strong>20 accounts</strong>, isolated data, and account locking – no auto‑logout timer. Closing the tab logs you out. Data is synced via Firebase.</p>
             </div>
             <div class="ssplitly-info-panel" data-panel="contact">
                 <p>For support or feedback:</p>
