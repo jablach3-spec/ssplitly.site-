@@ -110,7 +110,7 @@
         .cv-clean .header .name-title{flex:1}
         .cv-clean .header h1{font-family:var(--font-head);font-size:24px;font-weight:800;color:#0f172a;margin:0;line-height:1.1}
         .cv-clean .header .title{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
-        .cv-clean .header .profile-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #0f172a;flex-shrink:0;margin-left:12px}
+        .cv-clean .header .profile-photo{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #0f172a;flex-shrink:0;margin-left:12px}
         .cv-clean .summary{font-size:11px;line-height:1.6;color:#334155;margin:8px 0}
         .cv-clean .contact-row{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10px;color:#475569;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
         .cv-clean .contact-row span{display:inline-flex;align-items:center;gap:4px}
@@ -390,6 +390,10 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .logout-btn{background:#fee2e2;color:#ef4444;padding:6px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;transition:var(--transition);border:1px solid transparent}
         .logout-btn:hover{background:#fecaca;border-color:#ef4444}
+        /* Force logout button style */
+        #forceLogoutBtn{display:none; margin-top:12px; background:#f59e0b; color:#fff; padding:10px 16px; border-radius:6px; font-weight:700; border:none; cursor:pointer; width:100%; transition: background .2s}
+        #forceLogoutBtn:hover{background:#d97706}
+        #forceLogoutBtn i{margin-right:6px}
     </style>
 </head>
 <body>
@@ -402,7 +406,7 @@
             <p>Enter your 12‑digit serial and password</p>
             <div class="form-group">
                 <label>Serial Number</label>
-                <input type="text" id="loginSerial" placeholder="000000000001" maxlength="12">
+                <input type="text" id="loginSerial" placeholder="Serial Number" maxlength="12">
             </div>
             <div class="form-group" style="margin-top:14px;">
                 <label>Password</label>
@@ -411,6 +415,8 @@
             <button class="btn-login" id="loginBtn">Log In</button>
             <div class="error-msg" id="loginError"></div>
             <div class="login-loader" id="loginLoader"></div>
+            <!-- Force logout button (hidden initially) -->
+            <button id="forceLogoutBtn"><i class="fas fa-power-off"></i> Logout from other devices</button>
             <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Account lock prevents simultaneous login.</p>
         </div>
     </div>
@@ -678,10 +684,30 @@
         const db = getDatabase(app);
         window.__firebase = { db, ref, set, get, update };
 
-        // FIXED CREDENTIALS – only these two
+        // ── 20 FIXED CREDENTIALS ──
         const FIXED_CREDENTIALS = {
             '467321943310': 'sam1k3#',
-            '564279006743': 'ghr1#kq'
+            '564279006743': 'ghr1#kq',
+            '467321943311': 'alpha123',
+            '467321943312': 'bravo456',
+            '467321943313': 'charlie789',
+            '467321943314': 'delta101',
+            '467321943315': 'echo2024',
+            '467321943316': 'foxtrot567',
+            '467321943317': 'golf890',
+            '467321943318': 'hotel321',
+            '467321943319': 'india654',
+            '467321943320': 'juliet987',
+            '467321943321': 'kilo234',
+            '467321943322': 'lima876',
+            '467321943323': 'mike543',
+            '467321943324': 'november210',
+            '467321943325': 'oscar765',
+            '467321943326': 'papa432',
+            '467321943327': 'quebec198',
+            '467321943328': 'romeo654',
+            '467321943329': 'sierra321',
+            '467321943330': 'tango987'
         };
 
         // Seed if missing
@@ -695,7 +721,7 @@
                     if (!existing[serial]) updates[`users/${serial}`] = { password, active: false, lastActive: null };
                 }
                 if (Object.keys(updates).length > 0) { await update(ref(db), updates);
-                    console.log('✅ Accounts seeded.'); }
+                    console.log('✅ 20 accounts seeded.'); }
             } catch (e) { console.warn('Seed error:', e); }
         }
         seedUsers();
@@ -707,14 +733,12 @@
             errorEl.textContent = '';
             loader.classList.add('active');
 
-            // Local check
             if (!FIXED_CREDENTIALS[serial] || FIXED_CREDENTIALS[serial] !== password) {
                 errorEl.textContent = '❌ Invalid serial or password.';
                 loader.classList.remove('active');
                 return false;
             }
 
-            // Check Firebase active flag
             try {
                 const userRef = ref(db, `users/${serial}`);
                 const snapshot = await get(userRef);
@@ -726,46 +750,87 @@
                         return false;
                     }
                 }
-                // Set active true, update lastActive
                 await update(ref(db), {
                     [`users/${serial}/active`]: true,
                     [`users/${serial}/lastActive`]: Date.now()
                 });
             } catch (e) {
                 console.warn('Firebase sync failed, but local auth passed.', e);
-                // Still allow login if Firebase fails, but we won't set active.
             }
 
-            const loginTime = Date.now();
-            localStorage.setItem('ssplitly_session', JSON.stringify({ serial, loginTime }));
+            // Use sessionStorage so closing tab = logout
+            sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, loginTime: Date.now() }));
             loader.classList.remove('active');
             return true;
         };
 
+        // FORCE LOGOUT – reset active flag for a serial and then login
+        window.forceLogoutAndLogin = async function(serial, password) {
+            const errorEl = document.getElementById('loginError');
+            const loader = document.getElementById('loginLoader');
+            errorEl.textContent = '';
+            loader.classList.add('active');
+
+            try {
+                // Force reset active flag
+                await update(ref(db), { [`users/${serial}/active`]: false });
+            } catch (e) {
+                console.warn('Force logout update failed, continuing...', e);
+            }
+
+            // Now try to login again
+            const success = await window.loginUser(serial, password);
+            loader.classList.remove('active');
+            if (success) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('page1').classList.add('active');
+                document.getElementById('page2').classList.remove('active');
+                document.getElementById('page3').classList.remove('active');
+                // Load the builder data
+                loadFromLocalStorage();
+            }
+            return success;
+        };
+
         window.logout = async function() {
-            const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
+            const raw = sessionStorage.getItem('ssplitly_session');
+            const session = raw ? JSON.parse(raw) : {};
             if (session.serial) {
                 try {
                     await update(ref(db), { [`users/${session.serial}/active`]: false });
                 } catch (e) {}
             }
-            localStorage.removeItem('ssplitly_session');
+            sessionStorage.removeItem('ssplitly_session');
             location.reload();
         };
 
         window.checkSession = function() {
-            const raw = localStorage.getItem('ssplitly_session');
+            const raw = sessionStorage.getItem('ssplitly_session');
             if (!raw) return null;
             try {
                 const session = JSON.parse(raw);
-                if (!session.serial || !session.loginTime) return null;
-                // No timeout check – session persists until logout
+                if (!session.serial) return null;
                 return session;
             } catch (e) { return null; }
         };
 
         window.markViewOnly = function() { document.getElementById('loginOverlay').style.display = 'none'; };
-        console.log('Firebase module loaded with account lock and no auto‑logout timer.');
+
+        // On page unload, release lock
+        window.addEventListener('beforeunload', function() {
+            const raw = sessionStorage.getItem('ssplitly_session');
+            if (raw) {
+                try {
+                    const session = JSON.parse(raw);
+                    if (session.serial) {
+                        const { db, ref, update } = window.__firebase;
+                        update(ref(db), { [`users/${session.serial}/active`]: false });
+                    }
+                } catch (e) {}
+            }
+        });
+
+        console.log('✅ Firebase module: 20 accounts, account lock active, sessionStorage used.');
     </script>
 
     <!-- ===== MAIN SCRIPT ===== -->
@@ -787,7 +852,7 @@
         //  STORAGE – PER ACCOUNT (strict isolation)
         // ============================================================
         function getStorageKey() {
-            const raw = localStorage.getItem('ssplitly_session');
+            const raw = sessionStorage.getItem('ssplitly_session');
             if (!raw) return STORAGE_BASE + 'default';
             try {
                 const session = JSON.parse(raw);
@@ -801,7 +866,7 @@
         }
 
         function getCurrentSerial() {
-            const raw = localStorage.getItem('ssplitly_session');
+            const raw = sessionStorage.getItem('ssplitly_session');
             if (!raw) return null;
             try {
                 const session = JSON.parse(raw);
@@ -809,7 +874,6 @@
             } catch (e) { return null; }
         }
 
-        // Reset all global state before loading a different account
         function resetBuilderState() {
             customSoftwareIcons = {};
             projectImages = {};
@@ -1080,6 +1144,18 @@
 
         function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;',
                 '"': '&quot;', "'": '&#39;' })[m]); }
+
+        // ============================================================
+        //  DATE FORMAT HELPER (YYYY-MM → MM/YYYY)
+        // ============================================================
+        function formatMonthYear(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 2) {
+                return parts[1] + '/' + parts[0];
+            }
+            return dateStr;
+        }
 
         // ============================================================
         //  SOFTWARE MANAGER
@@ -1562,7 +1638,7 @@
         }
 
         // ============================================================
-        //  GENERATE CV
+        //  GENERATE CV – phone icon changed to fa-phone, photo right side, dates MM/YYYY
         // ============================================================
         function generateCV() {
             try {
@@ -1616,6 +1692,7 @@
                 });
 
                 let html = `<div class="a4-preview cv-clean">`;
+                // Header: Name/Title on left, Photo on right
                 html += `<div class="header">`;
                 html += `<div class="name-title">`;
                 html += `<h1>${escapeHTML(name)}</h1>`;
@@ -1628,7 +1705,7 @@
                 html += `<div class="contact-row">`;
                 html += `<span><i class="fas fa-envelope"></i> <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a></span>`;
                 html +=
-                    `<span><i class="fas fa-phone-alt"></i> <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
+                    `<span><i class="fas fa-phone"></i> <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
                 html += `<span><i class="fas fa-map-marker-alt"></i> ${escapeHTML(location)}</span>`;
                 if (showLinkedIn && linkedinUrl !== '#') {
                     html +=
@@ -1658,8 +1735,9 @@
                         html += `<div class="exp-item">`;
                         html += `<div class="exp-role">${escapeHTML(exp.role)}</div>`;
                         html += `<div class="exp-company">${escapeHTML(exp.company)}</div>`;
-                        const dateStr = exp.start ? exp.start + (exp.end ? ' - ' + exp.end : ' - Present') :
-                            '';
+                        const startF = formatMonthYear(exp.start);
+                        const endF = exp.end ? (exp.present ? 'Present' : formatMonthYear(exp.end)) : '';
+                        const dateStr = startF + (endF ? ' - ' + endF : '');
                         html += `<div class="exp-date-location">`;
                         html += `<span class="exp-date">${escapeHTML(dateStr)}</span>`;
                         if (exp.location) html += `<span class="exp-location">${escapeHTML(exp.location)}</span>`;
@@ -1687,7 +1765,9 @@
                 if (educations.length > 0) {
                     html += `<div class="section"><div class="section-heading">EDUCATION</div>`;
                     educations.forEach(edu => {
-                        const dateStr = edu.start + (edu.end ? ' - ' + edu.end : '');
+                        const startF = formatMonthYear(edu.start);
+                        const endF = edu.end && edu.end !== 'Present' ? formatMonthYear(edu.end) : edu.end;
+                        const dateStr = startF + (endF ? ' - ' + endF : '');
                         html += `<div class="edu-item">`;
                         html += `<span class="degree">${escapeHTML(edu.degree)}</span>`;
                         html += `<span class="institution">${escapeHTML(edu.institution)}</span>`;
@@ -2155,7 +2235,7 @@
                                     <div class="exp-dot"></div>
                                     <div class="exp-role">${escapeHTML(exp.role)}</div>
                                     <div class="exp-company">${escapeHTML(exp.company)}</div>
-                                    <div class="exp-date">${exp.start}${exp.end ? ' — '+exp.end : ' — Present'}</div>
+                                    <div class="exp-date">${formatMonthYear(exp.start)}${exp.end ? ' — '+formatMonthYear(exp.end) : ' — Present'}</div>
                                 </div>
                             `).join('')}
                         </div>
@@ -2746,16 +2826,37 @@
             setTimeout(fitA4MobilePreview, 50); };
 
         // ============================================================
-        //  LOGIN HANDLER
+        //  LOGIN HANDLER – with force logout button logic
         // ============================================================
         document.getElementById('loginBtn').addEventListener('click', async function() {
             const serial = document.getElementById('loginSerial').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
-            if (!serial || !password) { document.getElementById('loginError').textContent = 'Please fill both fields.'; return; }
-            if (serial.length !== 12 || !/^\d{12}$/.test(serial)) { document.getElementById('loginError')
-                    .textContent = 'Serial must be 12 digits.'; return; }
+            const errorEl = document.getElementById('loginError');
+            const forceBtn = document.getElementById('forceLogoutBtn');
+
+            // Hide force logout button initially
+            forceBtn.style.display = 'none';
+
+            if (!serial || !password) { errorEl.textContent = 'Please fill both fields.'; return; }
+            if (serial.length !== 12 || !/^\d{12}$/.test(serial)) {
+                errorEl.textContent = 'Serial must be 12 digits.';
+                return;
+            }
+
             const success = await window.loginUser(serial, password);
-            if (success) {
+            if (!success) {
+                // Check if error message indicates account in use
+                if (errorEl.textContent.includes('already in use')) {
+                    forceBtn.style.display = 'block';
+                    // Attach click handler (only once)
+                    forceBtn.onclick = function() {
+                        forceBtn.style.display = 'none';
+                        window.forceLogoutAndLogin(serial, password);
+                    };
+                }
+            } else {
+                // Login successful – hide force button just in case
+                forceBtn.style.display = 'none';
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
@@ -2763,6 +2864,8 @@
                 loadFromLocalStorage();
             }
         });
+
+        // Enter key support
         document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document
                 .getElementById('loginBtn').click(); });
         document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document
@@ -2786,7 +2889,6 @@
                 document.getElementById('page3').classList.remove('active');
                 const loaded = loadFromLocalStorage();
                 if (!loaded) {
-                    // First-time user: load defaults but save them to their key
                     resetBuilderState();
                     const expC = document.getElementById('experienceContainer');
                     expC.innerHTML = '';
@@ -2835,28 +2937,16 @@
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
-                localStorage.removeItem('ssplitly_session');
+                sessionStorage.removeItem('ssplitly_session');
             }
             setTimeout(fitA4MobilePreview, 400);
             setTimeout(updateThemeLabel, 100);
-
-            // Set active false on page unload to release lock
-            window.addEventListener('beforeunload', function() {
-                const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
-                if (session.serial) {
-                    // Use Firebase to set active false (fire and forget)
-                    try {
-                        const { db, ref, update } = window.__firebase;
-                        update(ref(db), { [`users/${session.serial}/active`]: false });
-                    } catch (e) {}
-                }
-            });
         };
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSsplitlyInfo();
         });
-        console.log('✅ Ssplitly fully loaded – account lock active, no auto‑logout.');
+        console.log('✅ Ssplitly fully loaded – 20 accounts, sessionStorage, phone icon updated, force logout added, dates MM/YYYY, photo 100px.');
     </script>
 
     <!-- ===== SSPLITLY INFO MODAL ===== -->
@@ -2875,7 +2965,7 @@
             </div>
             <div class="ssplitly-info-panel" data-panel="about">
                 <h3>About Ssplitly</h3>
-                <p>Secure career builder for two users with isolated data and account locking – no auto‑logout timer.</p>
+                <p>Secure career builder with <strong>20 accounts</strong>, isolated data, and account locking – no auto‑logout timer. Closing the tab logs you out.</p>
             </div>
             <div class="ssplitly-info-panel" data-panel="contact">
                 <p>For support or feedback:</p>
@@ -2886,7 +2976,7 @@
                 <ul>
                     <li>Use Ssplitly responsibly.</li>
                     <li>Upload only content you own.</li>
-                    <li>Session stays active until you log out or close the browser.</li>
+                    <li>Session ends when you close the tab.</li>
                 </ul>
             </div>
         </div>
