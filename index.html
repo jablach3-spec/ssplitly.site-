@@ -686,7 +686,7 @@
             '564279006743': 'ghr1#kq'
         };
 
-        // Seed if missing (no active flag anymore)
+        // Seed if missing (no active flag)
         async function seedUsers() {
             const usersRef = ref(db, 'users');
             try {
@@ -718,7 +718,6 @@
 
             // Update Firebase lastActive (no active flag)
             try {
-                const userRef = ref(db, `users/${serial}`);
                 await update(ref(db), { [`users/${serial}/lastActive`]: Date.now() });
             } catch (e) {
                 console.warn('Firebase sync failed, but local auth passed.', e);
@@ -812,7 +811,7 @@
         };
 
         // ============================================================
-        //  STORAGE – PER ACCOUNT (FIXED: strict isolation)
+        //  STORAGE – PER ACCOUNT (strict isolation)
         // ============================================================
         function getStorageKey() {
             const raw = localStorage.getItem('ssplitly_session');
