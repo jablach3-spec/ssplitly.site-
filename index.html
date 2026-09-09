@@ -390,7 +390,7 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .logout-btn{background:#fee2e2;color:#ef4444;padding:6px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;transition:var(--transition);border:1px solid transparent}
         .logout-btn:hover{background:#fecaca;border-color:#ef4444}
-        #sessionTimerDisplay{font-size:12px;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:2px 10px;border-radius:20px;white-space:nowrap}
+        /* removed timer display */
     </style>
 </head>
 <body>
@@ -412,7 +412,7 @@
             <button class="btn-login" id="loginBtn">Log In</button>
             <div class="error-msg" id="loginError"></div>
             <div class="login-loader" id="loginLoader"></div>
-            <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Auto‑lock after 15 minutes of inactivity.</p>
+            <!-- removed auto-lock text -->
         </div>
     </div>
 
@@ -453,7 +453,7 @@
                 <select class="theme-select" id="builderColorTheme" onchange="setColorTheme(this.value)"><option value="blue">Blue</option><option value="purple">Purple</option><option value="green">Green</option><option value="orange">Orange</option><option value="pink">Pink</option></select>
                 <button class="toggle-preview-btn" id="togglePreviewBtn" onclick="toggleMobilePreview()"><i class="fas fa-eye"></i> Preview</button>
                 <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                <span id="sessionTimerDisplay">15:00</span>
+                <!-- removed timer display -->
             </div>
             <span class="view-only-badge"><i class="fas fa-eye"></i> View‑only</span>
         </div>
@@ -702,7 +702,7 @@
         }
         seedUsers();
 
-        // LOGIN – no active check, just update lastActive
+        // LOGIN – no active check, no timer
         window.loginUser = async function(serial, password) {
             const errorEl = document.getElementById('loginError');
             const loader = document.getElementById('loginLoader');
@@ -716,14 +716,14 @@
                 return false;
             }
 
-            // Update Firebase lastActive (no active flag)
+            // Update Firebase lastActive (optional, keep for record)
             try {
                 await update(ref(db), { [`users/${serial}/lastActive`]: Date.now() });
             } catch (e) {
                 console.warn('Firebase sync failed, but local auth passed.', e);
             }
 
-            const loginTime = Date.now();
+            const loginTime = Date.now(); // not used for expiry
             localStorage.setItem('ssplitly_session', JSON.stringify({ serial, loginTime }));
             loader.classList.remove('active');
             return true;
@@ -733,7 +733,6 @@
             const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
             // No active flag to clear, just remove local session
             localStorage.removeItem('ssplitly_session');
-            stopSessionTimer();
             location.reload();
         };
 
@@ -742,22 +741,14 @@
             if (!raw) return null;
             try {
                 const session = JSON.parse(raw);
-                if (!session.serial || !session.loginTime) return null;
-                const elapsed = Date.now() - session.loginTime;
-                if (elapsed > 15 * 60 * 1000) {
-                    localStorage.removeItem('ssplitly_session');
-                    return null;
-                }
+                if (!session.serial) return null;
+                // No timeout check – session persists indefinitely
                 return session;
             } catch (e) { return null; }
         };
 
         window.markViewOnly = function() { document.getElementById('loginOverlay').style.display = 'none'; };
-        window.stopSessionTimer = function() {
-            if (window._sessionInterval) { clearInterval(window._sessionInterval);
-                window._sessionInterval = null; }
-        };
-        console.log('Firebase module loaded – no active session lock.');
+        console.log('Firebase module loaded – no auto‑lock.');
     </script>
 
     <!-- ===== MAIN SCRIPT ===== -->
@@ -774,41 +765,6 @@
         let cropper = null;
         let pdfPendingType = 'cv';
         const STORAGE_BASE = 'builderData_';
-        const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
-
-        // ============================================================
-        //  SESSION TIMER
-        // ============================================================
-        function startSessionTimer() {
-            stopSessionTimer();
-            const session = JSON.parse(localStorage.getItem('ssplitly_session') || '{}');
-            if (!session.loginTime) return;
-            const loginTime = session.loginTime;
-
-            function updateDisplay() {
-                const elapsed = Date.now() - loginTime;
-                const remaining = Math.max(0, SESSION_TIMEOUT_MS - elapsed);
-                if (remaining <= 0) { logout(); return; }
-                const mins = Math.floor(remaining / 60000);
-                const secs = Math.floor((remaining % 60000) / 1000);
-                const el = document.getElementById('sessionTimerDisplay');
-                if (el) el.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-            }
-            updateDisplay();
-            window._sessionInterval = setInterval(updateDisplay, 1000);
-        }
-
-        function stopSessionTimer() {
-            if (window._sessionInterval) { clearInterval(window._sessionInterval);
-                window._sessionInterval = null; }
-        }
-
-        // Override logout to stop timer
-        const origLogout = window.logout;
-        window.logout = async function() {
-            stopSessionTimer();
-            await origLogout();
-        };
 
         // ============================================================
         //  STORAGE – PER ACCOUNT (strict isolation)
@@ -838,7 +794,6 @@
 
         // Reset all global state before loading a different account
         function resetBuilderState() {
-            // Clear global data
             customSoftwareIcons = {};
             projectImages = {};
             window.croppedImageData = '';
@@ -846,7 +801,6 @@
             window.eduCounter = 0;
             window.projectCounter = 0;
 
-            // Clear DOM containers
             document.getElementById('experienceContainer').innerHTML = '';
             document.getElementById('educationContainer').innerHTML = '';
             document.getElementById('projectContainer').innerHTML = '';
@@ -856,7 +810,6 @@
             document.getElementById('coverOutput').innerHTML = '';
             document.getElementById('livePreviewContent').innerHTML = '';
 
-            // Reset form fields to defaults (will be overridden by load)
             document.getElementById('fullName').value = 'Salih Muhammed';
             document.getElementById('profTitle').value = 'EXTERIOR VISUALIZER';
             document.getElementById('email').value = 'salihchnr65@gmail.com';
@@ -877,16 +830,12 @@
             document.getElementById('showBehance').checked = true;
             document.getElementById('showInstagram').checked = true;
             document.getElementById('showWhatsApp').checked = true;
-
-            // Reset preview
             document.getElementById('livePreviewContent').innerHTML = '';
         }
 
         function saveToLocalStorage() {
-            // Only save if we have a valid serial (not default)
             const serial = getCurrentSerial();
             if (!serial) return;
-
             const key = getStorageKey();
             if (key === STORAGE_BASE + 'default') return;
 
@@ -956,20 +905,14 @@
         function loadFromLocalStorage() {
             const serial = getCurrentSerial();
             if (!serial) return false;
-
             const key = getStorageKey();
             if (key === STORAGE_BASE + 'default') return false;
-
             const saved = localStorage.getItem(key);
             if (!saved) return false;
 
             try {
-                // Reset state before loading new data
                 resetBuilderState();
-
                 const d = JSON.parse(saved);
-
-                // Restore all fields
                 if (d.fullName) document.getElementById('fullName').value = d.fullName;
                 if (d.profTitle) document.getElementById('profTitle').value = d.profTitle;
                 if (d.email) document.getElementById('email').value = d.email;
@@ -2800,7 +2743,6 @@
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
-                startSessionTimer();
                 loadFromLocalStorage();
             }
         });
@@ -2825,12 +2767,10 @@
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
-                startSessionTimer();
                 const loaded = loadFromLocalStorage();
                 if (!loaded) {
                     // First-time user: load defaults but save them to their key
                     resetBuilderState();
-                    // Load defaults
                     const expC = document.getElementById('experienceContainer');
                     expC.innerHTML = '';
                     window.expCounter = 0;
@@ -2879,7 +2819,6 @@
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
                 localStorage.removeItem('ssplitly_session');
-                stopSessionTimer();
             }
             setTimeout(fitA4MobilePreview, 400);
             setTimeout(updateThemeLabel, 100);
@@ -2888,7 +2827,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSsplitlyInfo();
         });
-        console.log('✅ Ssplitly fully loaded – no session locks, multi-device ready.');
+        console.log('✅ Ssplitly fully loaded – no auto‑lock, all data preserved.');
     </script>
 
     <!-- ===== SSPLITLY INFO MODAL ===== -->
@@ -2907,7 +2846,7 @@
             </div>
             <div class="ssplitly-info-panel" data-panel="about">
                 <h3>About Ssplitly</h3>
-                <p>Secure career builder for two users with isolated data and auto-lock after 15 minutes.</p>
+                <p>Secure career builder for two users with isolated data – no auto‑lock.</p>
             </div>
             <div class="ssplitly-info-panel" data-panel="contact">
                 <p>For support or feedback:</p>
@@ -2918,7 +2857,7 @@
                 <ul>
                     <li>Use Ssplitly responsibly.</li>
                     <li>Upload only content you own.</li>
-                    <li>Session auto-locks after 15 minutes.</li>
+                    <li>Session stays active until you log out.</li>
                 </ul>
             </div>
         </div>
