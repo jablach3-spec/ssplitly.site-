@@ -7,14 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 
     <style>
         /* ── Reset & Root ── */
@@ -128,10 +124,11 @@
         .cv-clean .skills-row{display:flex;flex-wrap:wrap;gap:8px 12px;font-size:10.5px;font-weight:600;margin-top:6px}
         .cv-clean .skills-row .skill-item{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--text);padding:2px 0}
         .cv-clean .skills-row .skill-item img.skill-logo{width:16px;height:16px;object-fit:contain;vertical-align:middle}
-        .cv-clean .edu-item{display:flex;flex-direction:column;font-size:10.5px;margin-bottom:4px}
-        .cv-clean .edu-item .degree{font-weight:700}
-        .cv-clean .edu-item .institution{font-weight:500;color:#334155}
-        .cv-clean .edu-item .edate{font-weight:400;color:#64748b}
+        /* ── Education font size increased ── */
+        .cv-clean .edu-item{display:flex;flex-direction:column;font-size:12px;margin-bottom:7px;line-height:1.5}
+        .cv-clean .edu-item .degree{font-weight:700;font-size:12.5px;color:#0f172a}
+        .cv-clean .edu-item .institution{font-weight:500;color:#334155;font-size:12px}
+        .cv-clean .edu-item .edate{font-weight:500;color:#475569;font-size:11.5px;margin-top:2px}
         .cv-clean .social-row{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:10px;color:#475569;margin-top:4px;padding-top:4px;border-top:1px solid #e2e8f0}
         .cv-clean .social-row a{display:inline-flex;align-items:center;gap:4px;color:#2563eb;text-decoration:none;font-size:10px}
         .cv-clean .social-row a:hover{text-decoration:underline}
@@ -371,7 +368,9 @@
         .preview-scroll .a4-preview{transform:scale(1);transition:transform .3s ease}
         .preview-scroll .a4-preview.scaled-fit{transform:scale(.55);transform-origin:top center}
         @media(max-width:1300px){.preview-scroll .a4-preview.scaled-fit{transform:scale(.50)}} @media(max-width:1100px){.preview-scroll .a4-preview.scaled-fit{transform:scale(.45)}} @media(max-width:900px){.preview-scroll .a4-preview.scaled-fit{transform:scale(.60)}} @media(max-width:700px){.preview-scroll .a4-preview.scaled-fit{transform:scale(.45)}} @media(max-width:500px){.preview-scroll .a4-preview.scaled-fit{transform:scale(.35)}}
-        #loginOverlay{position:fixed;inset:0;z-index:10000000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(12px);transition:opacity .6s}
+        /* Login overlay hidden by default to prevent flash in view-only mode */
+        #loginOverlay{position:fixed;inset:0;z-index:10000000;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(12px);transition:opacity .6s}
+        #loginOverlay.active{display:flex}
         #loginOverlay.hidden{opacity:0;pointer-events:none}
         .login-box{background:var(--surface);border-radius:24px;padding:40px 32px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center}
         .login-box .ssplitly-logo-mark{margin:0 auto 16px;width:56px;height:56px;flex-basis:56px}
@@ -390,7 +389,6 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .logout-btn{background:#fee2e2;color:#ef4444;padding:6px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;transition:var(--transition);border:1px solid transparent}
         .logout-btn:hover{background:#fecaca;border-color:#ef4444}
-        /* Force logout button style */
         #forceLogoutBtn{display:none; margin-top:12px; background:#f59e0b; color:#fff; padding:10px 16px; border-radius:6px; font-weight:700; border:none; cursor:pointer; width:100%; transition: background .2s}
         #forceLogoutBtn:hover{background:#d97706}
         #forceLogoutBtn i{margin-right:6px}
@@ -415,7 +413,6 @@
             <button class="btn-login" id="loginBtn">Log In</button>
             <div class="error-msg" id="loginError"></div>
             <div class="login-loader" id="loginLoader"></div>
-            <!-- Force logout button (hidden initially) -->
             <button id="forceLogoutBtn"><i class="fas fa-power-off"></i> Logout from other devices</button>
             <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Account lock prevents simultaneous login.</p>
         </div>
@@ -462,11 +459,8 @@
             <span class="view-only-badge"><i class="fas fa-eye"></i> View‑only</span>
         </div>
         <div class="builder-container">
-            <!-- Form Panel -->
             <div class="form-panel" id="formPanel">
                 <h2 id="formTitle"><i class="fas fa-wand-magic-sparkles"></i> Edit CV</h2>
-
-                <!-- Shared Fields -->
                 <div class="form-group">
                     <label><i class="fas fa-user-circle"></i> Profile Picture</label>
                     <div class="profile-upload">
@@ -511,8 +505,6 @@
                 <div id="softwareManager" class="software-manager"></div>
                 <button class="btn btn-outline btn-sm" onclick="addSoftware()"><i class="fas fa-plus-circle"></i> Add Software</button>
                 <hr>
-
-                <!-- CV Fields -->
                 <div id="cvFormFields">
                     <div class="section-title"><i class="fas fa-briefcase"></i> Experience</div>
                     <div id="experienceContainer"></div>
@@ -529,8 +521,6 @@
                         <button class="btn btn-success" onclick="showPDFOptions('cv')"><i class="fas fa-download"></i> PDF</button>
                     </div>
                 </div>
-
-                <!-- Cover Letter Fields -->
                 <div id="coverFormFields" style="display:none;">
                     <div class="section-title"><i class="fas fa-envelope"></i> Cover Letter Details</div>
                     <div class="row">
@@ -546,8 +536,6 @@
                         <button class="btn btn-success" onclick="showPDFOptions('cover')"><i class="fas fa-download"></i> PDF</button>
                     </div>
                 </div>
-
-                <!-- Portfolio Fields -->
                 <div id="portfolioFormFields" style="display:none;">
                     <div class="section-title"><i class="fas fa-sliders"></i> Portfolio Settings</div>
                     <div class="software-help">Edit the numbers shown on your portfolio. Leave a field empty to calculate it automatically from your projects and experience.</div>
@@ -570,8 +558,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Preview Panel -->
             <div class="preview-panel" id="previewPanel">
                 <h3 id="previewPanelTitle"><i class="fas fa-eye"></i> Live Preview (A4)</h3>
                 <div class="preview-scroll" id="previewScroll">
@@ -653,7 +639,6 @@
         </div>
     </div>
 
-    <!-- Hidden Outputs -->
     <div id="cvOutput" style="display:none;"></div>
     <div id="coverOutput" style="display:none;"></div>
 
@@ -684,33 +669,15 @@
         const db = getDatabase(app);
         window.__firebase = { db, ref, set, get, update };
 
-        // ── 20 FIXED CREDENTIALS ──
         const FIXED_CREDENTIALS = {
-            '467321943310': 'sam1k3#',
-            '564279006743': 'ghr1#kq',
-            '467321943311': 'alpha123',
-            '467321943312': 'bravo456',
-            '467321943313': 'charlie789',
-            '467321943314': 'delta101',
-            '467321943315': 'echo2024',
-            '467321943316': 'foxtrot567',
-            '467321943317': 'golf890',
-            '467321943318': 'hotel321',
-            '467321943319': 'india654',
-            '467321943320': 'juliet987',
-            '467321943321': 'kilo234',
-            '467321943322': 'lima876',
-            '467321943323': 'mike543',
-            '467321943324': 'november210',
-            '467321943325': 'oscar765',
-            '467321943326': 'papa432',
-            '467321943327': 'quebec198',
-            '467321943328': 'romeo654',
-            '467321943329': 'sierra321',
-            '467321943330': 'tango987'
+            '467321943310': 'sam1k3#','564279006743': 'ghr1#kq','467321943311': 'alpha123','467321943312': 'bravo456',
+            '467321943313': 'charlie789','467321943314': 'delta101','467321943315': 'echo2024','467321943316': 'foxtrot567',
+            '467321943317': 'golf890','467321943318': 'hotel321','467321943319': 'india654','467321943320': 'juliet987',
+            '467321943321': 'kilo234','467321943322': 'lima876','467321943323': 'mike543','467321943324': 'november210',
+            '467321943325': 'oscar765','467321943326': 'papa432','467321943327': 'quebec198','467321943328': 'romeo654',
+            '467321943329': 'sierra321','467321943330': 'tango987'
         };
 
-        // Seed if missing
         async function seedUsers() {
             const usersRef = ref(db, 'users');
             try {
@@ -720,13 +687,11 @@
                 for (const [serial, password] of Object.entries(FIXED_CREDENTIALS)) {
                     if (!existing[serial]) updates[`users/${serial}`] = { password, active: false, lastActive: null };
                 }
-                if (Object.keys(updates).length > 0) { await update(ref(db), updates);
-                    console.log('✅ 20 accounts seeded.'); }
+                if (Object.keys(updates).length > 0) { await update(ref(db), updates); }
             } catch (e) { console.warn('Seed error:', e); }
         }
         seedUsers();
 
-        // LOGIN – check active flag, set active true
         window.loginUser = async function(serial, password) {
             const errorEl = document.getElementById('loginError');
             const loader = document.getElementById('loginLoader');
@@ -755,16 +720,14 @@
                     [`users/${serial}/lastActive`]: Date.now()
                 });
             } catch (e) {
-                console.warn('Firebase sync failed, but local auth passed.', e);
+                console.warn('Firebase sync failed.', e);
             }
 
-            // Use sessionStorage so closing tab = logout
             sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, loginTime: Date.now() }));
             loader.classList.remove('active');
             return true;
         };
 
-        // FORCE LOGOUT – reset active flag for a serial and then login
         window.forceLogoutAndLogin = async function(serial, password) {
             const errorEl = document.getElementById('loginError');
             const loader = document.getElementById('loginLoader');
@@ -772,24 +735,17 @@
             loader.classList.add('active');
 
             try {
-                // Force reset active flag
                 await update(ref(db), { [`users/${serial}/active`]: false });
-            } catch (e) {
-                console.warn('Force logout update failed, continuing...', e);
-            }
+            } catch (e) { console.warn('Force logout failed', e); }
 
-            // Now try to login again
             const success = await window.loginUser(serial, password);
             loader.classList.remove('active');
             if (success) {
-                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('loginOverlay').classList.remove('active');
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
-                // Load the builder data
-                if (typeof loadFromFirebase === 'function') {
-                    await loadFromFirebase();
-                }
+                if (typeof loadFromFirebase === 'function') await loadFromFirebase();
             }
             return success;
         };
@@ -816,9 +772,11 @@
             } catch (e) { return null; }
         };
 
-        window.markViewOnly = function() { document.getElementById('loginOverlay').style.display = 'none'; };
+        window.markViewOnly = function() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('loginOverlay').style.display = 'none';
+        };
 
-        // On page unload, release lock
         window.addEventListener('beforeunload', function() {
             const raw = sessionStorage.getItem('ssplitly_session');
             if (raw) {
@@ -831,15 +789,10 @@
                 } catch (e) {}
             }
         });
-
-        console.log('✅ Firebase module: 20 accounts, account lock active, sessionStorage used.');
     </script>
 
     <!-- ===== MAIN SCRIPT ===== -->
     <script>
-        // ============================================================
-        //  STATE
-        // ============================================================
         let activeTab = 'cv';
         let isViewOnly = false;
         let isNightMode = false;
@@ -848,6 +801,7 @@
         let projectImages = {};
         let cropper = null;
         let pdfPendingType = 'cv';
+        let __skipHistoryPush = false;
 
         // ============================================================
         //  FIREBASE HELPERS
@@ -861,13 +815,10 @@
             } catch (e) { return null; }
         }
 
-        // ── SAVE TO FIREBASE ──
         async function saveToFirebase() {
             const serial = getCurrentSerial();
-            if (!serial) {
-                console.warn('No serial found, cannot save.');
-                return;
-            }
+            if (!serial) return;
+            if (!window.__firebase) return;
             const { db, ref, set } = window.__firebase;
 
             const data = {
@@ -934,25 +885,18 @@
 
             try {
                 await set(ref(db, `users/${serial}/builderData`), data);
-                console.log('✅ Data saved to Firebase');
-            } catch (e) {
-                console.error('Failed to save to Firebase:', e);
-            }
+            } catch (e) { console.error('Save failed:', e); }
         }
 
-        // ── LOAD FROM FIREBASE ──
         async function loadFromFirebase() {
             const serial = getCurrentSerial();
-            if (!serial) {
-                console.warn('No serial found, cannot load.');
-                return false;
-            }
+            if (!serial) return false;
+            if (!window.__firebase) return false;
             const { db, ref, get } = window.__firebase;
 
             try {
                 const snapshot = await get(ref(db, `users/${serial}/builderData`));
                 if (!snapshot.exists()) {
-                    console.log('No data in Firebase, loading defaults...');
                     resetBuilderState();
                     populateDefaultData();
                     await saveToFirebase();
@@ -962,7 +906,6 @@
                 const d = snapshot.val();
                 resetBuilderState();
 
-                // Apply data
                 if (d.fullName) document.getElementById('fullName').value = d.fullName;
                 if (d.profTitle) document.getElementById('profTitle').value = d.profTitle;
                 if (d.email) document.getElementById('email').value = d.email;
@@ -985,54 +928,43 @@
                 if (d.applyCompany) document.getElementById('applyCompany').value = d.applyCompany;
                 if (d.profilePic) { window.croppedImageData = d.profilePic;
                     document.getElementById('picPreviewSmall').src = d.profilePic; }
-                if (d.portfolioTotalProjects !== undefined) document.getElementById('portfolioTotalProjects').value = d
-                    .portfolioTotalProjects;
-                if (d.portfolioTotalExperience !== undefined) document.getElementById('portfolioTotalExperience').value = d
-                    .portfolioTotalExperience;
-                if (d.portfolioFinishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value =
-                    d.portfolioFinishedProjects;
+                if (d.portfolioTotalProjects !== undefined) document.getElementById('portfolioTotalProjects').value = d.portfolioTotalProjects;
+                if (d.portfolioTotalExperience !== undefined) document.getElementById('portfolioTotalExperience').value = d.portfolioTotalExperience;
+                if (d.portfolioFinishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value = d.portfolioFinishedProjects;
 
-                // Experiences
                 const expC = document.getElementById('experienceContainer');
                 expC.innerHTML = '';
                 window.expCounter = 0;
                 (d.experiences || []).forEach(exp => {
                     window.expCounter++;
-                    expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp
-                        .end, exp.present, exp.bullets, exp.location));
+                    expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end, exp.present, exp.bullets, exp.location));
                 });
                 if (!d.experiences || d.experiences.length === 0) {
                     defaultExperiences.forEach(exp => { window.expCounter++;
-                        expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start,
-                            exp.end, exp.present, exp.bullets, exp.location)); });
+                        expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end, exp.present, exp.bullets, exp.location)); });
                 }
                 initExpPresentListeners();
 
-                // Education
                 const eduC = document.getElementById('educationContainer');
                 eduC.innerHTML = '';
                 window.eduCounter = 0;
                 (d.educations || []).forEach(edu => {
                     window.eduCounter++;
-                    eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start,
-                        edu.end, edu.present, edu.location));
+                    eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu.end, edu.present, edu.location));
                 });
                 if (!d.educations || d.educations.length === 0) {
                     defaultEducations.forEach(edu => { window.eduCounter++;
-                        eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu
-                            .start, edu.end, edu.present, edu.location)); });
+                        eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu.end, edu.present, edu.location)); });
                 }
                 initEduPresentListeners();
 
-                // Projects
                 const projC = document.getElementById('projectContainer');
                 projC.innerHTML = '';
                 window.projectCounter = 0;
                 projectImages = {};
                 (d.projects || []).forEach(proj => {
                     window.projectCounter++;
-                    projC.insertAdjacentHTML('beforeend', createProjectHTML(proj.title, proj.desc, proj.tools, [],
-                        !!proj.finished));
+                    projC.insertAdjacentHTML('beforeend', createProjectHTML(proj.title, proj.desc, proj.tools, [], !!proj.finished));
                     const card = projC.lastElementChild;
                     const idx = card.dataset.projectIndex;
                     projectImages[idx] = proj.images || [];
@@ -1040,26 +972,17 @@
                 });
                 if (!d.projects || d.projects.length === 0) {
                     const defaults = [
-                        { title: 'Luxury Villa Exterior',
-                            desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.',
-                            tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
-                        { title: 'Commercial Tower Visualization',
-                            desc: 'High-end visualization for a mixed-use commercial tower.',
-                            tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
-                        { title: 'Interior Design Concept',
-                            desc: 'Detailed interior visualization for a modern penthouse.',
-                            tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
+                        { title: 'Luxury Villa Exterior', desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.', tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
+                        { title: 'Commercial Tower Visualization', desc: 'High-end visualization for a mixed-use commercial tower.', tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
+                        { title: 'Interior Design Concept', desc: 'Detailed interior visualization for a modern penthouse.', tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
                     ];
                     defaults.forEach(p => { window.projectCounter++;
-                        document.getElementById('projectContainer').insertAdjacentHTML('beforeend',
-                            createProjectHTML(p.title, p.desc, p.tools, [], !!p.finished)); });
+                        document.getElementById('projectContainer').insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p.finished)); });
                 }
                 updateProjectCount();
                 updateProjectStats();
-                if (document.getElementById('portfolioTotalExperience') && !document.getElementById(
-                        'portfolioTotalExperience').value) {
-                    document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() ||
-                        '';
+                if (document.getElementById('portfolioTotalExperience') && !document.getElementById('portfolioTotalExperience').value) {
+                    document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
                 }
                 renderSoftwareManagerFromInput();
                 applySavedAppearance();
@@ -1073,7 +996,6 @@
             }
         }
 
-        // ── RESET ──
         function resetBuilderState() {
             customSoftwareIcons = {};
             projectImages = {};
@@ -1111,7 +1033,6 @@
             document.getElementById('showBehance').checked = true;
             document.getElementById('showInstagram').checked = true;
             document.getElementById('showWhatsApp').checked = true;
-            document.getElementById('livePreviewContent').innerHTML = '';
         }
 
         function populateDefaultData() {
@@ -1119,35 +1040,26 @@
             expC.innerHTML = '';
             window.expCounter = 0;
             defaultExperiences.forEach(exp => { window.expCounter++;
-                expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end,
-                    exp.present, exp.bullets, exp.location)); });
+                expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end, exp.present, exp.bullets, exp.location)); });
             initExpPresentListeners();
 
             const eduC = document.getElementById('educationContainer');
             eduC.innerHTML = '';
             window.eduCounter = 0;
             defaultEducations.forEach(edu => { window.eduCounter++;
-                eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu
-                    .end, edu.present, edu.location)); });
+                eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu.end, edu.present, edu.location)); });
             initEduPresentListeners();
 
             const container = document.getElementById('projectContainer');
             container.innerHTML = '';
             window.projectCounter = 0;
             const defaults = [
-                { title: 'Luxury Villa Exterior',
-                    desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.',
-                    tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
-                { title: 'Commercial Tower Visualization',
-                    desc: 'High-end visualization for a mixed-use commercial tower.',
-                    tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
-                { title: 'Interior Design Concept',
-                    desc: 'Detailed interior visualization for a modern penthouse.',
-                    tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
+                { title: 'Luxury Villa Exterior', desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.', tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
+                { title: 'Commercial Tower Visualization', desc: 'High-end visualization for a mixed-use commercial tower.', tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
+                { title: 'Interior Design Concept', desc: 'Detailed interior visualization for a modern penthouse.', tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
             ];
             defaults.forEach(p => { window.projectCounter++;
-                container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p
-                    .finished)); });
+                container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p.finished)); });
             updateProjectCount();
             updateProjectStats();
             document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
@@ -1158,9 +1070,6 @@
             updateLivePreview();
         }
 
-        // ============================================================
-        //  ICON MAPPING & HELPERS
-        // ============================================================
         function getSoftwareLogo(name) {
             const key = (name || '').toLowerCase().trim();
             if (customSoftwareIcons[key]) return customSoftwareIcons[key];
@@ -1184,8 +1093,7 @@
                 'illustrator': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Adobe_Illustrator_CC_icon.svg/1200px-Adobe_Illustrator_CC_icon.svg.png'
             };
             if (logos[key]) return logos[key];
-            const slugMap = { 'blender': 'blender', 'corona': 'coronaengine', 'gemini ai': 'google-gemini',
-                'gemini': 'google-gemini' };
+            const slugMap = { 'blender': 'blender', 'corona': 'coronaengine', 'gemini ai': 'google-gemini', 'gemini': 'google-gemini' };
             if (slugMap[key]) return `https://cdn.simpleicons.org/${slugMap[key]}`;
             return null;
         }
@@ -1196,15 +1104,12 @@
             return `<i class="fas fa-cube" style="font-size:14px;color:#64748b;"></i>`;
         }
 
-        function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;',
-                '"': '&quot;', "'": '&#39;' })[m]); }
+        function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]); }
 
         function formatMonthYear(dateStr) {
             if (!dateStr) return '';
             const parts = dateStr.split('-');
-            if (parts.length === 2) {
-                return parts[1] + '/' + parts[0];
-            }
+            if (parts.length === 2) return parts[1] + '/' + parts[0];
             return dateStr;
         }
 
@@ -1212,8 +1117,7 @@
         //  SOFTWARE MANAGER
         // ============================================================
         function syncSkillsInputFromManager() {
-            const names = Array.from(document.querySelectorAll('#softwareManager .software-name'))
-                .map(i => i.value.trim()).filter(Boolean);
+            const names = Array.from(document.querySelectorAll('#softwareManager .software-name')).map(i => i.value.trim()).filter(Boolean);
             document.getElementById('skillsInput').value = names.join(', ');
             saveToFirebase();
             refreshAllOutputs();
@@ -1236,7 +1140,7 @@
             row.innerHTML = `<input class="software-name" type="text" value="${escapeHTML(name)}" placeholder="Software name">
                 <span class="software-icon-slot">${icon ? `<img class="software-icon-preview" src="${icon}" alt="Icon">` : `<span class="software-icon-empty"><i class="fas fa-image"></i></span>`}</span>
                 <input class="software-svg" type="file" accept=".svg,image/svg+xml" title="Upload SVG icon">
-                <button class="remove-software" onclick="removeSoftwareRow(this)">✕</button>`;
+                <button class="remove-software">✕</button>`;
             manager.appendChild(row);
             row.querySelector('.software-name').addEventListener('input', () => {
                 const input = row.querySelector('.software-name');
@@ -1254,15 +1158,13 @@
             row.querySelector('.software-svg').addEventListener('change', function() {
                 const file = this.files[0];
                 if (!file) return;
-                if (!/svg/i.test(file.type) && !/\.svg$/i.test(file.name)) { alert('Please select an SVG icon.');
-                    this.value = ''; return; }
+                if (!/svg/i.test(file.type) && !/\.svg$/i.test(file.name)) { alert('Please select an SVG icon.'); this.value = ''; return; }
                 const reader = new FileReader();
                 reader.onload = e => {
                     const n = row.querySelector('.software-name').value.trim();
                     if (!n) { alert('Enter the software name first.'); this.value = ''; return; }
                     customSoftwareIcons[n.toLowerCase()] = e.target.result;
-                    row.querySelector('.software-icon-slot').innerHTML =
-                        `<img class="software-icon-preview" src="${e.target.result}" alt="Icon">`;
+                    row.querySelector('.software-icon-slot').innerHTML = `<img class="software-icon-preview" src="${e.target.result}" alt="Icon">`;
                     syncSkillsInputFromManager();
                 };
                 reader.readAsDataURL(file);
@@ -1291,24 +1193,25 @@
         }
 
         function refreshAllOutputs() {
-            if (activeTab === 'cv') { generateCV();
-                updateLivePreview(); } else if (activeTab === 'cover') { generateCoverLetter();
-                updateLivePreview(); } else { updateLivePreview(); }
+            if (activeTab === 'cv') { generateCV(); updateLivePreview(); }
+            else if (activeTab === 'cover') { generateCoverLetter(); updateLivePreview(); }
+            else { updateLivePreview(); }
             const page3 = document.getElementById('page3');
             if (page3 && page3.classList.contains('active')) renderPortfolioWebsite(buildShareData());
         }
 
         // ============================================================
-        //  NAVIGATION
+        //  NAVIGATION WITH HISTORY (fixes phone back button)
         // ============================================================
         function activePageId() { const el = document.querySelector('.page.active'); return el ? el.id : 'page1'; }
 
-        function navigateTo(toId) {
+        function navigateTo(toId, skipHistory = false) {
             const fromId = activePageId();
             if (fromId === toId) return;
             const fromEl = document.getElementById(fromId);
             const toEl = document.getElementById(toId);
             if (!fromEl || !toEl) return;
+
             toEl.style.zIndex = 30;
             fromEl.style.zIndex = 15;
             toEl.classList.add('active');
@@ -1317,8 +1220,7 @@
             fromEl.classList.add('page-anim-out-fwd');
             requestAnimationFrame(() => { toEl.classList.remove('page-anim-in-fwd'); });
             let done = false;
-            const cleanup = () => { if (done) return;
-                done = true;
+            const cleanup = () => { if (done) return; done = true;
                 fromEl.classList.remove('active', 'page-anim-out-fwd');
                 fromEl.style.zIndex = '';
                 toEl.style.zIndex = '';
@@ -1326,6 +1228,11 @@
             const onEnd = (e) => { if (e.target === toEl && e.propertyName === 'transform') cleanup(); };
             toEl.addEventListener('transitionend', onEnd);
             setTimeout(cleanup, 480);
+
+            // Push history state so browser back button works within site
+            if (!skipHistory && !__skipHistoryPush && !isViewOnly) {
+                try { history.pushState({ page: toId }, ''); } catch (e) {}
+            }
         }
 
         function goToBuilder(tab) {
@@ -1334,11 +1241,7 @@
         }
 
         function goToLanding() { navigateTo('page1'); }
-
-        function switchTab(tab) {
-            if (tab === activeTab) return;
-            applyBuilderTab(tab);
-        }
+        function switchTab(tab) { if (tab === activeTab) return; applyBuilderTab(tab); }
 
         function applyBuilderTab(tab) {
             activeTab = tab || 'cv';
@@ -1351,20 +1254,24 @@
                 portfolio: '<i class="fas fa-wand-magic-sparkles"></i> Edit Portfolio'
             };
             document.getElementById('formTitle').innerHTML = titles[activeTab] || titles.cv;
-            document.querySelectorAll('#tabGroup button').forEach(b => b.classList.toggle('active', b.dataset.tab ===
-                activeTab));
-            if (activeTab === 'cv') { setTimeout(generateCV, 80);
-                setTimeout(updateLivePreview, 120); } else if (activeTab === 'cover') { setTimeout(generateCoverLetter,
-                80);
-                setTimeout(updateLivePreview, 120); } else { updateProjectCount();
-                setTimeout(updateLivePreview, 120); }
-            const titles2 = {
-                cv: 'CV Preview (A4)',
-                cover: 'Cover Letter Preview (A4)',
-                portfolio: 'Portfolio Preview'
-            };
+            document.querySelectorAll('#tabGroup button').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab));
+            if (activeTab === 'cv') { setTimeout(generateCV, 80); setTimeout(updateLivePreview, 120); }
+            else if (activeTab === 'cover') { setTimeout(generateCoverLetter, 80); setTimeout(updateLivePreview, 120); }
+            else { updateProjectCount(); setTimeout(updateLivePreview, 120); }
+            const titles2 = { cv: 'CV Preview (A4)', cover: 'Cover Letter Preview (A4)', portfolio: 'Portfolio Preview' };
             document.getElementById('previewPanelTitle').innerHTML = `<i class="fas fa-eye"></i> ${titles2[activeTab] || 'Live Preview (A4)'}`;
         }
+
+        // Browser back button handler
+        window.addEventListener('popstate', function(e) {
+            if (isViewOnly) return;
+            const targetPage = (e.state && e.state.page) ? e.state.page : 'page1';
+            const currentPage = activePageId();
+            if (currentPage === targetPage) return;
+            __skipHistoryPush = true;
+            navigateTo(targetPage, true);
+            __skipHistoryPush = false;
+        });
 
         // ============================================================
         //  PREVIEW & SCROLL
@@ -1381,22 +1288,14 @@
                 document.getElementById('previewScroll').scrollTop = 0;
             }, 150);
             setTimeout(() => {
-                if (activeTab === 'cv') { generateCV();
-                    updateLivePreview(); } else if (activeTab === 'cover') { generateCoverLetter();
-                    updateLivePreview(); }
+                if (activeTab === 'cv') { generateCV(); updateLivePreview(); }
+                else if (activeTab === 'cover') { generateCoverLetter(); updateLivePreview(); }
                 fitA4MobilePreview();
             }, 200);
         }
 
-        function previewCVWithScroll() { if (activeTab !== 'cv') switchTab('cv');
-            generateCV();
-            updateLivePreview();
-            scrollToPreview(); }
-
-        function previewCoverWithScroll() { if (activeTab !== 'cover') switchTab('cover');
-            generateCoverLetter();
-            updateLivePreview();
-            scrollToPreview(); }
+        function previewCVWithScroll() { if (activeTab !== 'cv') switchTab('cv'); generateCV(); updateLivePreview(); scrollToPreview(); }
+        function previewCoverWithScroll() { if (activeTab !== 'cover') switchTab('cover'); generateCoverLetter(); updateLivePreview(); scrollToPreview(); }
 
         function toggleMobilePreview() {
             const panel = document.getElementById('previewPanel');
@@ -1413,68 +1312,11 @@
 
         function updateLivePreview() {
             const container = document.getElementById('livePreviewContent');
-            if (activeTab === 'cv') {
-                generateCV();
-                container.innerHTML = document.getElementById('cvOutput').innerHTML;
-            } else if (activeTab === 'cover') {
-                generateCoverLetter();
-                container.innerHTML = document.getElementById('coverOutput').innerHTML;
-            } else {
-                container.innerHTML =
-                    `<div style="padding:20px;text-align:center;color:var(--text-muted);"><i class="fas fa-folder-open" style="font-size:32px;display:block;margin-bottom:12px;"></i> Portfolio preview available in the <strong>Live Website</strong> view.</div>`;
-            }
+            if (activeTab === 'cv') { generateCV(); container.innerHTML = document.getElementById('cvOutput').innerHTML; }
+            else if (activeTab === 'cover') { generateCoverLetter(); container.innerHTML = document.getElementById('coverOutput').innerHTML; }
+            else { container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);"><i class="fas fa-folder-open" style="font-size:32px;display:block;margin-bottom:12px;"></i> Portfolio preview available in the <strong>Live Website</strong> view.</div>`; }
             document.getElementById('previewScroll').scrollTop = 0;
             setTimeout(fitA4MobilePreview, 50);
-        }
-
-        // ============================================================
-        //  FULLSCREEN PREVIEW
-        // ============================================================
-        function openFullscreenPreview(type) {
-            const fsContent = document.getElementById('fsContent');
-            const fsTitle = document.getElementById('fsTitle');
-            if (type === 'cv') {
-                generateCV();
-                fsContent.innerHTML = document.getElementById('cvOutput').innerHTML;
-                fsTitle.textContent = 'CV Preview (A4)';
-            } else {
-                generateCoverLetter();
-                fsContent.innerHTML = document.getElementById('coverOutput').innerHTML;
-                fsTitle.textContent = 'Cover Letter Preview (A4)';
-            }
-            document.getElementById('fullscreenPreview').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            document.getElementById('fsViewport').scrollTop = 0;
-        }
-
-        function closeFullscreenPreview() {
-            document.getElementById('fullscreenPreview').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        let fsZoomed = false;
-
-        function toggleFsZoom() {
-            const fsContent = document.getElementById('fsContent');
-            const viewport = document.getElementById('fsViewport');
-            fsZoomed = !fsZoomed;
-            if (fsZoomed) { fsContent.style.transform = 'scale(1.2)';
-                viewport.style.alignItems = 'flex-start';
-                viewport.style.justifyContent = 'flex-start'; } else { fsContent.style.transform = 'scale(1)';
-                viewport.style.alignItems = 'center';
-                viewport.style.justifyContent = 'center';
-                viewport.scrollTop = 0;
-                viewport.scrollLeft = 0; }
-        }
-
-        function resetFsView() {
-            fsZoomed = false;
-            document.getElementById('fsContent').style.transform = 'scale(1)';
-            const viewport = document.getElementById('fsViewport');
-            viewport.style.alignItems = 'center';
-            viewport.style.justifyContent = 'center';
-            viewport.scrollTop = 0;
-            viewport.scrollLeft = 0;
         }
 
         // ============================================================
@@ -1490,15 +1332,12 @@
                 img.src = ev.target.result;
                 document.getElementById('cropModal').classList.add('active');
                 img.onload = function() { if (cropper) cropper.destroy();
-                    cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.8,
-                        cropBoxResizable: true, background: false }); };
+                    cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.8, cropBoxResizable: true, background: false }); };
             };
             reader.readAsDataURL(file);
         });
 
-        function closeCrop() { document.getElementById('cropModal').classList.remove('active'); if (cropper) { cropper
-                .destroy();
-                cropper = null; } document.getElementById('profilePicInput').value = ''; }
+        function closeCrop() { document.getElementById('cropModal').classList.remove('active'); if (cropper) { cropper.destroy(); cropper = null; } document.getElementById('profilePicInput').value = ''; }
 
         function applyCrop() {
             if (!cropper) return;
@@ -1508,9 +1347,7 @@
             window.croppedImageData = dataUrl;
             closeCrop();
             saveToFirebase();
-            if (activeTab === 'cv' || activeTab === 'cover') { generateCV();
-                generateCoverLetter();
-                updateLivePreview(); }
+            if (activeTab === 'cv' || activeTab === 'cover') { generateCV(); generateCoverLetter(); updateLivePreview(); }
         }
 
         function removePic() {
@@ -1519,18 +1356,14 @@
             document.getElementById('picPreviewSmall').src = '';
             window.croppedImageData = '';
             saveToFirebase();
-            if (activeTab === 'cv' || activeTab === 'cover') { generateCV();
-                generateCoverLetter();
-                updateLivePreview(); }
+            if (activeTab === 'cv' || activeTab === 'cover') { generateCV(); generateCoverLetter(); updateLivePreview(); }
         }
 
         // ============================================================
         //  EXPERIENCE
         // ============================================================
         function createExperienceHTML(company, role, start, end, present, bullets, location) {
-            const bulletHTML = bullets.map(b =>
-                `<div class="bullet-item"><input type="text" class="bullet-input" value="${escapeHTML(b)}" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button></div>`
-                ).join('');
+            const bulletHTML = bullets.map(b => `<div class="bullet-item"><input type="text" class="bullet-input" value="${escapeHTML(b)}" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button></div>`).join('');
             return `<div class="entry-card"><button class="remove-btn" onclick="removeEntry(this)">✕</button>
                 <div class="form-group"><label>Company</label><input type="text" class="exp-company" value="${escapeHTML(company)}"></div>
                 <div class="form-group"><label>Role</label><input type="text" class="exp-role" value="${escapeHTML(role)}"></div>
@@ -1542,28 +1375,24 @@
         }
 
         const defaultExperiences = [
-            { company: 'ARCAL ENGINEERING CONSULTANT', role: 'EXTERIOR VISUALIZER', start: '2022-11', end: '2026-08',
-                present: true, bullets: [
-                    'Lead the creation of high-end 3D exterior renderings for residential and commercial projects, ensuring lighting, textures, and environments meet premium standards.',
-                    'Collaborate with architects and engineers to translate complex design briefs into visually stunning 2D/3D presentations.',
-                    'Conduct material research and environmental mapping to provide clients with realistic previews of final builds.',
-                    'Manage multiple design iterations based on client feedback while maintaining strict project deadlines.'
-                ], location: 'Alain, UAE' },
-            { company: 'AL MAGHREB AL ARABI ENGINEERING CONSULTANT',
-                role: 'ARCHITECTURAL DRAFTMAN & EXTERIOR, INTERIOR VISUALIZER', start: '2019-11', end: '2022-11',
-                present: false, bullets: [
-                    'Architectural Documentation: Developed detailed structural and architectural drawings for private villas using AutoCAD, adhering to UAE building codes and regulations.',
-                    'Color Elevations: Produced detailed color elevations to define building aesthetics, material finishes, and color palettes for commercial approval.',
-                    'Technical Precision: Created and modified detailed layouts based on engineer specifications, ensuring 100% accuracy in technical site plans and sections.',
-                    'Multi-Disciplinary Design: Balanced roles between drafting technical blueprints and generating interior/exterior 3D visualizations to streamline the design-to-delivery process.'
-                ], location: 'Alain, UAE' },
-            { company: 'ANGUS BUILDERS', role: 'ARCHITECTURAL DRAFTMAN & EXTERIOR, INTERIOR VISUALIZER',
-                start: '2017-11', end: '2019-11', present: false, bullets: [
-                    '3D Modeling & Visualization: Developed high-quality architectural 3D models and renderings using SketchUp and 3ds Max to provide clients with immersive project previews.',
-                    'Design Coordination: Collaborated closely with head architects, contractors, and clients to ensure all commercial designs were functional, aesthetically cohesive, and met technical requirements.',
-                    'Technical Drafting: Prepared comprehensive architectural floor plans and technical construction details, ensuring precision and clarity for the building phase.',
-                    'Site Management & Analysis: Performed on-site construction analysis and participated in project meetings to ensure design specifications were accurately implemented during construction.'
-                ], location: 'Kerala, India' }
+            { company: 'ARCAL ENGINEERING CONSULTANT', role: 'EXTERIOR VISUALIZER', start: '2022-11', end: '2026-08', present: true, bullets: [
+                'Lead the creation of high-end 3D exterior renderings for residential and commercial projects, ensuring lighting, textures, and environments meet premium standards.',
+                'Collaborate with architects and engineers to translate complex design briefs into visually stunning 2D/3D presentations.',
+                'Conduct material research and environmental mapping to provide clients with realistic previews of final builds.',
+                'Manage multiple design iterations based on client feedback while maintaining strict project deadlines.'
+            ], location: 'Alain, UAE' },
+            { company: 'AL MAGHREB AL ARABI ENGINEERING CONSULTANT', role: 'ARCHITECTURAL DRAFTMAN & EXTERIOR, INTERIOR VISUALIZER', start: '2019-11', end: '2022-11', present: false, bullets: [
+                'Architectural Documentation: Developed detailed structural and architectural drawings for private villas using AutoCAD, adhering to UAE building codes and regulations.',
+                'Color Elevations: Produced detailed color elevations to define building aesthetics, material finishes, and color palettes for commercial approval.',
+                'Technical Precision: Created and modified detailed layouts based on engineer specifications, ensuring 100% accuracy in technical site plans and sections.',
+                'Multi-Disciplinary Design: Balanced roles between drafting technical blueprints and generating interior/exterior 3D visualizations to streamline the design-to-delivery process.'
+            ], location: 'Alain, UAE' },
+            { company: 'ANGUS BUILDERS', role: 'ARCHITECTURAL DRAFTMAN & EXTERIOR, INTERIOR VISUALIZER', start: '2017-11', end: '2019-11', present: false, bullets: [
+                '3D Modeling & Visualization: Developed high-quality architectural 3D models and renderings using SketchUp and 3ds Max to provide clients with immersive project previews.',
+                'Design Coordination: Collaborated closely with head architects, contractors, and clients to ensure all commercial designs were functional, aesthetically cohesive, and met technical requirements.',
+                'Technical Drafting: Prepared comprehensive architectural floor plans and technical construction details, ensuring precision and clarity for the building phase.',
+                'Site Management & Analysis: Performed on-site construction analysis and participated in project meetings to ensure design specifications were accurately implemented during construction.'
+            ], location: 'Kerala, India' }
         ];
 
         function initExpPresentListeners() {
@@ -1571,16 +1400,10 @@
                 cb.addEventListener('change', function() {
                     const card = this.closest('.entry-card');
                     const endInput = card.querySelector('.exp-end');
-                    if (this.checked) { endInput.disabled = true;
-                        endInput.value = '';
-                        endInput.placeholder = 'Present'; } else { endInput.disabled = false;
-                        endInput.placeholder = 'YYYY-MM'; }
+                    if (this.checked) { endInput.disabled = true; endInput.value = ''; endInput.placeholder = 'Present'; }
+                    else { endInput.disabled = false; endInput.placeholder = 'YYYY-MM'; }
                 });
-                if (cb.checked) { const card = cb.closest('.entry-card');
-                    const endInput = card.querySelector('.exp-end');
-                    endInput.disabled = true;
-                    endInput.value = '';
-                    endInput.placeholder = 'Present'; }
+                if (cb.checked) { const card = cb.closest('.entry-card'); const endInput = card.querySelector('.exp-end'); endInput.disabled = true; endInput.value = ''; endInput.placeholder = 'Present'; }
             });
         }
 
@@ -1593,14 +1416,11 @@
             card.querySelector('.exp-present').addEventListener('change', function() {
                 const card = this.closest('.entry-card');
                 const endInput = card.querySelector('.exp-end');
-                if (this.checked) { endInput.disabled = true;
-                    endInput.value = '';
-                    endInput.placeholder = 'Present'; } else { endInput.disabled = false;
-                    endInput.placeholder = 'YYYY-MM'; }
+                if (this.checked) { endInput.disabled = true; endInput.value = ''; endInput.placeholder = 'Present'; }
+                else { endInput.disabled = false; endInput.placeholder = 'YYYY-MM'; }
             });
             saveToFirebase();
-            if (activeTab === 'cv') { generateCV();
-                updateLivePreview(); }
+            if (activeTab === 'cv') { generateCV(); updateLivePreview(); }
         }
 
         function removeEntry(btn) {
@@ -1609,8 +1429,7 @@
             if (card.parentElement.children.length > 1) card.remove();
             else alert('Minimum one entry required.');
             saveToFirebase();
-            if (activeTab === 'cv') { generateCV();
-                updateLivePreview(); }
+            if (activeTab === 'cv') { generateCV(); updateLivePreview(); }
         }
 
         function addBullet(btn) {
@@ -1619,8 +1438,7 @@
             const list = card.querySelector('.bullet-list');
             const item = document.createElement('div');
             item.className = 'bullet-item';
-            item.innerHTML =
-                `<input type="text" class="bullet-input" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button>`;
+            item.innerHTML = `<input type="text" class="bullet-input" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button>`;
             list.appendChild(item);
             saveToFirebase();
         }
@@ -1633,9 +1451,6 @@
             saveToFirebase();
         }
 
-        // ============================================================
-        //  EDUCATION
-        // ============================================================
         function createEducationHTML(institution, degree, start, end, present, location) {
             return `<div class="entry-card"><button class="remove-btn" onclick="removeEntry(this)">✕</button>
                 <div class="form-group"><label>Institution</label><input type="text" class="edu-institution" value="${escapeHTML(institution)}"></div>
@@ -1647,8 +1462,7 @@
         }
 
         const defaultEducations = [
-            { institution: 'Industrial Training Institute', degree: 'Draughtsman Civil', start: '2014-08', end: '2016-08',
-                present: false, location: 'Kerala, India' }
+            { institution: 'Industrial Training Institute', degree: 'Draughtsman Civil', start: '2014-08', end: '2016-08', present: false, location: 'Kerala, India' }
         ];
 
         function initEduPresentListeners() {
@@ -1656,16 +1470,10 @@
                 cb.addEventListener('change', function() {
                     const card = this.closest('.entry-card');
                     const endInput = card.querySelector('.edu-end');
-                    if (this.checked) { endInput.disabled = true;
-                        endInput.value = '';
-                        endInput.placeholder = 'Present'; } else { endInput.disabled = false;
-                        endInput.placeholder = 'YYYY-MM'; }
+                    if (this.checked) { endInput.disabled = true; endInput.value = ''; endInput.placeholder = 'Present'; }
+                    else { endInput.disabled = false; endInput.placeholder = 'YYYY-MM'; }
                 });
-                if (cb.checked) { const card = cb.closest('.entry-card');
-                    const endInput = card.querySelector('.edu-end');
-                    endInput.disabled = true;
-                    endInput.value = '';
-                    endInput.placeholder = 'Present'; }
+                if (cb.checked) { const card = cb.closest('.entry-card'); const endInput = card.querySelector('.edu-end'); endInput.disabled = true; endInput.value = ''; endInput.placeholder = 'Present'; }
             });
         }
 
@@ -1678,18 +1486,15 @@
             card.querySelector('.edu-present').addEventListener('change', function() {
                 const card = this.closest('.entry-card');
                 const endInput = card.querySelector('.edu-end');
-                if (this.checked) { endInput.disabled = true;
-                    endInput.value = '';
-                    endInput.placeholder = 'Present'; } else { endInput.disabled = false;
-                    endInput.placeholder = 'YYYY-MM'; }
+                if (this.checked) { endInput.disabled = true; endInput.value = ''; endInput.placeholder = 'Present'; }
+                else { endInput.disabled = false; endInput.placeholder = 'YYYY-MM'; }
             });
             saveToFirebase();
-            if (activeTab === 'cv') { generateCV();
-                updateLivePreview(); }
+            if (activeTab === 'cv') { generateCV(); updateLivePreview(); }
         }
 
         // ============================================================
-        //  GENERATE CV – Photo LEFT, Name/Title/About/Contact RIGHT
+        //  GENERATE CV
         // ============================================================
         function generateCV() {
             try {
@@ -1706,8 +1511,7 @@
                 const showBehance = document.getElementById('showBehance').checked;
                 const showInstagram = document.getElementById('showInstagram').checked;
                 const showWhatsApp = document.getElementById('showWhatsApp').checked;
-                const skillsRaw = document.getElementById('skillsInput').value ||
-                    'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY, ADOBE LIGHTROOM, ADOBE PHOTOSHOP, GEMINI AI';
+                const skillsRaw = document.getElementById('skillsInput').value || 'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY, ADOBE LIGHTROOM, ADOBE PHOTOSHOP, GEMINI AI';
                 const skills = skillsRaw.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
                 const photo = window.croppedImageData || '';
                 const summary = document.getElementById('aboutInput').value || '';
@@ -1720,12 +1524,9 @@
                     const start = card.querySelector('.exp-start').value || '';
                     const end = card.querySelector('.exp-end').value || '';
                     const present = card.querySelector('.exp-present').checked;
-                    const bullets = Array.from(card.querySelectorAll('.bullet-input')).map(inp => inp.value).filter(
-                        b => b.trim() !== '');
-                    const loc = card.querySelector('.exp-location') ? card.querySelector('.exp-location').value :
-                        '';
-                    if (company || role) experiences.push({ company, role, start, end, present, bullets,
-                        location: loc });
+                    const bullets = Array.from(card.querySelectorAll('.bullet-input')).map(inp => inp.value).filter(b => b.trim() !== '');
+                    const loc = card.querySelector('.exp-location') ? card.querySelector('.exp-location').value : '';
+                    if (company || role) experiences.push({ company, role, start, end, present, bullets, location: loc });
                 });
 
                 const eduCards = document.querySelectorAll('#educationContainer .entry-card');
@@ -1736,48 +1537,32 @@
                     const start = card.querySelector('.edu-start').value || '';
                     const end = card.querySelector('.edu-end').value || '';
                     const present = card.querySelector('.edu-present').checked;
-                    const loc = card.querySelector('.edu-location') ? card.querySelector('.edu-location').value :
-                        '';
-                    if (institution || degree) educations.push({ institution, degree, start, end: present ?
-                            'Present' : (end || ''), location: loc });
+                    const loc = card.querySelector('.edu-location') ? card.querySelector('.edu-location').value : '';
+                    if (institution || degree) educations.push({ institution, degree, start, end: present ? 'Present' : (end || ''), location: loc });
                 });
 
                 let html = `<div class="a4-preview cv-clean">`;
                 html += `<div class="header">`;
-                if (photo) html +=
-                    `<img src="${photo}" class="profile-photo" alt="Profile Photo" onerror="this.style.display='none';">`;
-                html += `<div class="name-title">`;
-                html += `<h1>${escapeHTML(name)}</h1>`;
-                html += `<div class="title">${escapeHTML(title)}</div>`;
+                if (photo) html += `<img src="${photo}" class="profile-photo" alt="Profile Photo" onerror="this.style.display='none';">`;
+                html += `<div class="name-title"><h1>${escapeHTML(name)}</h1><div class="title">${escapeHTML(title)}</div></div>`;
                 html += `</div>`;
-                html += `</div>`;
-
                 if (summary) html += `<div class="summary">${escapeHTML(summary)}</div>`;
-
                 html += `<div class="contact-row">`;
                 html += `<span><i class="fas fa-envelope"></i> <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a></span>`;
-                html +=
-                    `<span><i class="fas fa-phone"></i> <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
+                html += `<span><i class="fas fa-phone"></i> <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
                 html += `<span><i class="fas fa-map-marker-alt"></i> ${escapeHTML(location)}</span>`;
                 if (showLinkedIn && linkedinUrl !== '#') {
-                    html +=
-                        `<span><i class="fab fa-linkedin-in"></i> <a href="${escapeHTML(linkedinUrl)}" target="_blank">${escapeHTML(linkedinUrl.replace(/^https?:\/\//,''))}</a></span>`;
+                    html += `<span><i class="fab fa-linkedin-in"></i> <a href="${escapeHTML(linkedinUrl)}" target="_blank">${escapeHTML(linkedinUrl.replace(/^https?:\/\//,''))}</a></span>`;
                 }
                 html += `</div>`;
 
                 const socialItems = [];
-                if (showBehance && behanceUrl && behanceUrl !== '#') socialItems.push({ icon: 'fab fa-behance',
-                    label: 'Behance', url: behanceUrl });
-                if (showInstagram && instagramUrl && instagramUrl !== '#') socialItems.push({ icon: 'fab fa-instagram',
-                    label: 'Instagram', url: instagramUrl });
-                if (showWhatsApp && whatsappUrl && whatsappUrl !== '#') socialItems.push({ icon: 'fab fa-whatsapp',
-                    label: 'WhatsApp', url: whatsappUrl });
+                if (showBehance && behanceUrl && behanceUrl !== '#') socialItems.push({ icon: 'fab fa-behance', label: 'Behance', url: behanceUrl });
+                if (showInstagram && instagramUrl && instagramUrl !== '#') socialItems.push({ icon: 'fab fa-instagram', label: 'Instagram', url: instagramUrl });
+                if (showWhatsApp && whatsappUrl && whatsappUrl !== '#') socialItems.push({ icon: 'fab fa-whatsapp', label: 'WhatsApp', url: whatsappUrl });
                 if (socialItems.length > 0) {
                     html += `<div class="social-row">`;
-                    socialItems.forEach(item => {
-                        html +=
-                            `<a href="${escapeHTML(item.url)}" target="_blank"><i class="${item.icon}"></i> ${item.label}</a>`;
-                    });
+                    socialItems.forEach(item => { html += `<a href="${escapeHTML(item.url)}" target="_blank"><i class="${item.icon}"></i> ${item.label}</a>`; });
                     html += `</div>`;
                 }
 
@@ -1794,8 +1579,7 @@
                         html += `<span class="exp-date">${escapeHTML(dateStr)}</span>`;
                         if (exp.location) html += `<span class="exp-location">${escapeHTML(exp.location)}</span>`;
                         html += `</div>`;
-                        html +=
-                            `<div style="font-size:9px;font-weight:600;color:#0f172a;margin:4px 0 2px;">Achievements/Tasks:</div>`;
+                        html += `<div style="font-size:9px;font-weight:600;color:#0f172a;margin:4px 0 2px;">Achievements/Tasks:</div>`;
                         if (exp.bullets.length > 0) {
                             html += `<ul class="exp-bullets">`;
                             exp.bullets.forEach(b => { html += `<li>${escapeHTML(b)}</li>`; });
@@ -1809,8 +1593,7 @@
                 if (skills.length > 0) {
                     html += `<div class="section"><div class="section-heading">TECHNICAL SKILLS</div>`;
                     html += `<div class="skills-row">`;
-                    skills.forEach(s => { html +=
-                            `<span class="skill-item">${getSkillLogoHTML(s)} ${escapeHTML(s)}</span>`; });
+                    skills.forEach(s => { html += `<span class="skill-item">${getSkillLogoHTML(s)} ${escapeHTML(s)}</span>`; });
                     html += `</div></div>`;
                 }
 
@@ -1824,8 +1607,7 @@
                         html += `<span class="degree">${escapeHTML(edu.degree)}</span>`;
                         html += `<span class="institution">${escapeHTML(edu.institution)}</span>`;
                         html += `<span class="edate">${escapeHTML(dateStr)}</span>`;
-                        if (edu.location) html +=
-                            `<span style="font-size:9px;color:#64748b;">${escapeHTML(edu.location)}</span>`;
+                        if (edu.location) html += `<span style="font-size:11px;color:#475569;">${escapeHTML(edu.location)}</span>`;
                         html += `</div>`;
                     });
                     html += `</div>`;
@@ -1834,8 +1616,7 @@
                 document.getElementById('cvOutput').innerHTML = html;
             } catch (e) {
                 console.error('CV generation error:', e);
-                document.getElementById('cvOutput').innerHTML =
-                    `<div class="a4-preview" style="padding:20px;color:red;">Error generating CV. Please check console.</div>`;
+                document.getElementById('cvOutput').innerHTML = `<div class="a4-preview" style="padding:20px;color:red;">Error generating CV.</div>`;
             }
         }
 
@@ -1851,8 +1632,7 @@
             const linkedinUrl = document.getElementById('linkedinUrl').value || '#';
             const applyJob = document.getElementById('applyJob').value || 'Architectural Visualizer';
             const applyCompany = document.getElementById('applyCompany').value || 'Design Studio';
-            const skillsRaw = document.getElementById('skillsInput').value ||
-                'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY, ADOBE LIGHTROOM, ADOBE PHOTOSHOP, GEMINI AI';
+            const skillsRaw = document.getElementById('skillsInput').value || 'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY, ADOBE LIGHTROOM, ADOBE PHOTOSHOP, GEMINI AI';
             const skills = skillsRaw.split(',').map(s => s.trim()).filter(s => s);
             const expCards = document.querySelectorAll('#experienceContainer .entry-card');
             let totalYears = 0;
@@ -1869,34 +1649,20 @@
             if (totalYears < 1) totalYears = 6;
             const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             const skillsList = skills.slice(0, 4).join(', ');
-            const lastRole = expCards.length > 0 ? (expCards[0].querySelector('.exp-role').value || 'Professional') :
-                'Professional';
+            const lastRole = expCards.length > 0 ? (expCards[0].querySelector('.exp-role').value || 'Professional') : 'Professional';
 
-            const letterContent =
-                `<div class="cover-letter-content"><div class="cover-header"><div class="cl-name">${escapeHTML(name)}</div><div class="cl-details">${escapeHTML(title)} | <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}">${escapeHTML(phone)}</a> | <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a> | ${escapeHTML(location)} | <a href="${escapeHTML(linkedinUrl)}" target="_blank">LinkedIn</a></div></div><div class="cover-date">${escapeHTML(today)}</div><div class="cover-subject">Subject: Application for ${escapeHTML(applyJob)} at ${escapeHTML(applyCompany)}</div><div class="cover-body"><p>Dear Hiring Manager,</p><p>I am writing to express my strong interest in the ${escapeHTML(applyJob)} position at ${escapeHTML(applyCompany)}. With over ${totalYears}+ years of experience as a ${escapeHTML(title)} and Architectural Draftsman, I have developed a comprehensive skill set that aligns perfectly with the requirements of this role.</p><p>In my recent role as ${escapeHTML(lastRole)}, I have successfully delivered high-quality 3D visualizations and technical drawings for luxury residential and commercial projects. My expertise includes ${escapeHTML(skillsList)}, enabling me to produce photorealistic renders and precise documentation that bridge the gap between architectural concepts and client vision. I take pride in my ability to collaborate effectively with architects, engineers, and clients to ensure every project meets the highest standards of quality and accuracy.</p><p>I am particularly drawn to ${escapeHTML(applyCompany)} because of its reputation for innovative design and commitment to excellence. I am confident that my background in architectural visualization and my dedication to continuous learning would make me a valuable addition to your team. I am eager to bring my skills in ${escapeHTML(skillsList)} and my experience in managing complex design workflows to contribute to your upcoming projects.</p><p>Thank you for considering my application. I look forward to the opportunity to discuss how my expertise can support the goals of ${escapeHTML(applyCompany)}. I am available for an interview at your earliest convenience.</p><p>Yours sincerely,</p></div><div class="cover-signature">${escapeHTML(name)}<br>${escapeHTML(title)}</div></div>`;
-            document.getElementById('coverOutput').innerHTML =
-                `<div class="a4-preview" style="margin:0 auto;">${letterContent}</div>`;
+            const letterContent = `<div class="cover-letter-content"><div class="cover-header"><div class="cl-name">${escapeHTML(name)}</div><div class="cl-details">${escapeHTML(title)} | <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}">${escapeHTML(phone)}</a> | <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a> | ${escapeHTML(location)} | <a href="${escapeHTML(linkedinUrl)}" target="_blank">LinkedIn</a></div></div><div class="cover-date">${escapeHTML(today)}</div><div class="cover-subject">Subject: Application for ${escapeHTML(applyJob)} at ${escapeHTML(applyCompany)}</div><div class="cover-body"><p>Dear Hiring Manager,</p><p>I am writing to express my strong interest in the ${escapeHTML(applyJob)} position at ${escapeHTML(applyCompany)}. With over ${totalYears}+ years of experience as a ${escapeHTML(title)} and Architectural Draftsman, I have developed a comprehensive skill set that aligns perfectly with the requirements of this role.</p><p>In my recent role as ${escapeHTML(lastRole)}, I have successfully delivered high-quality 3D visualizations and technical drawings for luxury residential and commercial projects. My expertise includes ${escapeHTML(skillsList)}, enabling me to produce photorealistic renders and precise documentation that bridge the gap between architectural concepts and client vision.</p><p>I am particularly drawn to ${escapeHTML(applyCompany)} because of its reputation for innovative design and commitment to excellence. I am confident that my background in architectural visualization and my dedication to continuous learning would make me a valuable addition to your team.</p><p>Thank you for considering my application. I look forward to the opportunity to discuss how my expertise can support the goals of ${escapeHTML(applyCompany)}. I am available for an interview at your earliest convenience.</p><p>Yours sincerely,</p></div><div class="cover-signature">${escapeHTML(name)}<br>${escapeHTML(title)}</div></div>`;
+            document.getElementById('coverOutput').innerHTML = `<div class="a4-preview" style="margin:0 auto;">${letterContent}</div>`;
         }
 
-        // ============================================================
-        //  MATCH CV → COVER / PORTFOLIO
-        // ============================================================
         function matchCVtoCover() {
             const expCards = document.querySelectorAll('#experienceContainer .entry-card');
             let lastRole = '';
             if (expCards.length > 0) { lastRole = expCards[0].querySelector('.exp-role').value || ''; }
             if (lastRole) document.getElementById('applyJob').value = lastRole;
             const title = document.getElementById('profTitle').value;
-            if (title) {
-                const words = title.split(' ');
-                const short = words.slice(0, 3).join(' ');
-                if (!document.getElementById('applyJob').value) document.getElementById('applyJob').value = short;
-            }
-            if (expCards.length > 0) {
-                const company = expCards[0].querySelector('.exp-company').value || '';
-                if (company && !document.getElementById('applyCompany').value) document.getElementById('applyCompany')
-                    .value = company;
-            }
+            if (title) { const words = title.split(' '); const short = words.slice(0, 3).join(' '); if (!document.getElementById('applyJob').value) document.getElementById('applyJob').value = short; }
+            if (expCards.length > 0) { const company = expCards[0].querySelector('.exp-company').value || ''; if (company && !document.getElementById('applyCompany').value) document.getElementById('applyCompany').value = company; }
             saveToFirebase();
             generateCoverLetter();
             updateLivePreview();
@@ -1910,36 +1676,24 @@
             const container = document.getElementById('projectContainer');
             if (container.children.length === 0) {
                 const defaults = [
-                    { title: 'Exterior Architectural Visualization',
-                        desc: 'Photorealistic exterior rendering for a premium residential project.',
-                        tools: skills.slice(0, 4).join(', ') || '3ds Max, V-Ray, Photoshop' },
-                    { title: 'Interior Design Concept',
-                        desc: 'Detailed interior visualization for a modern luxury penthouse.',
-                        tools: skills.slice(0, 4).join(', ') || '3ds Max, Corona, Photoshop' },
-                    { title: 'Commercial Building Render',
-                        desc: 'High-end visualization for a mixed-use commercial tower.',
-                        tools: skills.slice(0, 4).join(', ') || 'SketchUp, Lumion, After Effects' }
+                    { title: 'Exterior Architectural Visualization', desc: 'Photorealistic exterior rendering for a premium residential project.', tools: skills.slice(0, 4).join(', ') || '3ds Max, V-Ray, Photoshop' },
+                    { title: 'Interior Design Concept', desc: 'Detailed interior visualization for a modern luxury penthouse.', tools: skills.slice(0, 4).join(', ') || '3ds Max, Corona, Photoshop' },
+                    { title: 'Commercial Building Render', desc: 'High-end visualization for a mixed-use commercial tower.', tools: skills.slice(0, 4).join(', ') || 'SketchUp, Lumion, After Effects' }
                 ];
                 defaults.forEach(p => { window.projectCounter++;
                     container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, []));
                     updateProjectCount();
                     saveToFirebase(); });
-                alert('✅ Portfolio synced with your CV! New projects added.');
-            } else {
-                alert('ℹ️ Your portfolio already has projects. Use "Add Project" to add more.');
-            }
+                alert('✅ Portfolio synced with your CV!');
+            } else { alert('ℹ️ Your portfolio already has projects.'); }
             if (activeTab !== 'portfolio') switchTab('portfolio');
         }
 
-        // ============================================================
-        //  PORTFOLIO PROJECTS
-        // ============================================================
         function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
             let previewHTML = '';
             if (imagesArray && imagesArray.length > 0) {
                 previewHTML = imagesArray.map((img, idx) => {
-                    const label = idx === 0 ? '<span class="image-label-badge">Main</span>' : (idx === 1 ?
-                        '<span class="image-label-badge night">Night</span>' : '');
+                    const label = idx === 0 ? '<span class="image-label-badge">Main</span>' : (idx === 1 ? '<span class="image-label-badge night">Night</span>' : '');
                     return `<div class="preview-thumb" draggable="true" data-image-index="${idx}" data-project-idx="${window.projectCounter}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${idx+1}" loading="lazy"><span class="image-order-badge">${idx+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)" title="Make this the 1st photo">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${idx})">✕</button></div>`;
                 }).join('');
             }
@@ -1993,8 +1747,7 @@
             const previewContainer = card.querySelector('.proj-image-previews');
             if (!previewContainer) return;
             previewContainer.innerHTML = images.map((img, i) => {
-                const label = i === 0 ? '<span class="image-label-badge">Main</span>' : (i === 1 ?
-                    '<span class="image-label-badge night">Night</span>' : '');
+                const label = i === 0 ? '<span class="image-label-badge">Main</span>' : (i === 1 ? '<span class="image-label-badge night">Night</span>' : '');
                 return `<div class="preview-thumb" draggable="true" data-image-index="${i}" data-project-idx="${projectIdx}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${i+1}" loading="lazy"><span class="image-order-badge">${i+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)" title="Make this the 1st photo">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${i})">✕</button></div>`;
             }).join('');
             updateProjectStats();
@@ -2010,9 +1763,7 @@
             card.classList.add('dragging-images');
         }
 
-        function handleDragOver(e) { e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            e.currentTarget.classList.add('drag-over'); }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.currentTarget.classList.add('drag-over'); }
 
         function dropProjectImage(e, thumb) {
             e.preventDefault();
@@ -2028,11 +1779,9 @@
                 draggedProjectImageIndex = fromIndex;
                 draggedProjectId = fromId;
             }
-            if (draggedProjectImageIndex === null || draggedProjectImageIndex === targetIndex) { cleanDragState(card);
-                return; }
+            if (draggedProjectImageIndex === null || draggedProjectImageIndex === targetIndex) { cleanDragState(card); return; }
             const images = projectImages[projectIdx] || [];
-            if (draggedProjectImageIndex < 0 || draggedProjectImageIndex >= images.length || targetIndex < 0 || targetIndex >=
-                images.length) { cleanDragState(card); return; }
+            if (draggedProjectImageIndex < 0 || draggedProjectImageIndex >= images.length || targetIndex < 0 || targetIndex >= images.length) { cleanDragState(card); return; }
             const moved = images.splice(draggedProjectImageIndex, 1)[0];
             images.splice(targetIndex, 0, moved);
             projectImages[projectIdx] = images;
@@ -2045,8 +1794,7 @@
             draggedProjectImageIndex = null;
             draggedProjectId = null;
             document.querySelectorAll('.project-card').forEach(c => c.classList.remove('dragging-images'));
-            document.querySelectorAll('.preview-thumb').forEach(el => { el.style.opacity = '1';
-                el.classList.remove('drag-over'); });
+            document.querySelectorAll('.preview-thumb').forEach(el => { el.style.opacity = '1'; el.classList.remove('drag-over'); });
         }
         document.addEventListener('dragend', () => cleanDragState(null));
 
@@ -2096,10 +1844,7 @@
             const card = btn.closest('.project-card');
             const projectIdx = card.dataset.projectIndex;
             const images = projectImages[projectIdx] || [];
-            if (idx >= 0 && idx < images.length) { images.splice(idx, 1);
-                projectImages[projectIdx] = images;
-                refreshProjectImagePreviews(card, projectIdx);
-                saveToFirebase(); }
+            if (idx >= 0 && idx < images.length) { images.splice(idx, 1); projectImages[projectIdx] = images; refreshProjectImagePreviews(card, projectIdx); saveToFirebase(); }
         }
 
         function addProject() {
@@ -2171,23 +1916,20 @@
             };
         }
 
-        // ============================================================
-        //  PORTFOLIO SITE RENDERER
-        // ============================================================
         function goToPortfolioSite() {
             const data = buildShareData();
             renderPortfolioWebsite(data);
-            document.getElementById('page2').classList.remove('active');
-            document.getElementById('page3').classList.add('active', 'page-anim-in-fwd');
-            setTimeout(() => document.getElementById('page3').classList.remove('page-anim-in-fwd'), 500);
+            navigateTo('page3');
         }
 
+        // ============================================================
+        //  PORTFOLIO SITE RENDERER
+        // ============================================================
         function renderPortfolioWebsite(data) {
             customSoftwareIcons = data.customSoftwareIcons || customSoftwareIcons || {};
             colorTheme = data.colorTheme || colorTheme || 'blue';
             const page3 = document.getElementById('page3');
-            if (page3) { page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink');
-                page3.classList.add('theme-' + colorTheme); }
+            if (page3) { page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink'); page3.classList.add('theme-' + colorTheme); }
             const name = data.name || 'Salih Muhammed';
             const title = data.title || 'Exterior Visualizer';
             const email = data.email || '';
@@ -2196,12 +1938,9 @@
             const about = (data.about || '').trim();
             const skills = (data.skills || '').split(',').map(s => s.trim()).filter(s => s);
             const projects = data.projects || [];
-            const totalProjects = data.totalProjects !== '' && data.totalProjects != null ? Number(data.totalProjects) :
-                projects.length;
-            const totalExperience = data.totalExperience !== '' && data.totalExperience != null ? Number(data
-                .totalExperience) : calculatePortfolioExperienceYears();
-            const finishedProjects = data.finishedProjects !== '' && data.finishedProjects != null ? Number(data
-                .finishedProjects) : projects.filter(p => p.finished).length;
+            const totalProjects = data.totalProjects !== '' && data.totalProjects != null ? Number(data.totalProjects) : projects.length;
+            const totalExperience = data.totalExperience !== '' && data.totalExperience != null ? Number(data.totalExperience) : calculatePortfolioExperienceYears();
+            const finishedProjects = data.finishedProjects !== '' && data.finishedProjects != null ? Number(data.finishedProjects) : projects.filter(p => p.finished).length;
 
             const expCards = document.querySelectorAll('#experienceContainer .entry-card');
             let experiences = [];
@@ -2214,35 +1953,21 @@
                 if (company || role) experiences.push({ company, role, start, end, present });
             });
 
-            const photoHTML = data.photo ? `<img src="${data.photo}" alt="${escapeHTML(name)}">` :
-                `<img src="https://ui-avatars.com/api/?name=${name.replace(' ','+')}&size=400&background=1e293b&color=38bdf8" alt="Profile">`;
+            const photoHTML = data.photo ? `<img src="${data.photo}" alt="${escapeHTML(name)}">` : `<img src="https://ui-avatars.com/api/?name=${name.replace(' ','+')}&size=400&background=1e293b&color=38bdf8" alt="Profile">`;
 
             const socialLinks = [
-                data.showLinkedIn && data.linkedin ?
-                `<a href="${escapeHTML(data.linkedin)}" target="_blank"><i class="fab fa-linkedin-in"></i></a>` : '',
-                data.showBehance && data.behance ?
-                `<a href="${escapeHTML(data.behance)}" target="_blank"><i class="fab fa-behance"></i></a>` : '',
-                data.showInstagram && data.instagram ?
-                `<a href="${escapeHTML(data.instagram)}" target="_blank"><i class="fab fa-instagram"></i></a>` : '',
-                data.showWhatsApp && data.whatsapp ?
-                `<a href="${escapeHTML(data.whatsapp)}" target="_blank"><i class="fab fa-whatsapp"></i></a>` : ''
+                data.showLinkedIn && data.linkedin ? `<a href="${escapeHTML(data.linkedin)}" target="_blank"><i class="fab fa-linkedin-in"></i></a>` : '',
+                data.showBehance && data.behance ? `<a href="${escapeHTML(data.behance)}" target="_blank"><i class="fab fa-behance"></i></a>` : '',
+                data.showInstagram && data.instagram ? `<a href="${escapeHTML(data.instagram)}" target="_blank"><i class="fab fa-instagram"></i></a>` : '',
+                data.showWhatsApp && data.whatsapp ? `<a href="${escapeHTML(data.whatsapp)}" target="_blank"><i class="fab fa-whatsapp"></i></a>` : ''
             ].join('');
 
-            const cubesHTML = `
-            <div class="hero-css-bg">
-                <div class="cube-container">
-                    <div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>
-                    <div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>
-                    <div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>
-                    <div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>
-                    <div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>
-                    <div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>
-                </div>
-            </div>`;
+            const cubesHTML = `<div class="hero-css-bg"><div class="cube-container">` +
+                `<div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>`.repeat(6) +
+                `</div></div>`;
 
             let html = `
-            <section class="site-hero">
-                ${cubesHTML}
+            <section class="site-hero">${cubesHTML}
                 <div class="hero-wrap">
                     <div class="hero-grid">
                         <div class="hero-frame reveal">${photoHTML}</div>
@@ -2260,15 +1985,12 @@
                     </div>
                 </div>
             </section>
-
             <section class="site-section">
                 <div class="site-wrap">
                     <div class="site-section-head reveal"><span class="sec-index">01</span><h2>About & Skills</h2><span class="rule-line"></span></div>
                     <p class="about-text reveal">${escapeHTML(about) || 'Creative professional with a passion for architectural visualization.'}</p>
                     <div class="software-skills-title reveal">Software Skills</div>
-                    <div class="site-skills reveal">
-                        ${skills.map((s,i) => `<span style="transition-delay:${i*0.05}s">${getSkillLogoHTML(s)} ${escapeHTML(s)}</span>`).join('')}
-                    </div>
+                    <div class="site-skills reveal">${skills.map((s,i) => `<span style="transition-delay:${i*0.05}s">${getSkillLogoHTML(s)} ${escapeHTML(s)}</span>`).join('')}</div>
                     <div class="portfolio-stats reveal">
                         <div class="portfolio-stat"><div class="stat-number" data-target="${Number.isFinite(totalProjects) ? totalProjects : 0}">0</div><div class="stat-label">Total Projects</div></div>
                         <div class="portfolio-stat"><div class="stat-number" data-target="${Number.isFinite(totalExperience) ? totalExperience : 0}" data-suffix="+">0</div><div class="stat-label">Years Experience</div></div>
@@ -2278,67 +2000,25 @@
             </section>`;
 
             if (experiences.length > 0) {
-                html += `<section class="site-section">
-                    <div class="site-wrap">
-                        <div class="site-section-head reveal"><span class="sec-index">02</span><h2>Experience</h2><span class="rule-line"></span></div>
-                        <div class="exp-timeline">
-                            ${experiences.map((exp, i) => `
-                                <div class="exp-item reveal" style="transition-delay:${i*0.1}s">
-                                    <div class="exp-dot"></div>
-                                    <div class="exp-role">${escapeHTML(exp.role)}</div>
-                                    <div class="exp-company">${escapeHTML(exp.company)}</div>
-                                    <div class="exp-date">${formatMonthYear(exp.start)}${exp.end ? ' — '+formatMonthYear(exp.end) : ' — Present'}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </section>`;
+                html += `<section class="site-section"><div class="site-wrap"><div class="site-section-head reveal"><span class="sec-index">02</span><h2>Experience</h2><span class="rule-line"></span></div><div class="exp-timeline">${experiences.map((exp, i) => `<div class="exp-item reveal" style="transition-delay:${i*0.1}s"><div class="exp-dot"></div><div class="exp-role">${escapeHTML(exp.role)}</div><div class="exp-company">${escapeHTML(exp.company)}</div><div class="exp-date">${formatMonthYear(exp.start)}${exp.end ? ' — '+formatMonthYear(exp.end) : ' — Present'}</div></div>`).join('')}</div></div></section>`;
             }
 
-            html += `<section class="site-section">
-                <div class="site-wrap">
-                    <div class="site-section-head reveal"><span class="sec-index">03</span><h2>Selected Works</h2><span class="rule-line"></span></div>
-                    <div class="site-projects">
-                        ${(projects.length > 0 ? projects : [
-                            { title: 'Luxury Villa Concept', desc: 'Ultra-realistic 3D rendering for a modern Dubai villa.', tools: ['3ds Max', 'V-Ray', 'Photoshop'], images: [], finished: false },
-                            { title: 'Commercial Tower', desc: 'Sleek glass facade visualization for a commercial high-rise.', tools: ['SketchUp', 'Lumion'], images: [], finished: false },
-                            { title: 'Interior Living Space', desc: 'Warm lighting and texturing for a cozy penthouse.', tools: ['3ds Max', 'Corona'], images: [], finished: false }
-                        ]).map((p, i) => {
-                            let toolList = [];
-                            if (Array.isArray(p.tools)) toolList = p.tools;
-                            else if (typeof p.tools === 'string') toolList = p.tools.split(',').map(t => t.trim()).filter(t => t);
-                            else toolList = [];
-                            const galleryImages = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
-                            const firstImage = galleryImages[0] || `https://source.unsplash.com/random/800x500/?architecture,modern&sig=${i}`;
-                            const galleryThumbs = galleryImages.length > 1 ? `<div class="project-gallery-thumbs">${galleryImages.map((img, gi) => `<button type="button" class="${gi===0?'active':''}" onclick="switchProjectGallery(this)" data-image-index="${gi}"><img src="${img}" alt="Photo ${gi+1}" loading="lazy"></button>`).join('')}</div>` : '';
-                            const slideControls = galleryImages.length > 1 ? `<div class="project-slide-controls"><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,-1)"><i class="fas fa-chevron-left"></i></button><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,1)"><i class="fas fa-chevron-right"></i></button></div><div class="project-slideshow-progress"><span></span></div>` : '';
-                            return `
-                            <div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}">
-                                <div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" src="${firstImage}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>
-                                ${galleryThumbs}
-                                <div class="plate-body">
-                                    <div class="plate-title">${escapeHTML(p.title)}</div>
-                                    <div class="plate-desc">${escapeHTML(p.desc)}</div>
-                                    <div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div>
-                                </div>
-                            </div>`;
-                        }).join('')}
-                    </div>
-                </div>
-            </section>
-
-            <footer class="site-footer reveal">
-                <div class="site-wrap">
-                    <h2>Let's Create Together.</h2>
-                    <p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p>
-                    <button class="site-btn solid" onclick="window.location.href='mailto:${escapeHTML(email)}'"><i class="fas fa-paper-plane"></i> Get In Touch</button>
-                </div>
-                <div class="ssplitly-footer-links">
-                    <button onclick="openSsplitlyInfo('about')">About</button>
-                    <button onclick="openSsplitlyInfo('contact')">Contact Us</button>
-                    <button onclick="openSsplitlyInfo('terms')">Terms &amp; Conditions</button>
-                </div>
-            </footer>`;
+            html += `<section class="site-section"><div class="site-wrap"><div class="site-section-head reveal"><span class="sec-index">03</span><h2>Selected Works</h2><span class="rule-line"></span></div><div class="site-projects">${(projects.length > 0 ? projects : [
+                { title: 'Luxury Villa Concept', desc: 'Ultra-realistic 3D rendering for a modern Dubai villa.', tools: ['3ds Max', 'V-Ray', 'Photoshop'], images: [], finished: false },
+                { title: 'Commercial Tower', desc: 'Sleek glass facade visualization for a commercial high-rise.', tools: ['SketchUp', 'Lumion'], images: [], finished: false },
+                { title: 'Interior Living Space', desc: 'Warm lighting and texturing for a cozy penthouse.', tools: ['3ds Max', 'Corona'], images: [], finished: false }
+            ]).map((p, i) => {
+                let toolList = [];
+                if (Array.isArray(p.tools)) toolList = p.tools;
+                else if (typeof p.tools === 'string') toolList = p.tools.split(',').map(t => t.trim()).filter(t => t);
+                const galleryImages = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+                const firstImage = galleryImages[0] || `https://source.unsplash.com/random/800x500/?architecture,modern&sig=${i}`;
+                const galleryThumbs = galleryImages.length > 1 ? `<div class="project-gallery-thumbs">${galleryImages.map((img, gi) => `<button type="button" class="${gi===0?'active':''}" onclick="switchProjectGallery(this)" data-image-index="${gi}"><img src="${img}" alt="Photo ${gi+1}" loading="lazy"></button>`).join('')}</div>` : '';
+                const slideControls = galleryImages.length > 1 ? `<div class="project-slide-controls"><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,-1)"><i class="fas fa-chevron-left"></i></button><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,1)"><i class="fas fa-chevron-right"></i></button></div><div class="project-slideshow-progress"><span></span></div>` : '';
+                return `<div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}"><div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" src="${firstImage}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>${galleryThumbs}<div class="plate-body"><div class="plate-title">${escapeHTML(p.title)}</div><div class="plate-desc">${escapeHTML(p.desc)}</div><div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div></div></div>`;
+            }).join('')}</div></div></section>
+            <footer class="site-footer reveal"><div class="site-wrap"><h2>Let's Create Together.</h2><p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p><button class="site-btn solid" onclick="window.location.href='mailto:${escapeHTML(email)}'"><i class="fas fa-paper-plane"></i> Get In Touch</button></div>
+            <div class="ssplitly-footer-links"><button onclick="openSsplitlyInfo('about')">About</button><button onclick="openSsplitlyInfo('contact')">Contact Us</button><button onclick="openSsplitlyInfo('terms')">Terms &amp; Conditions</button></div></footer>`;
 
             document.getElementById('portfolioSiteContent').innerHTML = html;
             updateThemeLabel();
@@ -2349,16 +2029,12 @@
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             entry.target.classList.add('active');
-                            if (entry.target.classList.contains('portfolio-stats')) {
-                                animatePortfolioStats(entry.target);
-                            }
+                            if (entry.target.classList.contains('portfolio-stats')) animatePortfolioStats(entry.target);
                         } else {
                             entry.target.classList.remove('active');
                             if (entry.target.classList.contains('portfolio-stats')) {
                                 entry.target.dataset.counted = '0';
-                                entry.target.querySelectorAll('.stat-number[data-target]').forEach(el => {
-                                    el.textContent = '0';
-                                });
+                                entry.target.querySelectorAll('.stat-number[data-target]').forEach(el => { el.textContent = '0'; });
                             }
                         }
                     });
@@ -2368,18 +2044,13 @@
                 if (stats) {
                     const rect = stats.getBoundingClientRect();
                     const winHeight = window.innerHeight;
-                    if (rect.top < winHeight - 100 && rect.bottom > 100) {
-                        stats.classList.add('active');
-                        animatePortfolioStats(stats);
-                    }
+                    if (rect.top < winHeight - 100 && rect.bottom > 100) { stats.classList.add('active'); animatePortfolioStats(stats); }
                 }
             }, 150);
             initProjectSlideshows();
         }
 
-        function getProjectGalleryImages(card) {
-            try { return JSON.parse(card.dataset.projectImages || '[]'); } catch (e) { return []; }
-        }
+        function getProjectGalleryImages(card) { try { return JSON.parse(card.dataset.projectImages || '[]'); } catch (e) { return []; } }
 
         function setProjectSlide(card, index, animate = true) {
             const images = getProjectGalleryImages(card);
@@ -2388,28 +2059,15 @@
             const main = card.querySelector('.project-main-image');
             if (!main) return;
             main.dataset.slideIndex = index;
-            if (animate) { main.classList.remove('slideshow-fade');
-                void main.offsetWidth;
-                main.classList.add('slideshow-fade'); }
+            if (animate) { main.classList.remove('slideshow-fade'); void main.offsetWidth; main.classList.add('slideshow-fade'); }
             main.src = images[index];
-            card.querySelectorAll('.project-gallery-thumbs button').forEach((b, i) => b.classList.toggle('active', i ===
-                index));
+            card.querySelectorAll('.project-gallery-thumbs button').forEach((b, i) => b.classList.toggle('active', i === index));
             const progress = card.querySelector('.project-slideshow-progress span');
-            if (progress) { progress.style.animation = 'none';
-                void progress.offsetWidth;
-                progress.style.animation = 'slideshowProgress 4s linear infinite'; }
+            if (progress) { progress.style.animation = 'none'; void progress.offsetWidth; progress.style.animation = 'slideshowProgress 4s linear infinite'; }
         }
 
-        function switchProjectGallery(button) {
-            const card = button.closest('.site-plate');
-            setProjectSlide(card, Number(button.dataset.imageIndex || 0));
-        }
-
-        function changeProjectSlide(button, direction) {
-            const card = button.closest('.site-plate');
-            const main = card.querySelector('.project-main-image');
-            setProjectSlide(card, Number(main?.dataset.slideIndex || 0) + direction);
-        }
+        function switchProjectGallery(button) { const card = button.closest('.site-plate'); setProjectSlide(card, Number(button.dataset.imageIndex || 0)); }
+        function changeProjectSlide(button, direction) { const card = button.closest('.site-plate'); const main = card.querySelector('.project-main-image'); setProjectSlide(card, Number(main?.dataset.slideIndex || 0) + direction); }
 
         function initProjectSlideshows() {
             document.querySelectorAll('.site-plate').forEach(card => {
@@ -2425,15 +2083,11 @@
             });
         }
 
-        let lightboxImages = [],
-            lightboxIndex = 0;
+        let lightboxImages = [], lightboxIndex = 0;
 
         function openProjectLightbox(card) {
             const images = getProjectGalleryImages(card);
-            if (!images.length) {
-                const src = card.querySelector('.project-main-image')?.src;
-                if (src) images.push(src);
-            }
+            if (!images.length) { const src = card.querySelector('.project-main-image')?.src; if (src) images.push(src); }
             if (!images.length) return;
             lightboxImages = images;
             lightboxIndex = Number(card.querySelector('.project-main-image')?.dataset.slideIndex || 0);
@@ -2445,24 +2099,13 @@
 
         function renderLightboxImage() {
             const img = document.getElementById('lightboxImage');
-            img.classList.remove('lightbox-image');
-            void img.offsetWidth;
-            img.classList.add('lightbox-image');
+            img.classList.remove('lightbox-image'); void img.offsetWidth; img.classList.add('lightbox-image');
             img.src = lightboxImages[lightboxIndex];
-            document.getElementById('lightboxCaption').textContent =
-                `${document.getElementById('projectLightbox').dataset.title || 'Project'} • ${lightboxIndex + 1} / ${lightboxImages.length}`;
+            document.getElementById('lightboxCaption').textContent = `${document.getElementById('projectLightbox').dataset.title || 'Project'} • ${lightboxIndex + 1} / ${lightboxImages.length}`;
         }
 
-        function closeProjectLightbox() {
-            document.getElementById('projectLightbox').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function moveLightboxSlide(dir) {
-            if (!lightboxImages.length) return;
-            lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length;
-            renderLightboxImage();
-        }
+        function closeProjectLightbox() { document.getElementById('projectLightbox').classList.remove('active'); document.body.style.overflow = ''; }
+        function moveLightboxSlide(dir) { if (!lightboxImages.length) return; lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length; renderLightboxImage(); }
         document.addEventListener('keydown', e => {
             const modal = document.getElementById('projectLightbox');
             if (!modal?.classList.contains('active')) return;
@@ -2492,9 +2135,6 @@
             });
         }
 
-        // ============================================================
-        //  THEME
-        // ============================================================
         function toggleSiteTheme() {
             const page3 = document.getElementById('page3');
             page3.classList.toggle('light-mode');
@@ -2517,8 +2157,7 @@
             const allowed = ['blue', 'purple', 'green', 'orange', 'pink'];
             colorTheme = allowed.includes(theme) ? theme : 'blue';
             const page3 = document.getElementById('page3');
-            if (page3) { page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink');
-                page3.classList.add('theme-' + colorTheme); }
+            if (page3) { page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink'); page3.classList.add('theme-' + colorTheme); }
             document.getElementById('builderColorTheme').value = colorTheme;
             document.getElementById('siteColorTheme').value = colorTheme;
             saveToFirebase();
@@ -2537,37 +2176,30 @@
         function applySavedAppearance() {
             document.body.classList.toggle('app-dark', !!isNightMode);
             const page3 = document.getElementById('page3');
-            if (page3) { page3.classList.toggle('light-mode', !isNightMode);
-                page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink');
-                page3.classList.add('theme-' + (colorTheme || 'blue')); }
+            if (page3) { page3.classList.toggle('light-mode', !isNightMode); page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink'); page3.classList.add('theme-' + (colorTheme || 'blue')); }
             document.getElementById('builderThemeLabel').textContent = isNightMode ? 'Night' : 'Day';
             document.getElementById('builderColorTheme').value = colorTheme;
             setColorTheme(colorTheme);
         }
 
-        // ============================================================
-        //  SHARE LINK
-        // ============================================================
         function generateShareLink() {
             const data = buildShareData();
-            const name = (data.name || 'portfolio').trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
+            const name = (data.name || 'portfolio').trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
             const rand = Math.floor(10000 + Math.random() * 90000);
             const slug = name ? name + '-' + rand : 'portfolio-' + rand;
             try {
                 const json = JSON.stringify(data);
                 const compressed = LZString.compressToBase64(json);
-                const url = window.location.href.split('#')[0] + '#/portfolio/' + slug + '/' + compressed;
+                const baseUrl = window.location.href.split('#')[0];
+                const url = baseUrl + '#/portfolio/' + slug + '/' + compressed;
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(url).then(() => {
-                        alert('✅ Share link copied!');
-                    }).catch(() => { prompt('Copy link:', url); });
+                    navigator.clipboard.writeText(url).then(() => { alert('✅ Share link copied!\n\n' + url); }).catch(() => { prompt('Copy link:', url); });
                 } else { prompt('Copy link:', url); }
             } catch (e) { alert('Error generating link: ' + e.message); }
         }
 
         // ============================================================
-        //  VIEW-ONLY MODE
+        //  VIEW-ONLY MODE – no login/serial needed for shared links
         // ============================================================
         function detectViewOnly() {
             const hash = window.location.hash;
@@ -2579,6 +2211,11 @@
                     const json = LZString.decompressFromBase64(compressed);
                     if (!json) throw new Error('Decompression failed');
                     const data = JSON.parse(json);
+
+                    // Hide login overlay permanently
+                    document.getElementById('loginOverlay').classList.remove('active');
+                    document.getElementById('loginOverlay').style.display = 'none';
+
                     document.getElementById('fullName').value = data.name || '';
                     document.getElementById('profTitle').value = data.title || '';
                     document.getElementById('email').value = data.email || '';
@@ -2589,33 +2226,25 @@
                     document.getElementById('instagramUrl').value = data.instagram || '';
                     document.getElementById('whatsappUrl').value = data.whatsapp || '';
                     document.getElementById('aboutInput').value = data.about || '';
-                    if (data.showLinkedIn !== undefined) document.getElementById('showLinkedIn').checked = data
-                        .showLinkedIn;
-                    if (data.showBehance !== undefined) document.getElementById('showBehance').checked = data
-                        .showBehance;
-                    if (data.showInstagram !== undefined) document.getElementById('showInstagram').checked = data
-                        .showInstagram;
-                    if (data.showWhatsApp !== undefined) document.getElementById('showWhatsApp').checked = data
-                        .showWhatsApp;
+                    if (data.showLinkedIn !== undefined) document.getElementById('showLinkedIn').checked = data.showLinkedIn;
+                    if (data.showBehance !== undefined) document.getElementById('showBehance').checked = data.showBehance;
+                    if (data.showInstagram !== undefined) document.getElementById('showInstagram').checked = data.showInstagram;
+                    if (data.showWhatsApp !== undefined) document.getElementById('showWhatsApp').checked = data.showWhatsApp;
                     if (data.skills) document.getElementById('skillsInput').value = data.skills;
                     if (data.customSoftwareIcons) customSoftwareIcons = data.customSoftwareIcons;
                     if (data.colorTheme) colorTheme = data.colorTheme;
-                    if (data.photo) { window.croppedImageData = data.photo;
-                        document.getElementById('picPreviewSmall').src = data.photo; }
-                    if (data.totalProjects !== undefined) document.getElementById('portfolioTotalProjects').value = data
-                        .totalProjects;
-                    if (data.totalExperience !== undefined) document.getElementById('portfolioTotalExperience').value =
-                        data.totalExperience;
-                    if (data.finishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value =
-                        data.finishedProjects;
+                    if (data.photo) { window.croppedImageData = data.photo; document.getElementById('picPreviewSmall').src = data.photo; }
+                    if (data.totalProjects !== undefined) document.getElementById('portfolioTotalProjects').value = data.totalProjects;
+                    if (data.totalExperience !== undefined) document.getElementById('portfolioTotalExperience').value = data.totalExperience;
+                    if (data.finishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value = data.finishedProjects;
+
                     const container = document.getElementById('projectContainer');
                     container.innerHTML = '';
                     window.projectCounter = 0;
                     projectImages = {};
                     (data.projects || []).forEach(p => {
                         window.projectCounter++;
-                        container.insertAdjacentHTML('beforeend', createProjectHTML(p.title || '', p.desc || '',
-                            p.tools || '', [], !!p.finished));
+                        container.insertAdjacentHTML('beforeend', createProjectHTML(p.title || '', p.desc || '', p.tools || '', [], !!p.finished));
                         const card = container.lastElementChild;
                         const idx = card.dataset.projectIndex;
                         projectImages[idx] = (p.images || []).filter(Boolean);
@@ -2628,6 +2257,7 @@
                     generateCV();
                     generateCoverLetter();
                     updateLivePreview();
+
                     document.body.classList.add('view-only');
                     document.getElementById('page1').classList.remove('active');
                     document.getElementById('page2').classList.remove('active');
@@ -2645,33 +2275,18 @@
             return false;
         }
 
-        // ============================================================
-        //  PDF OPTIONS
-        // ============================================================
-        function showPDFOptions(type) { pdfPendingType = type || 'cv';
-            document.getElementById('pdfOptionsModal').classList.add('active'); }
-
+        function showPDFOptions(type) { pdfPendingType = type || 'cv'; document.getElementById('pdfOptionsModal').classList.add('active'); }
         function closePDFOptions() { document.getElementById('pdfOptionsModal').classList.remove('active'); }
-
-        function downloadPDFWithOptions() {
-            closePDFOptions();
-            if (pdfPendingType === 'cv') downloadCVWithOptions();
-            else downloadCoverLetterPDF();
-        }
+        function downloadPDFWithOptions() { closePDFOptions(); if (pdfPendingType === 'cv') downloadCVWithOptions(); else downloadCoverLetterPDF(); }
 
         function downloadCVWithOptions() {
-            generateCV();
-            updateLivePreview();
+            generateCV(); updateLivePreview();
             setTimeout(() => {
                 const el = document.getElementById('cvOutput').querySelector('.a4-preview');
                 if (!el) { alert('Error: Could not find CV preview.'); return; }
                 const clone = el.cloneNode(true);
-                clone.style.padding = '14mm 12mm';
-                clone.style.width = '210mm';
-                clone.style.minHeight = '297mm';
-                clone.style.boxSizing = 'border-box';
-                clone.style.transform = 'none';
-                clone.style.transformOrigin = 'top left';
+                clone.style.padding = '14mm 12mm'; clone.style.width = '210mm'; clone.style.minHeight = '297mm';
+                clone.style.boxSizing = 'border-box'; clone.style.transform = 'none'; clone.style.transformOrigin = 'top left';
                 const includePhoto = document.getElementById('pdfIncludePhoto').checked;
                 const includeSummary = document.getElementById('pdfIncludeSummary').checked;
                 const includeExperience = document.getElementById('pdfIncludeExperience').checked;
@@ -2680,43 +2295,17 @@
                 const includeSocial = document.getElementById('pdfIncludeSocial').checked;
                 if (!includePhoto) { const img = clone.querySelector('.header .profile-photo'); if (img) img.remove(); }
                 if (!includeSummary) { const summary = clone.querySelector('.summary'); if (summary) summary.remove(); }
-                if (!includeExperience) {
-                    clone.querySelectorAll('.section').forEach(sec => {
-                        const heading = sec.querySelector('.section-heading');
-                        if (heading && heading.textContent.includes('WORK EXPERIENCE')) sec.remove();
-                    });
-                }
-                if (!includeSkills) {
-                    clone.querySelectorAll('.section').forEach(sec => {
-                        const heading = sec.querySelector('.section-heading');
-                        if (heading && heading.textContent.includes('TECHNICAL SKILLS')) sec.remove();
-                    });
-                }
-                if (!includeEducation) {
-                    clone.querySelectorAll('.section').forEach(sec => {
-                        const heading = sec.querySelector('.section-heading');
-                        if (heading && heading.textContent.includes('EDUCATION')) sec.remove();
-                    });
-                }
-                if (!includeSocial) { const socialRow = clone.querySelector('.social-row'); if (socialRow) socialRow
-                        .remove(); }
+                if (!includeExperience) { clone.querySelectorAll('.section').forEach(sec => { const heading = sec.querySelector('.section-heading'); if (heading && heading.textContent.includes('WORK EXPERIENCE')) sec.remove(); }); }
+                if (!includeSkills) { clone.querySelectorAll('.section').forEach(sec => { const heading = sec.querySelector('.section-heading'); if (heading && heading.textContent.includes('TECHNICAL SKILLS')) sec.remove(); }); }
+                if (!includeEducation) { clone.querySelectorAll('.section').forEach(sec => { const heading = sec.querySelector('.section-heading'); if (heading && heading.textContent.includes('EDUCATION')) sec.remove(); }); }
+                if (!includeSocial) { const socialRow = clone.querySelector('.social-row'); if (socialRow) socialRow.remove(); }
                 const temp = document.createElement('div');
-                temp.style.position = 'absolute';
-                temp.style.left = '-9999px';
-                temp.style.top = '0';
-                temp.style.width = '210mm';
-                temp.style.height = '297mm';
-                temp.style.background = '#fff';
-                temp.style.overflow = 'hidden';
-                clone.style.width = '100%';
-                clone.style.minHeight = '297mm';
-                clone.style.padding = '14mm 12mm';
-                clone.style.margin = '0';
-                clone.style.transform = 'none';
+                temp.style.position = 'absolute'; temp.style.left = '-9999px'; temp.style.top = '0';
+                temp.style.width = '210mm'; temp.style.height = '297mm'; temp.style.background = '#fff'; temp.style.overflow = 'hidden';
+                clone.style.width = '100%'; clone.style.minHeight = '297mm'; clone.style.padding = '14mm 12mm'; clone.style.margin = '0'; clone.style.transform = 'none';
                 temp.appendChild(clone);
                 document.body.appendChild(temp);
-                html2canvas(temp, { scale: 3.0, useCORS: true, backgroundColor: '#fff', allowTaint: true,
-                        logging: false, width: 210 * 3.78, height: 297 * 3.78 })
+                html2canvas(temp, { scale: 3.0, useCORS: true, backgroundColor: '#fff', allowTaint: true, logging: false, width: 210 * 3.78, height: 297 * 3.78 })
                     .then(canvas => {
                         document.body.removeChild(temp);
                         const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -2724,42 +2313,26 @@
                         doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
                         doc.save('CV_Salih_Muhammed.pdf');
                     })
-                    .catch(err => { document.body.removeChild(temp);
-                        alert('PDF generation failed.');
-                        console.error(err); });
+                    .catch(err => { document.body.removeChild(temp); alert('PDF generation failed.'); console.error(err); });
             }, 800);
         }
 
         function downloadCoverLetterPDF() {
             if (isViewOnly) return;
-            generateCoverLetter();
-            updateLivePreview();
+            generateCoverLetter(); updateLivePreview();
             setTimeout(() => {
                 const el = document.getElementById('coverOutput').querySelector('.a4-preview');
                 if (!el) { alert('Error: Could not find cover letter preview.'); return; }
                 const clone = el.cloneNode(true);
-                clone.style.padding = '14mm 12mm';
-                clone.style.width = '210mm';
-                clone.style.minHeight = '297mm';
-                clone.style.boxSizing = 'border-box';
-                clone.style.transform = 'none';
-                clone.style.transformOrigin = 'top left';
+                clone.style.padding = '14mm 12mm'; clone.style.width = '210mm'; clone.style.minHeight = '297mm';
+                clone.style.boxSizing = 'border-box'; clone.style.transform = 'none'; clone.style.transformOrigin = 'top left';
                 const temp = document.createElement('div');
-                temp.style.position = 'absolute';
-                temp.style.left = '-9999px';
-                temp.style.top = '0';
-                temp.style.width = '210mm';
-                temp.style.height = '297mm';
-                temp.style.background = '#fff';
-                temp.style.overflow = 'hidden';
-                clone.style.width = '100%';
-                clone.style.minHeight = '297mm';
-                clone.style.padding = '14mm 12mm';
-                clone.style.margin = '0';
+                temp.style.position = 'absolute'; temp.style.left = '-9999px'; temp.style.top = '0';
+                temp.style.width = '210mm'; temp.style.height = '297mm'; temp.style.background = '#fff'; temp.style.overflow = 'hidden';
+                clone.style.width = '100%'; clone.style.minHeight = '297mm'; clone.style.padding = '14mm 12mm'; clone.style.margin = '0';
                 temp.appendChild(clone);
                 document.body.appendChild(temp);
-                html2canvas(temp, { scale: 3.0, useCORS: true, backgroundColor: '#fff', allowTaint: true,
-                        logging: false, width: 210 * 3.78, height: 297 * 3.78 })
+                html2canvas(temp, { scale: 3.0, useCORS: true, backgroundColor: '#fff', allowTaint: true, logging: false, width: 210 * 3.78, height: 297 * 3.78 })
                     .then(canvas => {
                         document.body.removeChild(temp);
                         const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -2767,26 +2340,18 @@
                         doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
                         doc.save('Cover_Letter_Salih_Muhammed.pdf');
                     })
-                    .catch(err => { document.body.removeChild(temp);
-                        alert('PDF generation failed.');
-                        console.error(err); });
+                    .catch(err => { document.body.removeChild(temp); alert('PDF generation failed.'); console.error(err); });
             }, 800);
         }
 
-        // ============================================================
-        //  MOBILE FIT
-        // ============================================================
         function fitA4MobilePreview() {
             const viewport = document.querySelector('.preview-scroll');
             if (!viewport) return;
             const page = viewport.querySelector('.a4-preview');
             if (!page) return;
-            page.style.transform = 'none';
-            page.style.marginBottom = '0';
-            page.style.marginRight = '0';
+            page.style.transform = 'none'; page.style.marginBottom = '0'; page.style.marginRight = '0';
             page.classList.remove('scaled-fit');
-            const w = page.offsetWidth;
-            const h = page.offsetHeight;
+            const w = page.offsetWidth, h = page.offsetHeight;
             if (!w || !h) return;
             const availableW = viewport.clientWidth - 20;
             const scaleW = availableW / w;
@@ -2799,26 +2364,17 @@
                 page.style.transformOrigin = 'top center';
                 page.style.marginBottom = `${-(h - h * scale)}px`;
                 page.style.marginRight = `${-(w - w * scale)}px`;
-            } else {
-                page.style.transform = 'scale(1)';
-                page.style.marginBottom = '0';
-                page.style.marginRight = '0';
-            }
+            } else { page.style.transform = 'scale(1)'; page.style.marginBottom = '0'; page.style.marginRight = '0'; }
         }
         window.addEventListener('resize', () => requestAnimationFrame(fitA4MobilePreview));
         window.addEventListener('orientationchange', () => setTimeout(fitA4MobilePreview, 250));
 
-        // ============================================================
-        //  SSPLITLY INFO
-        // ============================================================
         function openSsplitlyInfo(tab) {
             const modal = document.getElementById('ssplitlyInfoModal');
             if (!modal) return;
             modal.classList.add('active');
-            modal.querySelectorAll('.ssplitly-info-panel').forEach(p => p.classList.toggle('active', p.dataset.panel ===
-                tab));
-            modal.querySelectorAll('.ssplitly-info-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab ===
-                tab));
+            modal.querySelectorAll('.ssplitly-info-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+            modal.querySelectorAll('.ssplitly-info-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
             if (tab === 'contact') {
                 const email = document.getElementById('email').value || 'salihchnr65@gmail.com';
                 const phone = document.getElementById('phone').value || '+971566412245';
@@ -2830,8 +2386,7 @@
                     if (oldIcons) oldIcons.remove();
                     const iconsDiv = document.createElement('div');
                     iconsDiv.className = 'contact-icons';
-                    iconsDiv.innerHTML =
-                        `<a href="mailto:${escapeHTML(email)}" target="_blank"><i class="fas fa-envelope"></i></a><a href="https://wa.me/${escapeHTML(phone.replace(/[^0-9+]/g,''))}" target="_blank"><i class="fab fa-whatsapp"></i></a>`;
+                    iconsDiv.innerHTML = `<a href="mailto:${escapeHTML(email)}" target="_blank"><i class="fas fa-envelope"></i></a><a href="https://wa.me/${escapeHTML(phone.replace(/[^0-9+]/g,''))}" target="_blank"><i class="fab fa-whatsapp"></i></a>`;
                     panel.innerHTML = '';
                     panel.appendChild(desc);
                     panel.appendChild(iconsDiv);
@@ -2847,12 +2402,8 @@
             document.body.style.overflow = '';
         }
 
-        // ============================================================
-        //  AUTO-SAVE
-        // ============================================================
-        const autoSaveIds = ['fullName', 'profTitle', 'email', 'phone', 'location', 'linkedinUrl', 'behanceUrl',
-            'instagramUrl', 'whatsappUrl', 'aboutInput', 'skillsInput', 'applyJob', 'applyCompany'
-        ];
+        // Auto-save
+        const autoSaveIds = ['fullName', 'profTitle', 'email', 'phone', 'location', 'linkedinUrl', 'behanceUrl', 'instagramUrl', 'whatsappUrl', 'aboutInput', 'skillsInput', 'applyJob', 'applyCompany'];
         autoSaveIds.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { saveToFirebase(); if (activeTab === 'cv' || activeTab === 'cover') setTimeout(updateLivePreview, 200); }); });
         ['showLinkedIn', 'showBehance', 'showInstagram', 'showWhatsApp'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => { saveToFirebase(); if (activeTab === 'cv' || activeTab === 'cover') setTimeout(updateLivePreview, 200); }); });
         document.addEventListener('input', function(e) {
@@ -2861,88 +2412,73 @@
                 saveToFirebase();
                 if (activeTab === 'portfolio') setTimeout(() => renderPortfolioWebsite(buildShareData()), 120);
             }
-            if (e.target.closest('#experienceContainer') || e.target.closest('#educationContainer') || e.target
-                .closest('#projectContainer')) {
+            if (e.target.closest('#experienceContainer') || e.target.closest('#educationContainer') || e.target.closest('#projectContainer')) {
                 saveToFirebase();
                 if (activeTab === 'cv' || activeTab === 'cover') {
-                    setTimeout(() => { if (activeTab === 'cv') generateCV();
-                        else generateCoverLetter();
-                        updateLivePreview(); }, 200);
-                } else if (activeTab === 'portfolio') { updateProjectStats();
-                    setTimeout(() => renderPortfolioWebsite(buildShareData()), 120); }
+                    setTimeout(() => { if (activeTab === 'cv') generateCV(); else generateCoverLetter(); updateLivePreview(); }, 200);
+                } else if (activeTab === 'portfolio') { updateProjectStats(); setTimeout(() => renderPortfolioWebsite(buildShareData()), 120); }
             }
         });
 
         const origUpdateLivePreview = updateLivePreview;
-        updateLivePreview = function() { origUpdateLivePreview();
-            setTimeout(fitA4MobilePreview, 50); };
+        updateLivePreview = function() { origUpdateLivePreview(); setTimeout(fitA4MobilePreview, 50); };
 
-        // ============================================================
-        //  LOGIN HANDLER – with force logout button logic
-        // ============================================================
         document.getElementById('loginBtn').addEventListener('click', async function() {
             const serial = document.getElementById('loginSerial').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             const errorEl = document.getElementById('loginError');
             const forceBtn = document.getElementById('forceLogoutBtn');
-
             forceBtn.style.display = 'none';
-
             if (!serial || !password) { errorEl.textContent = 'Please fill both fields.'; return; }
-            if (serial.length !== 12 || !/^\d{12}$/.test(serial)) {
-                errorEl.textContent = 'Serial must be 12 digits.';
-                return;
-            }
-
+            if (serial.length !== 12 || !/^\d{12}$/.test(serial)) { errorEl.textContent = 'Serial must be 12 digits.'; return; }
             const success = await window.loginUser(serial, password);
             if (!success) {
                 if (errorEl.textContent.includes('already in use')) {
                     forceBtn.style.display = 'block';
-                    forceBtn.onclick = function() {
-                        forceBtn.style.display = 'none';
-                        window.forceLogoutAndLogin(serial, password);
-                    };
+                    forceBtn.onclick = function() { forceBtn.style.display = 'none'; window.forceLogoutAndLogin(serial, password); };
                 }
             } else {
                 forceBtn.style.display = 'none';
+                document.getElementById('loginOverlay').classList.remove('active');
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
+                try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
                 await loadFromFirebase();
             }
         });
 
-        document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document
-                .getElementById('loginBtn').click(); });
-        document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document
-                .getElementById('loginBtn').click(); });
+        document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+        document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 
         // ============================================================
         //  WINDOW ONLOAD
         // ============================================================
         window.onload = async function() {
+            // 1) Check view-only (shared link) FIRST – no login required
             const viewOnlyDetected = detectViewOnly();
             if (viewOnlyDetected) {
                 if (window.markViewOnly) window.markViewOnly();
+                setTimeout(fitA4MobilePreview, 400);
+                setTimeout(updateThemeLabel, 100);
                 return;
             }
 
+            // 2) Normal login flow
             const session = window.checkSession();
             if (session) {
+                document.getElementById('loginOverlay').classList.remove('active');
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('page1').classList.add('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
+                try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
                 const loaded = await loadFromFirebase();
-                if (!loaded) {
-                    resetBuilderState();
-                    populateDefaultData();
-                    await saveToFirebase();
-                }
+                if (!loaded) { resetBuilderState(); populateDefaultData(); await saveToFirebase(); }
             } else {
+                document.getElementById('loginOverlay').classList.add('active');
                 document.getElementById('loginOverlay').style.display = 'flex';
-                document.getElementById('loginOverlay').classList.remove('hidden');
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.remove('active');
                 document.getElementById('page3').classList.remove('active');
@@ -2952,13 +2488,9 @@
             setTimeout(updateThemeLabel, 100);
         };
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeSsplitlyInfo();
-        });
-        console.log('✅ Ssplitly fully loaded – Firebase sync enabled. No localStorage used for data.');
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSsplitlyInfo(); });
     </script>
 
-    <!-- ===== SSPLITLY INFO MODAL ===== -->
     <div id="ssplitlyInfoModal" class="ssplitly-info-modal" onclick="if(event.target===this) closeSsplitlyInfo()">
         <div class="ssplitly-info-backdrop"></div>
         <div class="ssplitly-info-box">
@@ -2974,7 +2506,7 @@
             </div>
             <div class="ssplitly-info-panel" data-panel="about">
                 <h3>About Ssplitly</h3>
-                <p>Secure career builder with <strong>20 accounts</strong>, isolated data, and account locking – no auto‑logout timer. Closing the tab logs you out. Data is synced via Firebase.</p>
+                <p>Secure career builder with <strong>20 accounts</strong>, isolated data, and account locking. Data is synced via Firebase.</p>
             </div>
             <div class="ssplitly-info-panel" data-panel="contact">
                 <p>For support or feedback:</p>
