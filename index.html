@@ -114,6 +114,34 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .a4-preview{width:210mm!important;min-height:297mm!important;height:auto!important;flex:0 0 auto!important;transform-origin:top center!important;box-sizing:border-box!important;margin:0 auto!important;padding:14mm 12mm;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.15);font-size:10.5pt;line-height:1.5;color:#0f172a;overflow:visible;word-wrap:break-word;transition:transform .2s ease;position:relative}
 @media(max-width:500px){.preview-scroll{padding:6px!important}.a4-preview{transform:scale(.78);transform-origin:top center;margin:0 auto}}
 
+/* ═══ PROJECT IMAGE UPLOADER (FIX) ═══ */
+.project-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:10px;background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--radius-sm);transition:border-color .3s,background .3s}
+.project-upload:hover{border-color:var(--primary);background:var(--surface-2)}
+.project-upload input[type=file]{flex:1 1 200px;min-width:160px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-muted);font-family:var(--font);cursor:pointer}
+.project-upload input[type=file]::file-selector-button{padding:6px 14px;margin-right:10px;border:none;border-radius:6px;background:var(--grad-primary);color:#fff;font-weight:600;font-size:12px;font-family:var(--font);cursor:pointer;transition:transform .25s,box-shadow .25s}
+.project-upload input[type=file]::file-selector-button:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--primary-glow)}
+.project-upload .upload-hint{font-size:11px;color:var(--text-muted);line-height:1.5;flex:1 1 100%}
+.proj-image-previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-top:12px}
+.proj-image-previews:empty{display:none}
+.preview-thumb{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:var(--surface);cursor:grab;transition:border-color .3s,transform .3s,box-shadow .3s;user-select:none}
+.preview-thumb:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 8px 20px rgba(37,99,235,.22)}
+.preview-thumb:active{cursor:grabbing}
+.preview-thumb.dragging{opacity:.45;transform:scale(.95)}
+.project-preview-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.image-order-badge{position:absolute;top:5px;left:5px;background:rgba(15,23,42,.78);color:#fff;font-family:var(--font-mono);font-size:10px;font-weight:700;line-height:1;padding:4px 7px;border-radius:20px;pointer-events:none}
+.image-label-badge{position:absolute;bottom:5px;left:5px;background:var(--grad-primary);color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 7px;border-radius:20px;pointer-events:none}
+.image-label-badge.night{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.remove-image-btn{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(239,68,68,.95);color:#fff;font-size:11px;font-weight:700;line-height:1;display:grid;place-items:center;opacity:0;transform:scale(.8);transition:opacity .25s,transform .25s}
+.preview-thumb:hover .remove-image-btn{opacity:1;transform:scale(1)}
+.remove-image-btn:hover{background:#dc2626;transform:scale(1.15)!important}
+.set-main-image-btn{position:absolute;bottom:5px;right:5px;background:rgba(15,23,42,.82);color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:20px;opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s,background .3s}
+.preview-thumb:hover .set-main-image-btn{opacity:1;transform:translateY(0)}
+.set-main-image-btn:hover{background:var(--primary)}
+@media(max-width:600px){
+  .proj-image-previews{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+  .remove-image-btn,.set-main-image-btn{opacity:1;transform:none}
+}
+
 /* ═══ CV A4 ═══ */
 .cv-clean .header{margin-bottom:8px;border-bottom:2px solid #0f172a;padding-bottom:6px;display:flex;align-items:center;justify-content:flex-start;gap:16px}
 .cv-clean .header .name-title{flex:1}
@@ -1556,27 +1584,74 @@ function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
         <div class="form-group"><label>Description</label><textarea class="proj-desc" rows="2" placeholder="Brief description">${escapeHTML(desc)}</textarea></div>
         <div class="form-group"><label>Tools Used (comma)</label><input type="text" class="proj-tools" value="${escapeHTML(tools)}" placeholder="e.g. 3ds Max, V-Ray, Photoshop"></div>
         <div class="checkbox-group project-finished-toggle"><input type="checkbox" class="proj-finished" ${finished ? 'checked' : ''} onchange="updateProjectStats()"><label>Finished Project</label></div>
-        <div class="project-upload"><input type="file" class="proj-image-input" accept="image/*" multiple onchange="handleProjectImages(this)"><span style="font-size:12px;color:var(--text-muted);">Select multiple photos. Drag thumbnails to change order.</span></div>
+        <div class="project-upload">
+            <input type="file" class="proj-image-input" accept="image/*" multiple onchange="handleProjectImages(this)">
+            <span class="upload-hint"><i class="fas fa-info-circle"></i> Select multiple photos. Drag thumbnails to change order.</span>
+        </div>
         <div class="proj-image-previews">${previewHTML}</div>
     </div>`;
 }
 
-function handleProjectImages(input) {
+/* ═══════════════════════════════════════════════════
+   ✅ FIXED: 画像を圧縮してから保存（Firebaseの容量制限対策）
+   ═══════════════════════════════════════════════════ */
+function compressImageFile(file, maxDim = 1400, quality = 0.82) {
+    return new Promise((resolve, reject) => {
+        if (!file || !file.type || !file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Read failed'));
+        reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('Decode failed'));
+            img.onload = () => {
+                let w = img.naturalWidth || img.width;
+                let h = img.naturalHeight || img.height;
+                if (!w || !h) { resolve(reader.result); return; }
+                const scale = Math.min(1, maxDim / Math.max(w, h));
+                w = Math.max(1, Math.round(w * scale));
+                h = Math.max(1, Math.round(h * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+                catch (e) { resolve(reader.result); }
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+/* ═══════════════════════════════════════════════════
+   ✅ FIXED: handleProjectImages
+   - Array.from() で確実にファイルを取得（input.value='' を先に実行）
+   - 画像を圧縮してから追加
+   - エラー時もUIが壊れないように
+   ═══════════════════════════════════════════════════ */
+async function handleProjectImages(input) {
     if (isViewOnly) return;
-    const files = input.files; if (!files || files.length === 0) return;
+    const files = Array.from(input.files || []);
+    input.value = ''; // 同じファイルを再選択できるようにリセット
+    if (!files.length) return;
     const card = input.closest('.project-card');
+    if (!card) { toast('Error: project card not found.', 'err'); return; }
     const idx = card.dataset.projectIndex;
     if (!projectImages[idx]) projectImages[idx] = [];
-    const newImages = []; let loaded = 0;
-    for (let f of files) {
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            newImages.push(ev.target.result); loaded++;
-            if (loaded === files.length) { projectImages[idx] = (projectImages[idx] || []).concat(newImages); refreshProjectImagePreviews(card, idx); saveToFirebase(); }
-        };
-        reader.readAsDataURL(f);
-    }
-    input.value = '';
+
+    toast('⏳ Processing ' + files.length + ' photo(s)…');
+    const results = await Promise.all(
+        files.map(f => compressImageFile(f).catch(err => { console.warn('Image failed:', err); return null; }))
+    );
+    const okImages = results.filter(Boolean);
+    if (!okImages.length) { toast('❌ Could not read the selected photos.', 'err'); return; }
+
+    projectImages[idx] = projectImages[idx].concat(okImages);
+    refreshProjectImagePreviews(card, idx);
+    await saveToFirebase();
+    toast('✅ ' + okImages.length + ' photo(s) added');
 }
 
 let draggedProjectImageIndex = null, draggedProjectId = null;
@@ -1585,6 +1660,7 @@ function refreshProjectImagePreviews(card, projectIdx) {
     const images = projectImages[projectIdx] || [];
     const previewContainer = card.querySelector('.proj-image-previews');
     if (!previewContainer) return;
+    if (!images.length) { previewContainer.innerHTML = ''; return; }
     previewContainer.innerHTML = images.map((img, i) => {
         const label = i === 0 ? '<span class="image-label-badge">Main</span>' : (i === 1 ? '<span class="image-label-badge night">Night</span>' : '');
         return `<div class="preview-thumb" draggable="true" data-image-index="${i}" data-project-idx="${projectIdx}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${i+1}" loading="lazy"><span class="image-order-badge">${i+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${i})">✕</button></div>`;
@@ -1596,7 +1672,7 @@ function dragProjectImage(e, thumb) {
     const card = thumb.closest('.project-card');
     draggedProjectImageIndex = Number(thumb.dataset.imageIndex);
     draggedProjectId = thumb.dataset.projectIdx || card.dataset.projectIndex;
-    thumb.style.opacity = '0.5';
+    thumb.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', `${draggedProjectId}|${draggedProjectImageIndex}`);
 }
@@ -1605,6 +1681,8 @@ function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'mo
 
 function dropProjectImage(e, thumb) {
     e.preventDefault();
+    thumb.classList.remove('dragging');
+    document.querySelectorAll('.preview-thumb.dragging').forEach(el => el.classList.remove('dragging'));
     const card = thumb.closest('.project-card');
     const projectIdx = card.dataset.projectIndex;
     const targetIndex = Number(thumb.dataset.imageIndex);
@@ -1660,7 +1738,7 @@ function removeProjectImage(btn, idx) {
     const card = btn.closest('.project-card');
     const projectIdx = card.dataset.projectIndex;
     const images = projectImages[projectIdx] || [];
-    if (idx >= 0 && idx < images.length) { images.splice(idx, 1); projectImages[projectIdx] = images; refreshProjectImagePreviews(card, projectIdx); saveToFirebase(); }
+    if (idx >= 0 && idx < images.length) { images.splice(idx, 1); projectImages[projectIdx] = images; refreshProjectImagePreviews(card, projectIdx); saveToFirebase(); toast('Photo removed'); }
 }
 
 function addProject() {
