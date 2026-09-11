@@ -24,18 +24,16 @@
   --grad-gold:linear-gradient(135deg,#f59e0b,#d97706);
   --grad-match:linear-gradient(135deg,#ec4899,#8b5cf6);
 }
-html,body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;height:100vh;width:100vw;scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"cv11","ss01";animation:pageFade .6s ease}
+html,body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;height:100vh;width:100vw;scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;animation:pageFade .6s ease}
 @keyframes pageFade{from{opacity:0}to{opacity:1}}
 a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:var(--font);border:none;background:none}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:rgba(100,100,100,.3);border-radius:10px}
 h1,h2,h3,.plate-title,.exp-role{letter-spacing:-.02em}
-.about-text,.plate-desc{letter-spacing:.01em}
 
 .page{display:none;width:100%;height:100vh;position:fixed;top:0;left:0;overflow-y:auto;background:var(--bg);transition:opacity .5s,transform .5s;z-index:10}
 .page.active{display:flex;flex-direction:column}
 .page-anim-in-fwd{opacity:0;transform:translateY(40px)}.page-anim-out-fwd{opacity:0;transform:translateY(-40px)}
 
-/* ═══ PAGE 1 – LANDING ═══ */
 #page1{align-items:center;justify-content:center;z-index:10;padding:20px;background:linear-gradient(-45deg,#0f172a,#1e1b4b,#312e81,#0f172a);background-size:400% 400%;animation:gradientBG 15s ease infinite;min-height:100vh;position:relative}
 @keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .landing-content{text-align:center;max-width:800px;padding:20px;margin:0 auto;flex:1;display:flex;flex-direction:column;justify-content:center}
@@ -54,7 +52,6 @@ h1,h2,h3,.plate-title,.exp-role{letter-spacing:-.02em}
 .landing-footer button{color:rgba(255,255,255,.6);font-size:13px;font-weight:600;padding:6px 0;border-bottom:2px solid transparent;transition:color .3s,border-color .3s}
 .landing-footer button:hover{color:#fff;border-bottom-color:#38bdf8}
 
-/* ═══ PAGE 2 – BUILDER ═══ */
 #page2{padding:20px;gap:0;background:var(--bg);z-index:20}
 .builder-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0 16px;flex-wrap:wrap;gap:10px;max-width:1400px;margin:0 auto;width:100%;flex-shrink:0}
 .builder-topbar .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:8px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);transition:border-color .3s,color .3s,transform .25s}
@@ -84,8 +81,6 @@ h1,h2,h3,.plate-title,.exp-role{letter-spacing:-.02em}
 .btn{padding:12px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease,background .3s}
 .btn:hover{transform:translateY(-2px)}
 .btn:active{transform:translateY(0) scale(.97)}
-.btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(255,255,255,.25),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
-.btn:hover::after{opacity:1}
 .btn-primary{background:var(--grad-primary);color:#fff;box-shadow:0 4px 15px var(--primary-glow)}
 .btn-success{background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
 .btn-gold{background:var(--grad-gold);color:#fff}
@@ -114,18 +109,15 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .a4-preview{width:210mm!important;min-height:297mm!important;height:auto!important;flex:0 0 auto!important;transform-origin:top center!important;box-sizing:border-box!important;margin:0 auto!important;padding:14mm 12mm;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.15);font-size:10.5pt;line-height:1.5;color:#0f172a;overflow:visible;word-wrap:break-word;transition:transform .2s ease;position:relative}
 @media(max-width:500px){.preview-scroll{padding:6px!important}.a4-preview{transform:scale(.78);transform-origin:top center;margin:0 auto}}
 
-/* ═══ PROJECT IMAGE UPLOADER ═══ */
 .project-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:10px;background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--radius-sm);transition:border-color .3s,background .3s}
 .project-upload:hover{border-color:var(--primary);background:var(--surface-2)}
 .project-upload input[type=file]{flex:1 1 200px;min-width:160px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-muted);font-family:var(--font);cursor:pointer}
 .project-upload input[type=file]::file-selector-button{padding:6px 14px;margin-right:10px;border:none;border-radius:6px;background:var(--grad-primary);color:#fff;font-weight:600;font-size:12px;font-family:var(--font);cursor:pointer;transition:transform .25s,box-shadow .25s}
-.project-upload input[type=file]::file-selector-button:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--primary-glow)}
 .project-upload .upload-hint{font-size:11px;color:var(--text-muted);line-height:1.5;flex:1 1 100%}
 .proj-image-previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-top:12px}
 .proj-image-previews:empty{display:none}
 .preview-thumb{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:var(--surface);cursor:grab;transition:border-color .3s,transform .3s,box-shadow .3s;user-select:none}
 .preview-thumb:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 8px 20px rgba(37,99,235,.22)}
-.preview-thumb:active{cursor:grabbing}
 .preview-thumb.dragging{opacity:.45;transform:scale(.95)}
 .project-preview-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .image-order-badge{position:absolute;top:5px;left:5px;background:rgba(15,23,42,.78);color:#fff;font-family:var(--font-mono);font-size:10px;font-weight:700;line-height:1;padding:4px 7px;border-radius:20px;pointer-events:none}
@@ -133,16 +125,11 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .image-label-badge.night{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
 .remove-image-btn{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(239,68,68,.95);color:#fff;font-size:11px;font-weight:700;line-height:1;display:grid;place-items:center;opacity:0;transform:scale(.8);transition:opacity .25s,transform .25s}
 .preview-thumb:hover .remove-image-btn{opacity:1;transform:scale(1)}
-.remove-image-btn:hover{background:#dc2626;transform:scale(1.15)!important}
 .set-main-image-btn{position:absolute;bottom:5px;right:5px;background:rgba(15,23,42,.82);color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:20px;opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s,background .3s}
 .preview-thumb:hover .set-main-image-btn{opacity:1;transform:translateY(0)}
 .set-main-image-btn:hover{background:var(--primary)}
-@media(max-width:600px){
-  .proj-image-previews{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
-  .remove-image-btn,.set-main-image-btn{opacity:1;transform:none}
-}
+@media(max-width:600px){.proj-image-previews{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}.remove-image-btn,.set-main-image-btn{opacity:1;transform:none}}
 
-/* ═══ CV A4 ═══ */
 .cv-clean .header{margin-bottom:8px;border-bottom:2px solid #0f172a;padding-bottom:6px;display:flex;align-items:center;justify-content:flex-start;gap:16px}
 .cv-clean .header .name-title{flex:1}
 .cv-clean .header h1{font-family:var(--font-head);font-size:24px;font-weight:800;color:#0f172a;margin:0;line-height:1.1}
@@ -177,7 +164,6 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .cover-letter-content .cover-body p{margin-bottom:10px}
 .cover-letter-content .cover-signature{margin-top:20px;font-weight:600;font-size:12pt}
 
-/* ═══ MODALS ═══ */
 .pdf-options-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .pdf-options-modal.active{display:flex}
 .pdf-options-box{background:var(--surface);border-radius:var(--radius);max-width:420px;width:100%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:ssplitlyModalIn .4s cubic-bezier(.16,1,.3,1) both}
@@ -205,7 +191,6 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .crop-modal .modal-footer .btn-cancel{border:1px solid var(--border);background:transparent;color:var(--text-muted)}
 .crop-modal .modal-footer .btn-crop{background:var(--primary);color:#fff}
 
-/* ═══ PAGE 3 – PORTFOLIO ═══ */
 #page3{z-index:30;background:var(--site-bg);color:var(--site-text);transition:background .5s ease,color .5s ease;scroll-behavior:smooth;overflow-y:auto}
 #page3.active{display:block}
 #page3:not(.light-mode){--site-bg:#030712;--site-surface:rgba(17,24,39,.7);--site-surface-2:rgba(31,41,55,.5);--site-text:#f8fafc;--site-text-muted:#94a3b8;--site-border:rgba(255,255,255,.08);--glass-shadow:0 8px 32px rgba(0,0,0,.4)}
@@ -289,7 +274,6 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .project-finished-badge{position:absolute;top:14px;right:14px;z-index:4;padding:6px 10px;border-radius:999px;background:rgba(16,185,129,.92);color:#fff;font-size:11px;font-weight:800}
 .project-gallery-thumbs{display:flex;gap:7px;padding:10px;overflow-x:auto;background:rgba(0,0,0,.12)}
 .project-gallery-thumbs button{flex:0 0 58px;width:58px;height:42px;padding:0;border:2px solid transparent;border-radius:7px;overflow:hidden;background:transparent;cursor:pointer;transition:border-color .3s,transform .3s}
-.project-gallery-thumbs button:hover{transform:scale(1.05)}
 .project-gallery-thumbs button.active{border-color:var(--site-primary)}
 .project-gallery-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
 .project-main-image{cursor:zoom-in}
@@ -325,7 +309,6 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .site-footer h2{font-family:var(--font-head);font-size:36px;font-weight:800;margin-bottom:20px;background:linear-gradient(90deg,var(--site-primary),var(--site-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 @media(max-width:800px){.hero-grid{grid-template-columns:1fr;text-align:center;gap:30px}.hero-frame{margin:0 auto;width:160px;height:160px}.hero-copy .eyebrow{justify-content:center}.hero-meta,.hero-social{justify-content:center}.site-section{padding:60px 0}.site-projects{grid-template-columns:1fr}}
 
-/* ═══ DARK MODE ═══ */
 .app-dark{--bg:#0b1120;--surface:#111827;--surface-2:#172033;--text:#f8fafc;--text-muted:#94a3b8;--border:#334155}
 .software-manager{margin-top:10px;display:flex;flex-direction:column;gap:8px}
 .software-row{display:grid;grid-template-columns:minmax(120px,1fr) auto 42px auto;gap:8px;align-items:center;padding:9px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm)}
@@ -340,7 +323,6 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 #page3 .theme-select{background:var(--site-surface);color:var(--site-text);border-color:var(--site-border)}
 #page3 .theme-select option{background:#111827;color:#f8fafc}
 
-/* ═══ LOGO & BRAND ═══ */
 .ssplitly-logo-mark{position:relative;width:38px;height:38px;flex:0 0 38px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#38bdf8,#6366f1 48%,#a855f7);box-shadow:0 8px 28px rgba(99,102,241,.38);transform:skewX(-7deg);transition:transform .4s cubic-bezier(.16,1,.3,1)}
 .ssplitly-logo-mark:hover{transform:skewX(-7deg) scale(1.08) rotate(-3deg)}
 .ssplitly-logo-mark span{position:absolute;font-family:'Sora',sans-serif;font-size:21px;line-height:1;font-weight:900;color:#fff;transform:skewX(7deg);text-shadow:0 2px 12px rgba(0,0,0,.25)}
@@ -364,13 +346,10 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .ssplitly-info-panel{display:none;line-height:1.8;color:var(--text-muted);font-size:15px}
 .ssplitly-info-panel.active{display:block}
 .ssplitly-info-panel h3{color:var(--text);font:800 22px 'Sora',sans-serif;margin-bottom:10px}
-.contact-icons{display:flex;gap:24px;margin-top:16px;justify-content:center}
-.contact-icons a{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-size:28px;border:1px solid var(--border)}
 .ssplitly-footer-links{display:flex;justify-content:center;gap:10px 22px;flex-wrap:wrap;margin-top:20px}
 .ssplitly-footer-links button{color:var(--site-text-muted);font-size:13px;font-weight:700;transition:color .3s,transform .3s}
 .ssplitly-footer-links button:hover{color:var(--site-primary);transform:translateY(-2px)}
 
-/* ═══ LOGIN ═══ */
 #loginOverlay{position:fixed;inset:0;z-index:10000000;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(12px)}
 #loginOverlay.active{display:flex}
 .login-box{background:var(--surface);border-radius:24px;padding:40px 32px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center;animation:ssplitlyModalIn .5s cubic-bezier(.16,1,.3,1) both}
@@ -390,18 +369,15 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .logout-btn{background:#fee2e2;color:#ef4444;padding:6px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;border:1px solid transparent;transition:transform .25s,background .3s}
 .logout-btn:hover{transform:translateY(-2px);background:#fecaca}
-#forceLogoutBtn{display:none;margin-top:12px;background:#f59e0b;color:#fff;padding:10px 16px;border-radius:6px;font-weight:700;border:none;cursor:pointer;width:100%}
 .view-only .builder-topbar .back-btn,.view-only .builder-topbar .tab-group,.view-only .builder-topbar .theme-controls,.view-only .form-panel,.view-only .preview-panel{display:none!important}
 .view-only .builder-container{justify-content:center;align-items:center}
 @media(max-width:600px){.software-row{grid-template-columns:1fr 34px auto}.software-row input[type=file]{grid-column:1/-1;max-width:none;width:100%}}
 
-/* ═══ TOAST ═══ */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#0f172a;color:#fff;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 10px 40px rgba(0,0,0,.3);opacity:0;transition:.4s cubic-bezier(.16,1,.3,1);z-index:100001;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.err{background:#ef4444}
 .toast.ok{background:linear-gradient(135deg,#10b981,#059669)}
 
-/* ═══ SCROLL TO TOP FAB ═══ */
 .scroll-top-fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:var(--grad-primary);color:#fff;font-size:18px;display:none;align-items:center;justify-content:center;box-shadow:0 10px 30px var(--primary-glow);z-index:9998;cursor:pointer;transition:transform .3s,opacity .3s}
 .scroll-top-fab.show{display:flex;animation:fadeInUp .4s cubic-bezier(.16,1,.3,1)}
 .scroll-top-fab:hover{transform:translateY(-4px) scale(1.08)}
@@ -506,7 +482,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
             </div>
             <div class="form-group">
                 <label><i class="fas fa-user-pen"></i> About / Bio</label>
-                <textarea id="aboutInput" rows="3">Creative 3D Exterior Visualizer & Architectural Draftsman with 6+ years of experience in the UAE and India. Expert in photorealistic 3D rendering and precise AutoCAD documentation for luxury villas and commercial projects. I specialize in transforming architectural concepts into high-fidelity visuals, bridging the gap between technical design and client vision.</textarea>
+                <textarea id="aboutInput" rows="3">Creative 3D Exterior Visualizer & Architectural Draftsman with 6+ years of experience in the UAE and India. Expert in photorealistic 3D rendering and precise AutoCAD documentation for luxury villas and commercial projects.</textarea>
             </div>
             <div class="section-title"><i class="fas fa-laptop-code"></i> Software &amp; Icons</div>
             <div class="software-help">Add software names and upload an SVG icon.</div>
@@ -693,18 +669,14 @@ async function seedUsers() {
 }
 seedUsers();
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ SESSION MANAGEMENT — lockOwner based auto logout
-   ═══════════════════════════════════════════════════════════ */
+/* ═══ SESSION MANAGEMENT — lockOwner based auto logout ═══ */
 let sessionWatcherUnsubscribe = null;
 let dataWatcherUnsubscribe = null;
 
 window.startSessionWatcher = function(serial, mySessionId) {
     if (sessionWatcherUnsubscribe) { sessionWatcherUnsubscribe(); sessionWatcherUnsubscribe = null; }
-    
     sessionWatcherUnsubscribe = onValue(ref(db, `users/${serial}/lockOwner`), (snapshot) => {
         const currentOwner = snapshot.val();
-        // ✅ lockOwner മാറിയാൽ = വേറെ device login ചെയ്തു → auto logout
         if (currentOwner && mySessionId && currentOwner !== mySessionId) {
             sessionStorage.removeItem('ssplitly_session');
             window.stopSessionWatcher();
@@ -719,14 +691,11 @@ window.stopSessionWatcher = function() {
     if (sessionWatcherUnsubscribe) { sessionWatcherUnsubscribe(); sessionWatcherUnsubscribe = null; }
 };
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ REAL-TIME DATA SYNC — Phone-ൽ Computer-ലെ photos auto കാണും
-   ═══════════════════════════════════════════════════════════ */
 window.startDataWatcher = function(serial, onRemoteUpdate) {
     if (dataWatcherUnsubscribe) { dataWatcherUnsubscribe(); dataWatcherUnsubscribe = null; }
     let firstFire = true;
     dataWatcherUnsubscribe = onValue(ref(db, `users/${serial}/builderData`), (snapshot) => {
-        if (firstFire) { firstFire = false; return; } // ആദ്യ load skip
+        if (firstFire) { firstFire = false; return; }
         const remoteData = snapshot.val();
         if (!remoteData) return;
         if (typeof onRemoteUpdate === 'function') onRemoteUpdate(remoteData);
@@ -753,15 +722,12 @@ window.loginUser = async function(serial, password) {
     const now = Date.now();
 
     try {
-        // ✅ lockOwner change → പഴയ device auto logout
         await update(ref(db), {
             [`users/${serial}/active`]: true,
             [`users/${serial}/lastActive`]: now,
             [`users/${serial}/lockOwner`]: sessionId
         });
-    } catch (e) {
-        console.warn('Firebase sync failed:', e);
-    }
+    } catch (e) { console.warn('Firebase sync failed:', e); }
 
     sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, sessionId, loginTime: now }));
     loader.classList.remove('active');
@@ -790,9 +756,7 @@ window.checkSession = function() {
     } catch (e) { return null; }
 };
 
-window.markViewOnly = function() {
-    document.getElementById('loginOverlay').classList.remove('active');
-};
+window.markViewOnly = function() { document.getElementById('loginOverlay').classList.remove('active'); };
 
 window.addEventListener('beforeunload', function() {
     const raw = sessionStorage.getItem('ssplitly_session');
@@ -806,9 +770,6 @@ window.addEventListener('beforeunload', function() {
 </script>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   GLOBAL STATE
-   ═══════════════════════════════════════════════════ */
 let activeTab = 'cv';
 let isViewOnly = false;
 let isNightMode = false;
@@ -818,9 +779,6 @@ let projectImages = {};
 let cropper = null;
 let pdfPendingType = 'cv';
 
-/* ═══════════════════════════════════════════════════
-   TOAST NOTIFICATION SYSTEM
-   ═══════════════════════════════════════════════════ */
 function toast(msg, type='ok') {
     let t = document.getElementById('__toast');
     if (!t) { t = document.createElement('div'); t.id = '__toast'; t.className = 'toast'; document.body.appendChild(t); }
@@ -836,9 +794,6 @@ function getCurrentSerial() {
     try { return JSON.parse(raw).serial || null; } catch (e) { return null; }
 }
 
-/* ═══════════════════════════════════════════════════
-   ✅ SAVE TO FIREBASE — with size check & error toast
-   ═══════════════════════════════════════════════════ */
 async function saveToFirebase() {
     const serial = getCurrentSerial();
     if (!serial || !window.__firebase) return;
@@ -896,7 +851,6 @@ async function saveToFirebase() {
         });
     });
 
-    // ✅ Size check — 8MB-ൽ കൂടരുത്
     data.lastSavedAt = Date.now();
     const jsonStr = JSON.stringify(data);
     if (jsonStr.length > 8 * 1024 * 1024) {
@@ -993,14 +947,11 @@ async function loadFromFirebase() {
     } catch (e) { console.error('Load error:', e); return false; }
 }
 
-/* ═══════════════════════════════════════════════════
-   ✅ APPLY REMOTE DATA — real-time sync from other device
-   ═══════════════════════════════════════════════════ */
+/* ✅ Real-time sync — applies remote changes */
 function applyRemoteData(d) {
     if (!d) return;
     if (window.__localLastSave && d.lastSavedAt && d.lastSavedAt <= window.__localLastSave) return;
-
-    console.log('🔄 Applying remote data from another device…');
+    console.log('🔄 Applying remote data…');
 
     if (d.fullName !== undefined) document.getElementById('fullName').value = d.fullName;
     if (d.profTitle !== undefined) document.getElementById('profTitle').value = d.profTitle;
@@ -1025,7 +976,6 @@ function applyRemoteData(d) {
     if (d.portfolioTotalExperience !== undefined) document.getElementById('portfolioTotalExperience').value = d.portfolioTotalExperience;
     if (d.portfolioFinishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value = d.portfolioFinishedProjects;
 
-    // ✅ Photos sync — പ്രധാനം!
     if (d.projects && Array.isArray(d.projects)) {
         const projC = document.getElementById('projectContainer');
         projC.innerHTML = ''; window.projectCounter = 0; projectImages = {};
@@ -1040,7 +990,6 @@ function applyRemoteData(d) {
         updateProjectCount(); updateProjectStats();
     }
 
-    // Experiences & Education sync
     if (d.experiences && Array.isArray(d.experiences)) {
         const expC = document.getElementById('experienceContainer');
         expC.innerHTML = ''; window.expCounter = 0;
@@ -1100,7 +1049,6 @@ function resetBuilderState() {
     document.getElementById('showWhatsApp').checked = true;
 }
 
-/* ═══ DEFAULT DATA ═══ */
 const DEFAULT_PROJECTS = [
     { title: 'Luxury Villa Exterior', desc: 'Photorealistic exterior rendering for a luxury villa in Dubai Hills.', tools: '3ds Max, V-Ray, Photoshop', images: [], finished: false },
     { title: 'Commercial Tower Visualization', desc: 'High-end visualization for a mixed-use commercial tower.', tools: 'SketchUp, Lumion, After Effects', images: [], finished: false },
@@ -1109,22 +1057,22 @@ const DEFAULT_PROJECTS = [
 
 const defaultExperiences = [
     { company: 'ARCAL ENGINEERING CONSULTANT', role: 'EXTERIOR VISUALIZER', start: '2022-11', end: '2026-08', present: true, bullets: [
-        'Lead the creation of high-end 3D exterior renderings for residential and commercial projects, ensuring lighting, textures, and environments meet premium standards.',
-        'Collaborate with architects and engineers to translate complex design briefs into visually stunning 2D/3D presentations.',
-        'Conduct material research and environmental mapping to provide clients with realistic previews of final builds.',
+        'Lead the creation of high-end 3D exterior renderings for residential and commercial projects.',
+        'Collaborate with architects and engineers to translate complex design briefs into visually stunning presentations.',
+        'Conduct material research and environmental mapping to provide clients with realistic previews.',
         'Manage multiple design iterations based on client feedback while maintaining strict project deadlines.'
     ], location: 'Alain, UAE' },
-    { company: 'AL MAGHREB AL ARABI ENGINEERING CONSULTANT', role: 'ARCHITECTURAL DRAFTMAN & EXTERIOR, INTERIOR VISUALIZER', start: '2019-11', end: '2022-11', present: false, bullets: [
-        'Architectural Documentation: Developed detailed structural and architectural drawings for private villas using AutoCAD, adhering to UAE building codes and regulations.',
-        'Color Elevations: Produced detailed color elevations to define building aesthetics, material finishes, and color palettes for commercial approval.',
-        'Technical Precision: Created and modified detailed layouts based on engineer specifications, ensuring 100% accuracy in technical site plans and sections.',
-        'Multi-Disciplinary Design: Balanced roles between drafting technical blueprints and generating interior/exterior 3D visualizations to streamline the design-to-delivery process.'
+    { company: 'AL MAGHREB AL ARABI ENGINEERING CONSULTANT', role: 'ARCHITECTURAL DRAFTMAN & VISUALIZER', start: '2019-11', end: '2022-11', present: false, bullets: [
+        'Architectural Documentation: Developed detailed structural and architectural drawings for private villas using AutoCAD.',
+        'Color Elevations: Produced detailed color elevations to define building aesthetics.',
+        'Technical Precision: Created and modified detailed layouts based on engineer specifications.',
+        'Multi-Disciplinary Design: Balanced roles between drafting and 3D visualizations.'
     ], location: 'Alain, UAE' },
-    { company: 'ANGUS BUILDERS', role: 'ARCHITECTURAL DRAFTMAN & EXTERIOR, INTERIOR VISUALIZER', start: '2017-11', end: '2019-11', present: false, bullets: [
-        '3D Modeling & Visualization: Developed high-quality architectural 3D models and renderings using SketchUp and 3ds Max to provide clients with immersive project previews.',
-        'Design Coordination: Collaborated closely with head architects, contractors, and clients to ensure all commercial designs were functional, aesthetically cohesive, and met technical requirements.',
-        'Technical Drafting: Prepared comprehensive architectural floor plans and technical construction details, ensuring precision and clarity for the building phase.',
-        'Site Management & Analysis: Performed on-site construction analysis and participated in project meetings to ensure design specifications were accurately implemented during construction.'
+    { company: 'ANGUS BUILDERS', role: 'ARCHITECTURAL DRAFTMAN & VISUALIZER', start: '2017-11', end: '2019-11', present: false, bullets: [
+        '3D Modeling & Visualization: Developed high-quality architectural 3D models using SketchUp and 3ds Max.',
+        'Design Coordination: Collaborated closely with head architects, contractors, and clients.',
+        'Technical Drafting: Prepared comprehensive architectural floor plans.',
+        'Site Management & Analysis: Performed on-site construction analysis.'
     ], location: 'Kerala, India' }
 ];
 
@@ -1151,7 +1099,6 @@ function populateDefaultData() {
     generateCV(); generateCoverLetter(); updateLivePreview();
 }
 
-/* ═══ SOFTWARE / SKILLS ═══ */
 function getSoftwareLogo(name) {
     const key = (name || '').toLowerCase().trim();
     if (customSoftwareIcons[key]) return customSoftwareIcons[key];
@@ -1257,7 +1204,6 @@ function refreshAllOutputs() {
     if (page3 && page3.classList.contains('active')) renderPortfolioWebsite(buildShareData());
 }
 
-/* ═══ NAVIGATION ═══ */
 function activePageId() { const el = document.querySelector('.page.active'); return el ? el.id : 'page1'; }
 
 function navigateTo(toId) {
@@ -1346,7 +1292,6 @@ function toggleFsZoom() { const c = document.getElementById('fsContent'); c.styl
 function resetFsView() { document.getElementById('fsContent').style.transform = 'scale(1)'; document.getElementById('fsViewport').scrollTop = 0; }
 function closeFullscreenPreview() { document.getElementById('fullscreenPreview').classList.remove('active'); document.body.style.overflow = ''; }
 
-/* ═══ PROFILE PIC / CROP ═══ */
 document.getElementById('profilePicInput').addEventListener('change', function(e) {
     if (isViewOnly) return;
     const file = e.target.files[0]; if (!file) return;
@@ -1381,7 +1326,6 @@ function removePic() {
     toast('Profile photo removed');
 }
 
-/* ═══ EXPERIENCE ═══ */
 function createExperienceHTML(company, role, start, end, present, bullets, location) {
     const bulletHTML = (bullets || []).map(b => `<div class="bullet-item"><input type="text" class="bullet-input" value="${escapeHTML(b)}" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button></div>`).join('');
     return `<div class="entry-card"><button class="remove-btn" onclick="removeEntry(this)">✕</button>
@@ -1449,7 +1393,6 @@ function removeBullet(btn) {
     saveToFirebase();
 }
 
-/* ═══ EDUCATION ═══ */
 function createEducationHTML(institution, degree, start, end, present, location) {
     return `<div class="entry-card"><button class="remove-btn" onclick="removeEntry(this)">✕</button>
         <div class="form-group"><label>Institution</label><input type="text" class="edu-institution" value="${escapeHTML(institution)}"></div>
@@ -1488,7 +1431,6 @@ function addEducation() {
     if (activeTab === 'cv') { generateCV(); updateLivePreview(); }
 }
 
-/* ═══ CV GENERATION ═══ */
 function generateCV() {
     try {
         const name = document.getElementById('fullName').value || 'Salih Muhammed';
@@ -1504,7 +1446,7 @@ function generateCV() {
         const showBehance = document.getElementById('showBehance').checked;
         const showInstagram = document.getElementById('showInstagram').checked;
         const showWhatsApp = document.getElementById('showWhatsApp').checked;
-        const skillsRaw = document.getElementById('skillsInput').value || 'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY, ADOBE LIGHTROOM, ADOBE PHOTOSHOP, GEMINI AI';
+        const skillsRaw = document.getElementById('skillsInput').value || 'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY';
         const skills = skillsRaw.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
         const photo = window.croppedImageData || '';
         const summary = document.getElementById('aboutInput').value || '';
@@ -1598,7 +1540,6 @@ function generateCV() {
     } catch (e) { console.error('CV generation error:', e); }
 }
 
-/* ═══ COVER LETTER ═══ */
 function generateCoverLetter() {
     const name = document.getElementById('fullName').value || 'Salih Muhammed';
     const title = document.getElementById('profTitle').value || 'Exterior Visualizer';
@@ -1626,7 +1567,7 @@ function generateCoverLetter() {
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const skillsList = skills.slice(0, 4).join(', ');
     const lastRole = expCards.length > 0 ? (expCards[0].querySelector('.exp-role').value || 'Professional') : 'Professional';
-    const letterContent = `<div class="cover-letter-content"><div class="cover-header"><div class="cl-name">${escapeHTML(name)}</div><div class="cl-details">${escapeHTML(title)} | <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}">${escapeHTML(phone)}</a> | <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a> | ${escapeHTML(location)} | <a href="${escapeHTML(linkedinUrl)}" target="_blank">LinkedIn</a></div></div><div class="cover-date">${escapeHTML(today)}</div><div class="cover-subject">Subject: Application for ${escapeHTML(applyJob)} at ${escapeHTML(applyCompany)}</div><div class="cover-body"><p>Dear Hiring Manager,</p><p>I am writing to express my strong interest in the ${escapeHTML(applyJob)} position at ${escapeHTML(applyCompany)}. With over ${totalYears}+ years of experience as a ${escapeHTML(title)} and Architectural Draftsman, I have developed a comprehensive skill set that aligns perfectly with the requirements of this role.</p><p>In my recent role as ${escapeHTML(lastRole)}, I have successfully delivered high-quality 3D visualizations and technical drawings for luxury residential and commercial projects. My expertise includes ${escapeHTML(skillsList)}, enabling me to produce photorealistic renders and precise documentation that bridge the gap between architectural concepts and client vision.</p><p>I am particularly drawn to ${escapeHTML(applyCompany)} because of its reputation for innovative design and commitment to excellence. I am confident that my background in architectural visualization and my dedication to continuous learning would make me a valuable addition to your team.</p><p>Thank you for considering my application. I look forward to the opportunity to discuss how my expertise can support the goals of ${escapeHTML(applyCompany)}. I am available for an interview at your earliest convenience.</p><p>Yours sincerely,</p></div><div class="cover-signature">${escapeHTML(name)}<br>${escapeHTML(title)}</div></div>`;
+    const letterContent = `<div class="cover-letter-content"><div class="cover-header"><div class="cl-name">${escapeHTML(name)}</div><div class="cl-details">${escapeHTML(title)} | <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}">${escapeHTML(phone)}</a> | <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a> | ${escapeHTML(location)}</div></div><div class="cover-date">${escapeHTML(today)}</div><div class="cover-subject">Subject: Application for ${escapeHTML(applyJob)} at ${escapeHTML(applyCompany)}</div><div class="cover-body"><p>Dear Hiring Manager,</p><p>I am writing to express my strong interest in the ${escapeHTML(applyJob)} position at ${escapeHTML(applyCompany)}. With over ${totalYears}+ years of experience as a ${escapeHTML(title)} and Architectural Draftsman, I have developed a comprehensive skill set that aligns perfectly with the requirements of this role.</p><p>In my recent role as ${escapeHTML(lastRole)}, I have successfully delivered high-quality 3D visualizations and technical drawings for luxury residential and commercial projects. My expertise includes ${escapeHTML(skillsList)}, enabling me to produce photorealistic renders and precise documentation.</p><p>I am particularly drawn to ${escapeHTML(applyCompany)} because of its reputation for innovative design and commitment to excellence. I am confident that my background would make me a valuable addition to your team.</p><p>Thank you for considering my application. I look forward to the opportunity to discuss how my expertise can support the goals of ${escapeHTML(applyCompany)}.</p><p>Yours sincerely,</p></div><div class="cover-signature">${escapeHTML(name)}<br>${escapeHTML(title)}</div></div>`;
     document.getElementById('coverOutput').innerHTML = `<div class="a4-preview" style="margin:0 auto;">${letterContent}</div>`;
 }
 
@@ -1638,7 +1579,7 @@ function matchCVtoCover() {
     if (expCards.length > 0) { const company = expCards[0].querySelector('.exp-company').value || ''; if (company && !document.getElementById('applyCompany').value) document.getElementById('applyCompany').value = company; }
     saveToFirebase(); generateCoverLetter(); updateLivePreview();
     if (activeTab !== 'cover') switchTab('cover');
-    toast('✅ Cover Letter synced with your CV data!');
+    toast('✅ Cover Letter synced!');
 }
 
 function matchCVtoPortfolio() {
@@ -1652,18 +1593,17 @@ function matchCVtoPortfolio() {
             { title: 'Commercial Building Render', desc: 'High-end visualization for a mixed-use commercial tower.', tools: skills.slice(0, 4).join(', ') || 'SketchUp, Lumion, After Effects' }
         ];
         defaults.forEach(p => { window.projectCounter++; container.insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [])); updateProjectCount(); saveToFirebase(); });
-        toast('✅ Portfolio synced with your CV!');
-    } else { toast('ℹ️ Your portfolio already has projects.'); }
+        toast('✅ Portfolio synced!');
+    } else { toast('ℹ️ Portfolio already has projects.'); }
     if (activeTab !== 'portfolio') switchTab('portfolio');
 }
 
-/* ═══ PROJECTS ═══ */
 function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
     let previewHTML = '';
     if (imagesArray && imagesArray.length > 0) {
         previewHTML = imagesArray.map((img, idx) => {
             const label = idx === 0 ? '<span class="image-label-badge">Main</span>' : (idx === 1 ? '<span class="image-label-badge night">Night</span>' : '');
-            return `<div class="preview-thumb" draggable="true" data-image-index="${idx}" data-project-idx="${window.projectCounter}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${idx+1}" loading="lazy"><span class="image-order-badge">${idx+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)" title="Make this the 1st photo">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${idx})">✕</button></div>`;
+            return `<div class="preview-thumb" draggable="true" data-image-index="${idx}" data-project-idx="${window.projectCounter}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${idx+1}" loading="lazy"><span class="image-order-badge">${idx+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)" title="Make this 1st">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${idx})">✕</button></div>`;
         }).join('');
     }
     return `<div class="project-card" data-project-index="${window.projectCounter}">
@@ -1674,21 +1614,16 @@ function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
         <div class="checkbox-group project-finished-toggle"><input type="checkbox" class="proj-finished" ${finished ? 'checked' : ''} onchange="updateProjectStats()"><label>Finished Project</label></div>
         <div class="project-upload">
             <input type="file" class="proj-image-input" accept="image/*" multiple onchange="handleProjectImages(this)">
-            <span class="upload-hint"><i class="fas fa-info-circle"></i> Select multiple photos (max 5). Auto-compressed for sync.</span>
+            <span class="upload-hint"><i class="fas fa-info-circle"></i> Select multiple photos. Auto-compressed & synced across devices.</span>
         </div>
         <div class="proj-image-previews">${previewHTML}</div>
     </div>`;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ COMPRESS IMAGE — Auto compress to save Firebase space
-   ═══════════════════════════════════════════════════════════ */
+/* ✅ Compress image aggressively to fit Firebase limits */
 function compressImageFile(file, maxDim = 900, quality = 0.62) {
     return new Promise((resolve, reject) => {
-        if (!file || !file.type || !file.type.startsWith('image/')) {
-            reject(new Error('Not an image'));
-            return;
-        }
+        if (!file || !file.type || !file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
         const reader = new FileReader();
         reader.onerror = () => reject(new Error('Read failed'));
         reader.onload = () => {
@@ -1702,24 +1637,18 @@ function compressImageFile(file, maxDim = 900, quality = 0.62) {
                 w = Math.max(1, Math.round(w * scale));
                 h = Math.max(1, Math.round(h * scale));
                 const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
+                canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
                 try {
                     const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                    // 280KB-ൽ കൂടുതലാണെങ്കിൽ കൂടുതൽ compress ചെയ്യുക
                     if (dataUrl.length > 280000) {
                         const smaller = canvas.toDataURL('image/jpeg', 0.45);
                         resolve(smaller);
-                    } else {
-                        resolve(dataUrl);
-                    }
-                } catch (e) {
-                    resolve(reader.result);
-                }
+                    } else { resolve(dataUrl); }
+                } catch (e) { resolve(reader.result); }
             };
             img.src = reader.result;
         };
@@ -1727,9 +1656,6 @@ function compressImageFile(file, maxDim = 900, quality = 0.62) {
     });
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ HANDLE PROJECT IMAGES — better error handling
-   ═══════════════════════════════════════════════════════════ */
 async function handleProjectImages(input) {
     if (isViewOnly) return;
     const files = Array.from(input.files || []);
@@ -1741,7 +1667,6 @@ async function handleProjectImages(input) {
     const idx = card.dataset.projectIndex;
     if (!projectImages[idx]) projectImages[idx] = [];
 
-    // Total size check — 10MB-ൽ കൂടരുത്
     let totalSize = 0;
     files.forEach(f => totalSize += f.size);
     if (totalSize > 10 * 1024 * 1024) {
@@ -1751,10 +1676,7 @@ async function handleProjectImages(input) {
 
     toast('⏳ Processing ' + files.length + ' photo(s)…');
     const results = await Promise.all(
-        files.map(f => compressImageFile(f).catch(err => {
-            console.warn('Image failed:', err);
-            return null;
-        }))
+        files.map(f => compressImageFile(f).catch(err => { console.warn('Image failed:', err); return null; }))
     );
     const okImages = results.filter(Boolean);
     if (!okImages.length) { toast('❌ Could not read photos.', 'err'); return; }
@@ -1916,7 +1838,6 @@ function goToPortfolioSite() {
     pushHistoryForPage('page3');
 }
 
-/* ═══ PORTFOLIO WEBSITE ═══ */
 function renderPortfolioWebsite(data) {
     customSoftwareIcons = data.customSoftwareIcons || customSoftwareIcons || {};
     colorTheme = data.colorTheme || colorTheme || 'blue';
@@ -2068,7 +1989,6 @@ function animatePortfolioStats(container) {
     });
 }
 
-/* ═══ THEME ═══ */
 function toggleSiteTheme() {
     const page3 = document.getElementById('page3');
     page3.classList.toggle('light-mode');
@@ -2087,9 +2007,7 @@ function toggleBuilderTheme() {
     document.getElementById('builderThemeLabel').textContent = isNightMode ? 'Night' : 'Day';
     updateThemeLabel();
     saveToFirebase();
-    if (page3.classList.contains('active')) {
-        setTimeout(() => renderPortfolioWebsite(buildShareData()), 50);
-    }
+    if (page3.classList.contains('active')) { setTimeout(() => renderPortfolioWebsite(buildShareData()), 50); }
 }
 
 function updateThemeLabel() {
@@ -2110,9 +2028,7 @@ function setColorTheme(theme) {
     document.getElementById('builderColorTheme').value = colorTheme;
     document.getElementById('siteColorTheme').value = colorTheme;
     saveToFirebase();
-    if (page3.classList.contains('active')) {
-        renderPortfolioWebsite(buildShareData());
-    }
+    if (page3.classList.contains('active')) { renderPortfolioWebsite(buildShareData()); }
 }
 
 function applySavedAppearance() {
@@ -2128,7 +2044,6 @@ function applySavedAppearance() {
     if (icon) icon.className = isNightMode ? 'fas fa-moon' : 'fas fa-sun';
 }
 
-/* ═══ SHARE LINK & VIEW-ONLY ═══ */
 function generateShareLink() {
     const data = buildShareData();
     const name = (data.name || 'portfolio').trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -2198,7 +2113,6 @@ function detectViewOnly() {
     return false;
 }
 
-/* ═══ PDF EXPORT ═══ */
 function showPDFOptions(type) { pdfPendingType = type || 'cv'; document.getElementById('pdfOptionsModal').classList.add('active'); }
 function closePDFOptions() { document.getElementById('pdfOptionsModal').classList.remove('active'); }
 function downloadPDFWithOptions() { closePDFOptions(); if (pdfPendingType === 'cv') downloadCVWithOptions(); else downloadCoverLetterPDF(); }
@@ -2217,7 +2131,7 @@ function downloadCVWithOptions() {
         temp.style.width = '210mm'; temp.style.background = '#fff';
         temp.appendChild(clone); document.body.appendChild(temp);
         html2canvas(temp, { scale: 3.0, useCORS: true, backgroundColor: '#fff', logging: false })
-            .then(canvas => { document.body.removeChild(temp); const imgData = canvas.toDataURL('image/jpeg', 0.95); const doc = new window.jspdf.jsPDF('p', 'mm', 'a4'); doc.addImage(imgData, 'JPEG', 0, 0, 210, 297); doc.save('CV_Salih_Muhammed.pdf'); toast('✅ CV downloaded'); })
+            .then(canvas => { document.body.removeChild(temp); const imgData = canvas.toDataURL('image/jpeg', 0.95); const doc = new window.jspdf.jsPDF('p', 'mm', 'a4'); doc.addImage(imgData, 'JPEG', 0, 0, 210, 297); doc.save('CV.pdf'); toast('✅ CV downloaded'); })
             .catch(err => { document.body.removeChild(temp); toast('PDF generation failed.', 'err'); console.error(err); });
     }, 800);
 }
@@ -2236,7 +2150,7 @@ function downloadCoverLetterPDF() {
         temp.style.width = '210mm'; temp.style.background = '#fff';
         temp.appendChild(clone); document.body.appendChild(temp);
         html2canvas(temp, { scale: 3.0, useCORS: true, backgroundColor: '#fff', logging: false })
-            .then(canvas => { document.body.removeChild(temp); const imgData = canvas.toDataURL('image/jpeg', 0.95); const doc = new window.jspdf.jsPDF('p', 'mm', 'a4'); doc.addImage(imgData, 'JPEG', 0, 0, 210, 297); doc.save('Cover_Letter_Salih_Muhammed.pdf'); toast('✅ Cover letter downloaded'); })
+            .then(canvas => { document.body.removeChild(temp); const imgData = canvas.toDataURL('image/jpeg', 0.95); const doc = new window.jspdf.jsPDF('p', 'mm', 'a4'); doc.addImage(imgData, 'JPEG', 0, 0, 210, 297); doc.save('Cover_Letter.pdf'); toast('✅ Cover letter downloaded'); })
             .catch(err => { document.body.removeChild(temp); toast('PDF generation failed.', 'err'); console.error(err); });
     }, 800);
 }
@@ -2269,7 +2183,6 @@ function openSsplitlyInfo(tab) {
 }
 function closeSsplitlyInfo() { const modal = document.getElementById('ssplitlyInfoModal'); if (!modal) return; modal.classList.remove('active'); document.body.style.overflow = ''; }
 
-/* ═══ AUTO-SAVE ═══ */
 const autoSaveInputIds = ['fullName', 'profTitle', 'email', 'phone', 'location', 'linkedinUrl', 'behanceUrl', 'instagramUrl', 'whatsappUrl', 'aboutInput', 'skillsInput', 'applyJob', 'applyCompany'];
 const autoSaveCheckboxIds = ['showLinkedIn', 'showBehance', 'showInstagram', 'showWhatsApp'];
 autoSaveInputIds.forEach(id => {
@@ -2291,23 +2204,12 @@ document.addEventListener('input', function(e) {
     }
 });
 
-/* ═══ BUTTON RIPPLE ═══ */
-document.addEventListener('pointermove', e => {
-    const btn = e.target.closest('.btn, .btn-landing');
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    btn.style.setProperty('--x', ((e.clientX - rect.left) / rect.width * 100) + '%');
-    btn.style.setProperty('--y', ((e.clientY - rect.top) / rect.height * 100) + '%');
-});
-
-/* ═══ SCROLL-TO-TOP FAB ═══ */
 const scrollFab = document.getElementById('scrollTopFab');
 window.addEventListener('scroll', () => {
     if (window.scrollY > 400) scrollFab.classList.add('show');
     else scrollFab.classList.remove('show');
 }, { passive: true });
 
-/* ═══ KEYBOARD SHORTCUTS ═══ */
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey || e.metaKey) {
         if (e.key === 's' && !e.shiftKey) { e.preventDefault(); saveToFirebase(); toast('💾 Saved'); }
@@ -2316,15 +2218,11 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') { closeSsplitlyInfo(); closePDFOptions(); }
 });
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ LOGIN HANDLER — with session + data watchers
-   ═══════════════════════════════════════════════════════════ */
 document.getElementById('loginBtn').addEventListener('click', async function() {
     const serial = document.getElementById('loginSerial').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
     const errorEl = document.getElementById('loginError');
     errorEl.textContent = '';
-
     if (!serial || !password) { errorEl.textContent = 'Please fill both fields.'; return; }
     if (serial.length !== 12 || !/^\d{12}$/.test(serial)) { errorEl.textContent = 'Serial must be 12 digits.'; return; }
 
@@ -2336,20 +2234,14 @@ document.getElementById('loginBtn').addEventListener('click', async function() {
         document.getElementById('page3').classList.remove('active');
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         await loadFromFirebase();
-
         const sess = JSON.parse(sessionStorage.getItem('ssplitly_session'));
-        // ✅ Session watcher — auto logout when another device logs in
         window.startSessionWatcher(serial, sess.sessionId);
-        // ✅ Data watcher — real-time sync from other device
         window.startDataWatcher(serial, applyRemoteData);
     }
 });
 document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ INITIAL LOAD
-   ═══════════════════════════════════════════════════════════ */
 window.onload = async function() {
     const viewOnlyDetected = detectViewOnly();
     if (viewOnlyDetected) {
@@ -2367,9 +2259,7 @@ window.onload = async function() {
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         const loaded = await loadFromFirebase();
         if (!loaded) { resetBuilderState(); populateDefaultData(); await saveToFirebase(); }
-        // ✅ Pass sessionId to watcher
         window.startSessionWatcher(session.serial, session.sessionId);
-        // ✅ Start data watcher for real-time sync
         window.startDataWatcher(session.serial, applyRemoteData);
     } else {
         document.getElementById('loginOverlay').classList.add('active');
@@ -2384,9 +2274,6 @@ window.onload = async function() {
 
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSsplitlyInfo(); });
 
-/* ═══════════════════════════════════════════════════════════
-   ✅ VISIBILITY CHANGE — refresh on tab focus (extra safety)
-   ═══════════════════════════════════════════════════════════ */
 document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible' && !isViewOnly) {
         const session = window.checkSession();
