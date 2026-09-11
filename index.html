@@ -114,7 +114,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 .a4-preview{width:210mm!important;min-height:297mm!important;height:auto!important;flex:0 0 auto!important;transform-origin:top center!important;box-sizing:border-box!important;margin:0 auto!important;padding:14mm 12mm;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.15);font-size:10.5pt;line-height:1.5;color:#0f172a;overflow:visible;word-wrap:break-word;transition:transform .2s ease;position:relative}
 @media(max-width:500px){.preview-scroll{padding:6px!important}.a4-preview{transform:scale(.78);transform-origin:top center;margin:0 auto}}
 
-/* ═══ PROJECT IMAGE UPLOADER (FIX) ═══ */
+/* ═══ PROJECT IMAGE UPLOADER ═══ */
 .project-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:10px;background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--radius-sm);transition:border-color .3s,background .3s}
 .project-upload:hover{border-color:var(--primary);background:var(--surface-2)}
 .project-upload input[type=file]{flex:1 1 200px;min-width:160px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-muted);font-family:var(--font);cursor:pointer}
@@ -426,8 +426,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
         <div class="login-loader" id="loginLoader"></div>
-        <button id="forceLogoutBtn"><i class="fas fa-power-off"></i> Logout from other devices</button>
-        <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Account lock prevents simultaneous login.</p>
+        <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
 </div>
 
@@ -694,29 +693,24 @@ async function seedUsers() {
 }
 seedUsers();
 
+/* ═══════════════════════════════════════════════════════════
+   ✅ SESSION MANAGEMENT — lockOwner based auto logout
+   ═══════════════════════════════════════════════════════════ */
 let sessionWatcherUnsubscribe = null;
+let dataWatcherUnsubscribe = null;
 
-window.startSessionWatcher = function(serial) {
+window.startSessionWatcher = function(serial, mySessionId) {
     if (sessionWatcherUnsubscribe) { sessionWatcherUnsubscribe(); sessionWatcherUnsubscribe = null; }
-    let firstFire = true;
-    let lastSeenForceLogoutAt = 0;
-    sessionWatcherUnsubscribe = onValue(ref(db, `users/${serial}/forceLogoutAt`), (snapshot) => {
-        const currentForceLogoutAt = snapshot.val() || 0;
-        if (firstFire) { firstFire = false; lastSeenForceLogoutAt = currentForceLogoutAt; return; }
-        if (currentForceLogoutAt > lastSeenForceLogoutAt) {
-            lastSeenForceLogoutAt = currentForceLogoutAt;
-            const raw = sessionStorage.getItem('ssplitly_session');
-            if (raw) {
-                try {
-                    const session = JSON.parse(raw);
-                    if (session.serial === serial) {
-                        sessionStorage.removeItem('ssplitly_session');
-                        window.stopSessionWatcher();
-                        alert('⚠️ You have been logged out because someone logged into this account from another device.');
-                        location.reload();
-                    }
-                } catch (e) {}
-            }
+    
+    sessionWatcherUnsubscribe = onValue(ref(db, `users/${serial}/lockOwner`), (snapshot) => {
+        const currentOwner = snapshot.val();
+        // ✅ lockOwner മാറിയാൽ = വേറെ device login ചെയ്തു → auto logout
+        if (currentOwner && mySessionId && currentOwner !== mySessionId) {
+            sessionStorage.removeItem('ssplitly_session');
+            window.stopSessionWatcher();
+            if (typeof window.stopDataWatcher === 'function') window.stopDataWatcher();
+            alert('⚠️ You have been logged out because someone logged into this account from another device.');
+            location.reload();
         }
     });
 };
@@ -725,58 +719,50 @@ window.stopSessionWatcher = function() {
     if (sessionWatcherUnsubscribe) { sessionWatcherUnsubscribe(); sessionWatcherUnsubscribe = null; }
 };
 
+/* ═══════════════════════════════════════════════════════════
+   ✅ REAL-TIME DATA SYNC — Phone-ൽ Computer-ലെ photos auto കാണും
+   ═══════════════════════════════════════════════════════════ */
+window.startDataWatcher = function(serial, onRemoteUpdate) {
+    if (dataWatcherUnsubscribe) { dataWatcherUnsubscribe(); dataWatcherUnsubscribe = null; }
+    let firstFire = true;
+    dataWatcherUnsubscribe = onValue(ref(db, `users/${serial}/builderData`), (snapshot) => {
+        if (firstFire) { firstFire = false; return; } // ആദ്യ load skip
+        const remoteData = snapshot.val();
+        if (!remoteData) return;
+        if (typeof onRemoteUpdate === 'function') onRemoteUpdate(remoteData);
+    });
+};
+
+window.stopDataWatcher = function() {
+    if (dataWatcherUnsubscribe) { dataWatcherUnsubscribe(); dataWatcherUnsubscribe = null; }
+};
+
 window.loginUser = async function(serial, password) {
     const errorEl = document.getElementById('loginError');
     const loader = document.getElementById('loginLoader');
     errorEl.textContent = '';
     loader.classList.add('active');
+
     if (!FIXED_CREDENTIALS[serial] || FIXED_CREDENTIALS[serial] !== password) {
         errorEl.textContent = '❌ Invalid serial or password.';
         loader.classList.remove('active');
         return false;
     }
-    try {
-        const snapshot = await get(ref(db, `users/${serial}`));
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            if (data.active === true) {
-                errorEl.textContent = '❌ Account already in use.';
-                loader.classList.remove('active');
-                return false;
-            }
-        }
-        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        await update(ref(db), {
-            [`users/${serial}/active`]: true,
-            [`users/${serial}/lastActive`]: Date.now(),
-            [`users/${serial}/lockOwner`]: sessionId
-        });
-        sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, sessionId, loginTime: Date.now() }));
-    } catch (e) {
-        console.warn('Firebase sync failed, using local session.', e);
-        sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, sessionId: 'local_' + Date.now(), loginTime: Date.now() }));
-    }
-    loader.classList.remove('active');
-    return true;
-};
 
-window.forceLogoutAndLogin = async function(serial, password) {
-    const loader = document.getElementById('loginLoader');
-    loader.classList.add('active');
-    if (!FIXED_CREDENTIALS[serial] || FIXED_CREDENTIALS[serial] !== password) {
-        loader.classList.remove('active');
-        return false;
-    }
-    const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
     const now = Date.now();
+
     try {
+        // ✅ lockOwner change → പഴയ device auto logout
         await update(ref(db), {
             [`users/${serial}/active`]: true,
-            [`users/${serial}/forceLogoutAt`]: now,
             [`users/${serial}/lastActive`]: now,
             [`users/${serial}/lockOwner`]: sessionId
         });
-    } catch (e) { console.warn('Force logout sync failed.', e); }
+    } catch (e) {
+        console.warn('Firebase sync failed:', e);
+    }
+
     sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, sessionId, loginTime: now }));
     loader.classList.remove('active');
     return true;
@@ -784,6 +770,7 @@ window.forceLogoutAndLogin = async function(serial, password) {
 
 window.logout = async function() {
     window.stopSessionWatcher();
+    if (typeof window.stopDataWatcher === 'function') window.stopDataWatcher();
     const raw = sessionStorage.getItem('ssplitly_session');
     const session = raw ? JSON.parse(raw) : {};
     if (session.serial) {
@@ -849,6 +836,9 @@ function getCurrentSerial() {
     try { return JSON.parse(raw).serial || null; } catch (e) { return null; }
 }
 
+/* ═══════════════════════════════════════════════════
+   ✅ SAVE TO FIREBASE — with size check & error toast
+   ═══════════════════════════════════════════════════ */
 async function saveToFirebase() {
     const serial = getCurrentSerial();
     if (!serial || !window.__firebase) return;
@@ -905,7 +895,31 @@ async function saveToFirebase() {
             finished: !!c.querySelector('.proj-finished')?.checked
         });
     });
-    try { await set(ref(db, `users/${serial}/builderData`), data); } catch (e) { console.error('Save failed:', e); }
+
+    // ✅ Size check — 8MB-ൽ കൂടരുത്
+    data.lastSavedAt = Date.now();
+    const jsonStr = JSON.stringify(data);
+    if (jsonStr.length > 8 * 1024 * 1024) {
+        console.error('Data too large:', jsonStr.length);
+        if (!window.__sizeWarningShown) {
+            window.__sizeWarningShown = true;
+            toast('⚠️ Data too large! Remove some photos.', 'err');
+        }
+        return;
+    }
+
+    try {
+        await set(ref(db, `users/${serial}/builderData`), data);
+        window.__lastSaveError = false;
+        window.__sizeWarningShown = false;
+        window.__localLastSave = data.lastSavedAt;
+    } catch (e) {
+        console.error('Save failed:', e);
+        if (!window.__lastSaveError) {
+            window.__lastSaveError = true;
+            toast('⚠️ Sync failed. Check internet or reduce photos.', 'err');
+        }
+    }
 }
 
 async function loadFromFirebase() {
@@ -917,6 +931,7 @@ async function loadFromFirebase() {
         if (!snapshot.exists()) { resetBuilderState(); populateDefaultData(); await saveToFirebase(); return true; }
         const d = snapshot.val();
         resetBuilderState();
+        window.__localLastSave = d.lastSavedAt || 0;
         if (d.fullName) document.getElementById('fullName').value = d.fullName;
         if (d.profTitle) document.getElementById('profTitle').value = d.profTitle;
         if (d.email) document.getElementById('email').value = d.email;
@@ -976,6 +991,79 @@ async function loadFromFirebase() {
         generateCV(); generateCoverLetter(); updateLivePreview();
         return true;
     } catch (e) { console.error('Load error:', e); return false; }
+}
+
+/* ═══════════════════════════════════════════════════
+   ✅ APPLY REMOTE DATA — real-time sync from other device
+   ═══════════════════════════════════════════════════ */
+function applyRemoteData(d) {
+    if (!d) return;
+    if (window.__localLastSave && d.lastSavedAt && d.lastSavedAt <= window.__localLastSave) return;
+
+    console.log('🔄 Applying remote data from another device…');
+
+    if (d.fullName !== undefined) document.getElementById('fullName').value = d.fullName;
+    if (d.profTitle !== undefined) document.getElementById('profTitle').value = d.profTitle;
+    if (d.email !== undefined) document.getElementById('email').value = d.email;
+    if (d.phone !== undefined) document.getElementById('phone').value = d.phone;
+    if (d.location !== undefined) document.getElementById('location').value = d.location;
+    if (d.linkedinUrl !== undefined) document.getElementById('linkedinUrl').value = d.linkedinUrl;
+    if (d.behanceUrl !== undefined) document.getElementById('behanceUrl').value = d.behanceUrl;
+    if (d.instagramUrl !== undefined) document.getElementById('instagramUrl').value = d.instagramUrl;
+    if (d.whatsappUrl !== undefined) document.getElementById('whatsappUrl').value = d.whatsappUrl;
+    if (d.aboutInput !== undefined) document.getElementById('aboutInput').value = d.aboutInput;
+    if (d.skillsInput !== undefined) document.getElementById('skillsInput').value = d.skillsInput;
+    if (d.applyJob !== undefined) document.getElementById('applyJob').value = d.applyJob;
+    if (d.applyCompany !== undefined) document.getElementById('applyCompany').value = d.applyCompany;
+    if (d.showLinkedIn !== undefined) document.getElementById('showLinkedIn').checked = d.showLinkedIn;
+    if (d.showBehance !== undefined) document.getElementById('showBehance').checked = d.showBehance;
+    if (d.showInstagram !== undefined) document.getElementById('showInstagram').checked = d.showInstagram;
+    if (d.showWhatsApp !== undefined) document.getElementById('showWhatsApp').checked = d.showWhatsApp;
+    if (d.profilePic) { window.croppedImageData = d.profilePic; document.getElementById('picPreviewSmall').src = d.profilePic; }
+    if (d.customSoftwareIcons) customSoftwareIcons = d.customSoftwareIcons;
+    if (d.portfolioTotalProjects !== undefined) document.getElementById('portfolioTotalProjects').value = d.portfolioTotalProjects;
+    if (d.portfolioTotalExperience !== undefined) document.getElementById('portfolioTotalExperience').value = d.portfolioTotalExperience;
+    if (d.portfolioFinishedProjects !== undefined) document.getElementById('portfolioFinishedProjects').value = d.portfolioFinishedProjects;
+
+    // ✅ Photos sync — പ്രധാനം!
+    if (d.projects && Array.isArray(d.projects)) {
+        const projC = document.getElementById('projectContainer');
+        projC.innerHTML = ''; window.projectCounter = 0; projectImages = {};
+        d.projects.forEach(proj => {
+            window.projectCounter++;
+            projC.insertAdjacentHTML('beforeend', createProjectHTML(proj.title, proj.desc, proj.tools, [], !!proj.finished));
+            const card = projC.lastElementChild;
+            const pIdx = card.dataset.projectIndex;
+            projectImages[pIdx] = proj.images || [];
+            refreshProjectImagePreviews(card, pIdx);
+        });
+        updateProjectCount(); updateProjectStats();
+    }
+
+    // Experiences & Education sync
+    if (d.experiences && Array.isArray(d.experiences)) {
+        const expC = document.getElementById('experienceContainer');
+        expC.innerHTML = ''; window.expCounter = 0;
+        d.experiences.forEach(exp => {
+            window.expCounter++;
+            expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end, exp.present, exp.bullets, exp.location));
+        });
+        initExpPresentListeners();
+    }
+    if (d.educations && Array.isArray(d.educations)) {
+        const eduC = document.getElementById('educationContainer');
+        eduC.innerHTML = ''; window.eduCounter = 0;
+        d.educations.forEach(edu => {
+            window.eduCounter++;
+            eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu.end, edu.present, edu.location));
+        });
+        initEduPresentListeners();
+    }
+
+    window.__localLastSave = d.lastSavedAt || Date.now();
+    renderSoftwareManagerFromInput();
+    generateCV(); generateCoverLetter(); updateLivePreview();
+    toast('🔄 Synced from another device', 'ok');
 }
 
 function resetBuilderState() {
@@ -1295,7 +1383,7 @@ function removePic() {
 
 /* ═══ EXPERIENCE ═══ */
 function createExperienceHTML(company, role, start, end, present, bullets, location) {
-    const bulletHTML = bullets.map(b => `<div class="bullet-item"><input type="text" class="bullet-input" value="${escapeHTML(b)}" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button></div>`).join('');
+    const bulletHTML = (bullets || []).map(b => `<div class="bullet-item"><input type="text" class="bullet-input" value="${escapeHTML(b)}" placeholder="Achievement"><button class="remove-bullet" onclick="removeBullet(this)">✕</button></div>`).join('');
     return `<div class="entry-card"><button class="remove-btn" onclick="removeEntry(this)">✕</button>
         <div class="form-group"><label>Company</label><input type="text" class="exp-company" value="${escapeHTML(company)}"></div>
         <div class="form-group"><label>Role</label><input type="text" class="exp-role" value="${escapeHTML(role)}"></div>
@@ -1586,18 +1674,21 @@ function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
         <div class="checkbox-group project-finished-toggle"><input type="checkbox" class="proj-finished" ${finished ? 'checked' : ''} onchange="updateProjectStats()"><label>Finished Project</label></div>
         <div class="project-upload">
             <input type="file" class="proj-image-input" accept="image/*" multiple onchange="handleProjectImages(this)">
-            <span class="upload-hint"><i class="fas fa-info-circle"></i> Select multiple photos. Drag thumbnails to change order.</span>
+            <span class="upload-hint"><i class="fas fa-info-circle"></i> Select multiple photos (max 5). Auto-compressed for sync.</span>
         </div>
         <div class="proj-image-previews">${previewHTML}</div>
     </div>`;
 }
 
-/* ═══════════════════════════════════════════════════
-   ✅ FIXED: 画像を圧縮してから保存（Firebaseの容量制限対策）
-   ═══════════════════════════════════════════════════ */
-function compressImageFile(file, maxDim = 1400, quality = 0.82) {
+/* ═══════════════════════════════════════════════════════════
+   ✅ COMPRESS IMAGE — Auto compress to save Firebase space
+   ═══════════════════════════════════════════════════════════ */
+function compressImageFile(file, maxDim = 900, quality = 0.62) {
     return new Promise((resolve, reject) => {
-        if (!file || !file.type || !file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+            reject(new Error('Not an image'));
+            return;
+        }
         const reader = new FileReader();
         reader.onerror = () => reject(new Error('Read failed'));
         reader.onload = () => {
@@ -1611,13 +1702,24 @@ function compressImageFile(file, maxDim = 1400, quality = 0.82) {
                 w = Math.max(1, Math.round(w * scale));
                 h = Math.max(1, Math.round(h * scale));
                 const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
+                canvas.width = w;
+                canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
-                try { resolve(canvas.toDataURL('image/jpeg', quality)); }
-                catch (e) { resolve(reader.result); }
+                try {
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    // 280KB-ൽ കൂടുതലാണെങ്കിൽ കൂടുതൽ compress ചെയ്യുക
+                    if (dataUrl.length > 280000) {
+                        const smaller = canvas.toDataURL('image/jpeg', 0.45);
+                        resolve(smaller);
+                    } else {
+                        resolve(dataUrl);
+                    }
+                } catch (e) {
+                    resolve(reader.result);
+                }
             };
             img.src = reader.result;
         };
@@ -1625,33 +1727,42 @@ function compressImageFile(file, maxDim = 1400, quality = 0.82) {
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   ✅ FIXED: handleProjectImages
-   - Array.from() で確実にファイルを取得（input.value='' を先に実行）
-   - 画像を圧縮してから追加
-   - エラー時もUIが壊れないように
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   ✅ HANDLE PROJECT IMAGES — better error handling
+   ═══════════════════════════════════════════════════════════ */
 async function handleProjectImages(input) {
     if (isViewOnly) return;
     const files = Array.from(input.files || []);
-    input.value = ''; // 同じファイルを再選択できるようにリセット
+    input.value = '';
     if (!files.length) return;
+
     const card = input.closest('.project-card');
     if (!card) { toast('Error: project card not found.', 'err'); return; }
     const idx = card.dataset.projectIndex;
     if (!projectImages[idx]) projectImages[idx] = [];
 
+    // Total size check — 10MB-ൽ കൂടരുത്
+    let totalSize = 0;
+    files.forEach(f => totalSize += f.size);
+    if (totalSize > 10 * 1024 * 1024) {
+        toast('❌ Total too large. Select fewer photos.', 'err');
+        return;
+    }
+
     toast('⏳ Processing ' + files.length + ' photo(s)…');
     const results = await Promise.all(
-        files.map(f => compressImageFile(f).catch(err => { console.warn('Image failed:', err); return null; }))
+        files.map(f => compressImageFile(f).catch(err => {
+            console.warn('Image failed:', err);
+            return null;
+        }))
     );
     const okImages = results.filter(Boolean);
-    if (!okImages.length) { toast('❌ Could not read the selected photos.', 'err'); return; }
+    if (!okImages.length) { toast('❌ Could not read photos.', 'err'); return; }
 
     projectImages[idx] = projectImages[idx].concat(okImages);
     refreshProjectImagePreviews(card, idx);
     await saveToFirebase();
-    toast('✅ ' + okImages.length + ' photo(s) added');
+    toast('✅ ' + okImages.length + ' photo(s) added & synced');
 }
 
 let draggedProjectImageIndex = null, draggedProjectId = null;
@@ -2158,7 +2269,7 @@ function openSsplitlyInfo(tab) {
 }
 function closeSsplitlyInfo() { const modal = document.getElementById('ssplitlyInfoModal'); if (!modal) return; modal.classList.remove('active'); document.body.style.overflow = ''; }
 
-/* ═══ AUTO-SAVE (merged listeners) ═══ */
+/* ═══ AUTO-SAVE ═══ */
 const autoSaveInputIds = ['fullName', 'profTitle', 'email', 'phone', 'location', 'linkedinUrl', 'behanceUrl', 'instagramUrl', 'whatsappUrl', 'aboutInput', 'skillsInput', 'applyJob', 'applyCompany'];
 const autoSaveCheckboxIds = ['showLinkedIn', 'showBehance', 'showInstagram', 'showWhatsApp'];
 autoSaveInputIds.forEach(id => {
@@ -2180,7 +2291,7 @@ document.addEventListener('input', function(e) {
     }
 });
 
-/* ═══ BUTTON RIPPLE (pointer position) ═══ */
+/* ═══ BUTTON RIPPLE ═══ */
 document.addEventListener('pointermove', e => {
     const btn = e.target.closest('.btn, .btn-landing');
     if (!btn) return;
@@ -2205,49 +2316,40 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') { closeSsplitlyInfo(); closePDFOptions(); }
 });
 
-/* ═══ LOGIN ═══ */
+/* ═══════════════════════════════════════════════════════════
+   ✅ LOGIN HANDLER — with session + data watchers
+   ═══════════════════════════════════════════════════════════ */
 document.getElementById('loginBtn').addEventListener('click', async function() {
     const serial = document.getElementById('loginSerial').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
     const errorEl = document.getElementById('loginError');
-    const forceBtn = document.getElementById('forceLogoutBtn');
-    forceBtn.style.display = 'none';
     errorEl.textContent = '';
+
     if (!serial || !password) { errorEl.textContent = 'Please fill both fields.'; return; }
     if (serial.length !== 12 || !/^\d{12}$/.test(serial)) { errorEl.textContent = 'Serial must be 12 digits.'; return; }
+
     const success = await window.loginUser(serial, password);
-    if (!success) {
-        if (errorEl.textContent.includes('already in use')) {
-            forceBtn.style.display = 'block';
-            forceBtn.onclick = async function() {
-                forceBtn.style.display = 'none';
-                errorEl.textContent = 'Logging out other devices...';
-                const ok = await window.forceLogoutAndLogin(serial, password);
-                if (ok) {
-                    document.getElementById('loginOverlay').classList.remove('active');
-                    document.getElementById('page1').classList.add('active');
-                    document.getElementById('page2').classList.remove('active');
-                    document.getElementById('page3').classList.remove('active');
-                    try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
-                    await loadFromFirebase();
-                    window.startSessionWatcher(serial);
-                }
-            };
-        }
-    } else {
+    if (success) {
         document.getElementById('loginOverlay').classList.remove('active');
         document.getElementById('page1').classList.add('active');
         document.getElementById('page2').classList.remove('active');
         document.getElementById('page3').classList.remove('active');
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         await loadFromFirebase();
-        window.startSessionWatcher(serial);
+
+        const sess = JSON.parse(sessionStorage.getItem('ssplitly_session'));
+        // ✅ Session watcher — auto logout when another device logs in
+        window.startSessionWatcher(serial, sess.sessionId);
+        // ✅ Data watcher — real-time sync from other device
+        window.startDataWatcher(serial, applyRemoteData);
     }
 });
 document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 
-/* ═══ INITIAL LOAD ═══ */
+/* ═══════════════════════════════════════════════════════════
+   ✅ INITIAL LOAD
+   ═══════════════════════════════════════════════════════════ */
 window.onload = async function() {
     const viewOnlyDetected = detectViewOnly();
     if (viewOnlyDetected) {
@@ -2265,7 +2367,10 @@ window.onload = async function() {
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         const loaded = await loadFromFirebase();
         if (!loaded) { resetBuilderState(); populateDefaultData(); await saveToFirebase(); }
-        window.startSessionWatcher(session.serial);
+        // ✅ Pass sessionId to watcher
+        window.startSessionWatcher(session.serial, session.sessionId);
+        // ✅ Start data watcher for real-time sync
+        window.startDataWatcher(session.serial, applyRemoteData);
     } else {
         document.getElementById('loginOverlay').classList.add('active');
         document.getElementById('page1').classList.remove('active');
@@ -2278,6 +2383,27 @@ window.onload = async function() {
 };
 
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSsplitlyInfo(); });
+
+/* ═══════════════════════════════════════════════════════════
+   ✅ VISIBILITY CHANGE — refresh on tab focus (extra safety)
+   ═══════════════════════════════════════════════════════════ */
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && !isViewOnly) {
+        const session = window.checkSession();
+        if (session && window.__firebase) {
+            const { db, ref, get } = window.__firebase;
+            try {
+                const snapshot = await get(ref(db, `users/${session.serial}/builderData`));
+                if (snapshot.exists()) {
+                    const remote = snapshot.val();
+                    if (window.__localLastSave && remote.lastSavedAt && remote.lastSavedAt > window.__localLastSave) {
+                        applyRemoteData(remote);
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        }
+    }
+});
 </script>
 
 <div id="ssplitlyInfoModal" class="ssplitly-info-modal" onclick="if(event.target===this) closeSsplitlyInfo()">
