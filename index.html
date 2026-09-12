@@ -4958,6 +4958,178 @@ ${source.innerHTML}
   registerCards();
 })();
 </script>
+  <script id="save-before-logout-fix">
+(function () {
+  if (window.__saveBeforeLogoutFix) return;
+  window.__saveBeforeLogoutFix = true;
+
+  let busy = false;
+  let attempt = null;
+
+  function installSaveTracker() {
+    const fb = window.__firebase;
+
+    if (!fb) {
+      throw new Error('Firebase is not ready. Check your internet connection.');
+    }
+
+    if (fb.__logoutSaveTracker) return;
+
+    const originalSet = fb.set;
+
+    fb.set = function (reference, data, ...rest) {
+      const result = originalSet.call(this, reference, data, ...rest);
+
+      if (
+        attempt &&
+        reference?.key === 'builderData' &&
+        reference.parent?.key === attempt.serial
+      ) {
+        const write = Promise.resolve(result);
+        attempt.writes.push(write);
+
+        // Prevent an unhandled rejection while the original
+        // save function is still handling the same error.
+        write.catch(() => {});
+      }
+
+      return result;
+    };
+
+    fb.__logoutSaveTracker = true;
+  }
+
+  function installLogoutFix() {
+    if (typeof window.logout !== 'function') return;
+    if (window.logout.__waitsForSave) return;
+
+    const originalLogout = window.logout;
+
+    async function safeLogout() {
+      if (busy) return;
+
+      const serial = typeof getCurrentSerial === 'function'
+        ? getCurrentSerial()
+        : null;
+
+      if (!serial) {
+        return originalLogout();
+      }
+
+      busy = true;
+
+      const controls = Array.from(document.querySelectorAll(
+        '#formPanel input, #formPanel select, #formPanel textarea,' +
+        '#formPanel button, .logout-btn'
+      ));
+
+      const previousStates = controls.map(element => ({
+        element,
+        disabled: element.disabled
+      }));
+
+      controls.forEach(element => {
+        element.disabled = true;
+      });
+
+      let timer;
+      let finished = false;
+
+      try {
+        if (typeof __saveTimer !== 'undefined' && __saveTimer) {
+          clearTimeout(__saveTimer);
+          __saveTimer = null;
+        }
+
+        installSaveTracker();
+
+        const currentAttempt = {
+          serial,
+          writes: []
+        };
+
+        attempt = currentAttempt;
+
+        if (typeof toast === 'function') {
+          toast('Saving your changes before logout…');
+        }
+
+        const saveAndConfirm = async () => {
+          // Save the current form immediately.
+          await saveToFirebase();
+
+          if (!currentAttempt.writes.length) {
+            throw new Error(
+              'No save request was sent. Your changes are not confirmed saved.'
+            );
+          }
+
+          // Wait for Firebase to confirm the write.
+          await Promise.all(currentAttempt.writes);
+        };
+
+        await Promise.race([
+          saveAndConfirm(),
+          new Promise((_, reject) => {
+            timer = setTimeout(() => {
+              reject(new Error(
+                'Save confirmation timed out. Stay logged in and check your internet connection.'
+              ));
+            }, 15000);
+          })
+        ]);
+
+        if (getCurrentSerial() !== serial) {
+          throw new Error('The login session changed. Please check your account.');
+        }
+
+        clearTimeout(timer);
+        attempt = null;
+
+        if (typeof toast === 'function') {
+          toast('Changes saved. Logging out…');
+        }
+
+        await originalLogout();
+        finished = true;
+
+      } catch (error) {
+        console.error('Save before logout failed:', error);
+
+        const message = [
+          error?.code || '',
+          error?.message || 'Could not confirm saving.'
+        ].filter(Boolean).join('\n');
+
+        alert(
+          'Logout stopped because saving was not confirmed.\n\n' +
+          message +
+          '\n\nKeep this page open so you can retain your edits.'
+        );
+
+      } finally {
+        clearTimeout(timer);
+        attempt = null;
+
+        if (!finished) {
+          previousStates.forEach(({element, disabled}) => {
+            element.disabled = disabled;
+          });
+          busy = false;
+        }
+      }
+    }
+
+    safeLogout.__waitsForSave = true;
+    window.logout = safeLogout;
+  }
+
+  installLogoutFix();
+
+  // Firebase's module may finish loading after this script.
+  window.addEventListener('load', installLogoutFix, { once: true });
+})();
+</script>
 </body>
 </html>
   
