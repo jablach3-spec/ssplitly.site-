@@ -1033,7 +1033,11 @@ async function saveToFirebase() {
         console.error('Save failed:', e);
         if (!window.__lastSaveError) {
             window.__lastSaveError = true;
-            toast('⚠️ Sync failed. Check internet or reduce photos.', 'err');
+            alert(
+  'Save failed\n\n' +
+  (e.code || 'No error code') + '\n' +
+  (e.message || 'No error details')
+);
         }
     }
 }
