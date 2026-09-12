@@ -5134,6 +5134,65 @@ ${source.innerHTML}
   window.addEventListener('load', installLogoutFix, { once: true });
 })();
 </script>
+  <script id="fix-software-icon-save">
+(function () {
+  if (window.__softwareIconSaveFixed) return;
+  window.__softwareIconSaveFixed = true;
+
+  const previousSave = saveToFirebase;
+
+  function validKey(key) {
+    return (
+      typeof key === 'string' &&
+      key.trim().length > 0 &&
+      !/[.#$\/\[\]\u0000-\u001F\u007F]/.test(key)
+    );
+  }
+
+  function repairSoftwareIcons() {
+    if (
+      !customSoftwareIcons ||
+      typeof customSoftwareIcons !== 'object' ||
+      Array.isArray(customSoftwareIcons)
+    ) {
+      customSoftwareIcons = {};
+    }
+
+    // Recover uploaded icons using their current software names.
+    document.querySelectorAll(
+      '#softwareManager .software-row'
+    ).forEach(row => {
+      const name = (
+        row.querySelector('.software-name')?.value || ''
+      ).trim().toLowerCase();
+
+      const icon = row.querySelector(
+        '.software-icon-preview'
+      )?.getAttribute('src');
+
+      if (validKey(name) && icon) {
+        customSoftwareIcons[name] = icon;
+      }
+    });
+
+    // Remove keys Firebase cannot accept.
+    Object.keys(customSoftwareIcons).forEach(key => {
+      if (!validKey(key)) {
+        delete customSoftwareIcons[key];
+      }
+    });
+  }
+
+  saveToFirebase = function (...args) {
+    if (typeof isViewOnly !== 'undefined' && isViewOnly) {
+      return Promise.resolve();
+    }
+
+    repairSoftwareIcons();
+    return previousSave.apply(this, args);
+  };
+})();
+</script>
 </body>
 </html>
   
