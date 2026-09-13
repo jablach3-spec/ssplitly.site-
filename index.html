@@ -527,6 +527,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         </div>
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
+        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v4</p>
         <div class="login-loader" id="loginLoader"></div>
         <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
@@ -835,21 +836,57 @@ window.loginUser = async function(serial, password) {
     const errorEl=document.getElementById('loginError');
     const loader=document.getElementById('loginLoader');
     const button=document.getElementById('loginBtn');
+    if (window.__loginBusy || window.__loginNeedsReload) return false;
+    window.__loginBusy=true;
     errorEl.textContent=''; loader.classList.add('active');button.disabled=true;
-    try {
+    let loginStage='connection', expired=false, deadline;
+    const setStage=stage=>{loginStage=stage;errorEl.textContent='Connecting: '+stage+'…';};
+    const checkDeadline=()=>{if(expired)throw Object.assign(new Error('Login timeout'),{code:'login/timeout'});};
+    setStage('connection');
+    const attempt=async()=>{
+
         await window.__authReady;
+        checkDeadline();
+        setStage('password verification');
         const result=await signInWithEmailAndPassword(auth, serial+'@accounts.ssplitly.invalid', password);
+        if(expired){void signOut(auth).catch(()=>{});checkDeadline();}
         const uid=result.user.uid;
+        setStage('session creation');
         const sessionId=crypto.randomUUID();
+        setStage('database access');
         await update(ref(db,`users/${uid}`),{active:true,lastActive:Date.now(),lockOwner:sessionId});
+        checkDeadline();
+        setStage('browser storage');
         sessionStorage.setItem('ssplitly_session',JSON.stringify({serial:uid,accountSerial:serial,sessionId,loginTime:Date.now()}));
+        errorEl.textContent='';
         return true;
+    };
+    try {
+        return await Promise.race([attempt(),new Promise((_,reject)=>{
+            deadline=setTimeout(()=>{expired=true;window.__loginNeedsReload=true;reject(Object.assign(new Error('Login timeout'),{code:'login/timeout'}));},30000);
+        })]);
     } catch(e) {
-        await signOut(auth).catch(()=>{});
+        void signOut(auth).catch(()=>{});
         sessionStorage.removeItem('ssplitly_session');
-        errorEl.textContent=e.code==='auth/operation-not-allowed'?'Enable Email/Password in Firebase Authentication.':e.code==='PERMISSION_DENIED'?'Database access denied. Check UID rules and account migration.':'Login failed. Check your migrated serial/password and connection.';
+        const errorCode=String(e?.code || e?.name || 'unknown-error').replace(/[^a-zA-Z0-9_/-]/g,'').slice(0,100);
+        const hints={
+            'login/timeout':'Connection took too long. Reload this page before trying again.',
+            'auth/invalid-credential':'Firebase did not accept the account/password.',
+            'auth/wrong-password':'Firebase did not accept this password.',
+            'auth/user-not-found':'This login account was not found in Firebase Authentication.',
+            'auth/user-disabled':'This Firebase login account is disabled.',
+            'auth/too-many-requests':'Too many attempts. Wait before retrying.',
+            'auth/network-request-failed':'Could not connect to Firebase. Check your connection.',
+            'auth/operation-not-allowed':'Enable Email/Password in Firebase Authentication.',
+            'auth/unauthorized-domain':'Check Firebase Authentication authorized domains.',
+            'PERMISSION_DENIED':'Password accepted, but database access was denied. Check accountAccess and UID Rules.',
+            'permission-denied':'Password accepted, but database access was denied. Check accountAccess and UID Rules.'
+        };
+        errorEl.style.whiteSpace='pre-line';
+        errorEl.textContent=(hints[errorCode] || 'Login could not finish.')+'\nError: '+errorCode+'\nStep: '+loginStage;
+
         return false;
-    } finally {loader.classList.remove('active');button.disabled=false;}
+    } finally {clearTimeout(deadline);window.__loginBusy=false;loader.classList.remove('active');button.disabled=!!window.__loginNeedsReload;}
 };
 
 window.logout = async function() {
