@@ -527,7 +527,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         </div>
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
-        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v4</p>
+        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v5</p>
         <div class="login-loader" id="loginLoader"></div>
         <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
@@ -778,13 +778,14 @@ import { getAuth, signInWithEmailAndPassword, signOut, setPersistence, browserSe
 import { getDatabase, ref, set, get, update, onValue } from "firebase/database";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD0feRzkZ-6k87cr5_6rdvJBLqWEMHnH7M",
-    authDomain: "splitwise-e3111.firebaseapp.com",
-    projectId: "splitwise-e3111",
-    storageBucket: "splitwise-e3111.firebasestorage.app",
-    messagingSenderId: "992417120470",
-    appId: "1:992417120470:web:0e107b9e636debfe2d8977",
-    measurementId: "G-L9MVKMVPKS"
+  "apiKey": "AIzaSyD8feRzKZ-6k87cr5_6rdvJBLqWEMmHn7M",
+  "authDomain": "splitwise-e3111.firebaseapp.com",
+  "databaseURL": "https://splitwise-e3111-default-rtdb.firebaseio.com",
+  "projectId": "splitwise-e3111",
+  "storageBucket": "splitwise-e3111.firebasestorage.app",
+  "messagingSenderId": "992417120470",
+  "appId": "1:992417120470:web:0e107b9e636debfe2d8977",
+  "measurementId": "G-L9MVKMVPKS"
 };
 
 const app = initializeApp(firebaseConfig);
