@@ -3,6 +3,28 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+<style id="portfolio-loading-style">
+html.portfolio-opening::before{content:attr(data-opening-message);position:fixed;inset:0;z-index:100000010;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#172b46,transparent 65%),#080d18;color:#c7ecff;font:600 17px/1.6 system-ui,sans-serif;letter-spacing:.3px;pointer-events:none}
+html.portfolio-opening::after{content:'';position:fixed;z-index:100000011;top:calc(50% + 35px);left:calc(50% - 64px);width:128px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#7dd3fc,#a5b4fc,transparent);animation:portfolioOpening 1.5s ease-in-out infinite;pointer-events:none}
+html.portfolio-opening #page1,html.portfolio-opening #loginOverlay{display:none!important}
+@keyframes portfolioOpening{0%,100%{transform:scaleX(.35);opacity:.35}50%{transform:scaleX(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){html.portfolio-opening::after{animation:none}}
+.portfolio-load-error{padding:48px 24px;text-align:center;color:var(--site-text);line-height:1.8}
+</style>
+<script>
+if(location.hash.startsWith('#/p/')){
+ document.documentElement.classList.add('portfolio-opening');
+ document.documentElement.dataset.openingMessage='Opening portfolio…';
+ window.__portfolioBootTimeout=setTimeout(()=>{
+  document.documentElement.classList.remove('portfolio-opening');
+  const target=document.getElementById('portfolioSiteContent');
+  const page=document.getElementById('page3');
+  if(target&&page){page.classList.add('active');target.textContent='Connection is taking longer than expected. Please reload to retry.';}
+ },35000);
+}
+</script>
+
 <title>Professional Builder – CV, Cover Letter & Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -527,7 +549,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         </div>
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
-        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v5</p>
+        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v7</p>
         <div class="login-loader" id="loginLoader"></div>
         <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
@@ -2089,9 +2111,9 @@ function renderPortfolioWebsite(data) {
         else if (typeof p.tools === 'string') toolList = p.tools.split(',').map(t => t.trim()).filter(t => t);
         const galleryImages = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
         const firstImage = galleryImages[0] || `https://source.unsplash.com/random/800x500/?architecture,modern&sig=${i}`;
-        const galleryThumbs = galleryImages.length > 1 ? `<div class="project-gallery-thumbs">${galleryImages.map((img, gi) => `<button type="button" class="${gi===0?'active':''}" onclick="switchProjectGallery(this)" data-image-index="${gi}"><img src="${img}" alt="Photo ${gi+1}" loading="lazy"></button>`).join('')}</div>` : '';
+        const galleryThumbs = galleryImages.length > 1 ? `<div class="project-gallery-thumbs">${galleryImages.map((img, gi) => `<button type="button" class="${gi===0?'active':''}" onclick="switchProjectGallery(this)" data-image-index="${gi}"><img src="${img}" alt="Photo ${gi+1}" loading="lazy" decoding="async"></button>`).join('')}</div>` : '';
         const slideControls = galleryImages.length > 1 ? `<div class="project-slide-controls"><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,-1)"><i class="fas fa-chevron-left"></i></button><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,1)"><i class="fas fa-chevron-right"></i></button></div><div class="project-slideshow-progress"><span></span></div>` : '';
-        return `<div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}"><div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" src="${firstImage}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>${galleryThumbs}<div class="plate-body"><div class="plate-title">${escapeHTML(p.title)}</div><div class="plate-desc">${escapeHTML(p.desc)}</div><div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div></div></div>`;
+        return `<div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}"><div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" loading="lazy" decoding="async" src="${firstImage}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>${galleryThumbs}<div class="plate-body"><div class="plate-title">${escapeHTML(p.title)}</div><div class="plate-desc">${escapeHTML(p.desc)}</div><div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div></div></div>`;
     }).join('')}</div></div></section>
     <footer class="site-footer reveal"><div class="site-wrap"><h2>Let's Create Together.</h2><p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p><button class="site-btn solid" onclick="window.location.href=this.dataset.contact" data-contact="mailto:${escapeHTML(email)}"><i class="fas fa-paper-plane"></i> Get In Touch</button></div><div class="ssplitly-footer-links"><button onclick="openSsplitlyInfo('about')">About</button><button onclick="openSsplitlyInfo('contact')">Contact Us</button><button onclick="openSsplitlyInfo('terms')">Terms &amp; Conditions</button></div></footer>`;
 
@@ -2132,17 +2154,22 @@ function setProjectSlide(card, index) {
 }
 function switchProjectGallery(button) { const card = button.closest('.site-plate'); setProjectSlide(card, Number(button.dataset.imageIndex || 0)); }
 function changeProjectSlide(button, direction) { const card = button.closest('.site-plate'); const main = card.querySelector('.project-main-image'); setProjectSlide(card, Number(main?.dataset.slideIndex || 0) + direction); }
+let portfolioSlideTimers=[];
 function initProjectSlideshows() {
+    portfolioSlideTimers.forEach(clearInterval);portfolioSlideTimers=[];
     document.querySelectorAll('.site-plate').forEach(card => {
         const images = getProjectGalleryImages(card);
-        if (images.length <= 1 || card.dataset.slideshowReady === '1') return;
+        if (images.length <= 1) return;
         card.dataset.slideshowReady = '1';
-        setInterval(() => {
+        portfolioSlideTimers.push(setInterval(() => {
             if (!document.getElementById('page3')?.classList.contains('active')) return;
             if (document.getElementById('projectLightbox')?.classList.contains('active')) return;
+            if(document.hidden || !card.isConnected) return;
+            const box=card.getBoundingClientRect();
+            if(box.bottom<=0 || box.top>=window.innerHeight) return;
             const main = card.querySelector('.project-main-image');
             setProjectSlide(card, Number(main?.dataset.slideIndex || 0) + 1);
-        }, 4000);
+        }, 4000));
     });
 }
 
@@ -4177,8 +4204,9 @@ ${pages.join('')}
       ]);
     });
 
-    const portfolioURL = safeURL(read('cvPortfolioUrl'));
-    if ($('showCVPortfolio')?.checked && portfolioURL) contacts.push(['fas fa-globe', `<a href="${escape(portfolioURL)}">Portfolio — ${escape(portfolioURL.replace(/^https?:\/\//,''))}</a>`]);
+    const portfolioRaw = read('cvPortfolioUrl').trim();
+    const portfolioURL = portfolioRaw ? safeURL(/^[a-z][a-z0-9+.-]*:/i.test(portfolioRaw) ? portfolioRaw : 'https://' + portfolioRaw) : '';
+    if ($('showCVPortfolio')?.checked && portfolioURL) contacts.push(['fas fa-link', `<a href="${escape(portfolioURL)}" target="_blank" rel="noopener noreferrer" aria-label="Open portfolio website">Portfolio</a>`]);
 
     if (contacts.length) {
       html += `<div class="ref-contact">${
@@ -5260,6 +5288,7 @@ function applySharingPreferences(p,legacy={}){
  const field=document.createElement('div');field.className='form-group';
  field.innerHTML='<label for="cvPortfolioUrl">Portfolio link — CV only</label><input type="url" id="cvPortfolioUrl" placeholder="https://…"><label style="display:flex;align-items:center;gap:8px;margin-top:8px;text-transform:none"><input type="checkbox" id="showCVPortfolio" checked style="width:auto">Show Portfolio link on CV</label>';
  cvSocial.after(field);
+ $('cvPortfolioUrl').addEventListener('input',()=>{if($('cvPortfolioUrl').value.trim())$('showCVPortfolio').checked=true;});
  const options=document.createElement('div');options.className='form-group';
  options.innerHTML='<label>Show on Portfolio</label>'+sharingNetworks.map(n=>`<label style="display:inline-flex;gap:6px;margin:8px"><input style="width:auto" type="checkbox" id="portfolioShow${n}" checked>${n}</label>`).join('');
  $('portfolioFormFields').prepend(options);
@@ -5292,20 +5321,25 @@ function applySharingPreferences(p,legacy={}){
  $('closeShare').onclick=()=>dialog.close();
  $('copyShare').onclick=async()=>{try{await navigator.clipboard.writeText($('shortShareURL').value);toast('Link copied');}catch{$('shortShareURL').select();$('shareStatus').textContent='Select and copy this link.';}};
  $('nativeShare').onclick=async()=>{if(!navigator.share){$('copyShare').click();return;}try{await navigator.share({title:'Portfolio',url:$('shortShareURL').value});}catch(e){if(e.name!=='AbortError')$('shareStatus').textContent='Please use Copy link on this browser.';}};
+ function addPortfolioLinkToCV(url){
+  $('cvPortfolioUrl').value=url;
+  $('showCVPortfolio').checked=true;
+  generateCV();updateLivePreviewDebounced();saveToFirebaseDebounced();
+ }
  let busy=false,cachedJSON='',cachedURL='';
  generateShareLink=async function(){
   if(busy)return;
   if(isViewOnly){$('shortShareURL').value=location.href;$('shareStatus').textContent='Choose an app or copy the link.';dialog.showModal();$('nativeShare').click();return;}
   if(!getCurrentSerial())return toast('Log in to share your portfolio.','err');
   const json=JSON.stringify({...publicData(buildShareData()),ownerUid:getCurrentSerial()});
-  if(json===cachedJSON&&cachedURL){$('shortShareURL').value=cachedURL;dialog.showModal();$('nativeShare').click();return;}
+  if(json===cachedJSON&&cachedURL){addPortfolioLinkToCV(cachedURL);$('shortShareURL').value=cachedURL;dialog.showModal();$('nativeShare').click();return;}
   busy=true;$('shareStatus').textContent='Preparing portfolio link…';$('shortShareURL').value='';$('nativeShare').disabled=$('copyShare').disabled=true;dialog.showModal();
   try{
    const fb=window.__firebase;if(!fb)throw Error('Database connection unavailable');
    const bytes=crypto.getRandomValues(new Uint8Array(12));const token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
    await Promise.race([fb.set(fb.ref(fb.db,'publicPortfolios/'+token),JSON.parse(json)),new Promise((_,reject)=>setTimeout(()=>reject(Error('Connection timed out. Please retry.')),20000))]);
-   cachedURL=location.href.split('#')[0]+'#/p/'+token;cachedJSON=json;$('shortShareURL').value=cachedURL;
-   $('shareStatus').textContent='Link ready. Tap Share to apps to choose WhatsApp or another app. This link contains a snapshot of your portfolio.';
+   cachedURL=location.href.split('#')[0]+'#/p/'+token;cachedJSON=json;$('shortShareURL').value=cachedURL;addPortfolioLinkToCV(cachedURL);
+   $('shareStatus').textContent='Link ready and added to your CV. Tap Share to apps to choose WhatsApp or another app. This link contains a snapshot of your portfolio.';
    $('nativeShare').disabled=$('copyShare').disabled=false;
    if(navigator.userActivation?.isActive)$('nativeShare').click();
   }catch(e){$('shareStatus').textContent='Could not create link: '+e.message;}
@@ -5317,11 +5351,21 @@ function applySharingPreferences(p,legacy={}){
   if(!location.hash.startsWith('#/p/'))return originalLoad.apply(this,args);
   isViewOnly=true;document.body.classList.add('view-only');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('loginOverlay').classList.remove('active');$('page3').classList.add('active');
-  $('portfolioSiteContent').textContent='Loading portfolio…';
+  $('portfolioSiteContent').setAttribute('aria-busy','true');
+  $('portfolioSiteContent').innerHTML='<p role="status" style="padding:30px;text-align:center">Opening portfolio…</p>';
+  let loadTimer;
   try{if(!match)throw Error('Invalid portfolio link');const fb=window.__firebase;if(!fb)throw Error('Database unavailable. Reload to retry.');
-   const snap=await fb.get(fb.ref(fb.db,'publicPortfolios/'+match[1]));if(!snap.exists())throw Error('Portfolio not found. Ask the owner for a new link.');
+   const snap=await Promise.race([fb.get(fb.ref(fb.db,'publicPortfolios/'+match[1])),new Promise((_,reject)=>{loadTimer=setTimeout(()=>reject(Error('Connection timed out. Please reload to retry.')),20000);})]);if(!snap.exists())throw Error('Portfolio not found. Ask the owner for a new link.');
    renderPortfolioWebsite(publicData(snap.val()));
-  }catch(e){$('portfolioSiteContent').textContent=e.message;}
+  }catch(e){
+   const box=document.createElement('div');box.className='portfolio-load-error';
+   const message=document.createElement('p');message.setAttribute('role','alert');message.textContent=e.message;
+   const retry=document.createElement('button');retry.className='site-btn';retry.textContent='Retry';retry.onclick=()=>location.reload();
+   box.append(message,retry);$('portfolioSiteContent').replaceChildren(box);
+  }finally{
+   clearTimeout(loadTimer);clearTimeout(window.__portfolioBootTimeout);
+   $('portfolioSiteContent').removeAttribute('aria-busy');document.documentElement.classList.remove('portfolio-opening');
+  }
  };
  const originalBack=goBackFromPortfolio;goBackFromPortfolio=function(){if(!isViewOnly)originalBack();};
 })();
