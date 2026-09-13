@@ -766,12 +766,14 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 {
   "imports": {
     "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
     "firebase/database": "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js"
   }
 }
 </script>
 <script type="module">
 import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { getDatabase, ref, set, get, update, onValue } from "firebase/database";
 
 const firebaseConfig = {
@@ -788,27 +790,10 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 window.__firebase = { db, ref, set, get, update, onValue };
 
-const FIXED_CREDENTIALS = {
-    '467321943310': 'sam1k3#','564279006743': 'ghr1#kq','467321943311': 'alpha123','467321943312': 'bravo456',
-    '467321943313': 'charlie789','467321943314': 'delta101','467321943315': 'echo2024','467321943316': 'foxtrot567',
-    '467321943317': 'golf890','467321943318': 'hotel321','467321943319': 'india654','467321943320': 'juliet987',
-    '467321943321': 'kilo234','467321943322': 'lima876','467321943323': 'mike543','467321943324': 'november210',
-    '467321943325': 'oscar765','467321943326': 'papa432','467321943327': 'quebec198','467321943328': 'romeo654',
-    '467321943329': 'sierra321','467321943330': 'tango987'
-};
-
-async function seedUsers() {
-    try {
-        const snapshot = await get(ref(db, 'users'));
-        const existing = snapshot.exists() ? snapshot.val() : {};
-        const updates = {};
-        for (const [serial, password] of Object.entries(FIXED_CREDENTIALS)) {
-            if (!existing[serial]) updates[`users/${serial}`] = { password, active: false, lastActive: null };
-        }
-        if (Object.keys(updates).length > 0) { await update(ref(db), updates); }
-    } catch (e) { console.warn('Seed error:', e); }
-}
-seedUsers();
+const auth = getAuth(app);
+window.__auth = auth;
+window.__authReady = setPersistence(auth, browserSessionPersistence).then(() => auth.authStateReady());
+window.__authReady.catch(() => {});
 
 let sessionWatcherUnsubscribe = null;
 let dataWatcherUnsubscribe = null;
@@ -822,7 +807,7 @@ window.startSessionWatcher = function(serial, mySessionId) {
             window.stopSessionWatcher();
             if (typeof window.stopDataWatcher === 'function') window.stopDataWatcher();
             alert('⚠️ You have been logged out because someone logged into this account from another device.');
-            location.reload();
+            signOut(auth).finally(() => location.reload());
         }
     });
 };
@@ -847,31 +832,24 @@ window.stopDataWatcher = function() {
 };
 
 window.loginUser = async function(serial, password) {
-    const errorEl = document.getElementById('loginError');
-    const loader = document.getElementById('loginLoader');
-    errorEl.textContent = '';
-    loader.classList.add('active');
-
-    if (!FIXED_CREDENTIALS[serial] || FIXED_CREDENTIALS[serial] !== password) {
-        errorEl.textContent = '❌ Invalid serial or password.';
-        loader.classList.remove('active');
-        return false;
-    }
-
-    const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    const now = Date.now();
-
+    const errorEl=document.getElementById('loginError');
+    const loader=document.getElementById('loginLoader');
+    const button=document.getElementById('loginBtn');
+    errorEl.textContent=''; loader.classList.add('active');button.disabled=true;
     try {
-        await update(ref(db), {
-            [`users/${serial}/active`]: true,
-            [`users/${serial}/lastActive`]: now,
-            [`users/${serial}/lockOwner`]: sessionId
-        });
-    } catch (e) { console.warn('Firebase sync failed:', e); }
-
-    sessionStorage.setItem('ssplitly_session', JSON.stringify({ serial, sessionId, loginTime: now }));
-    loader.classList.remove('active');
-    return true;
+        await window.__authReady;
+        const result=await signInWithEmailAndPassword(auth, serial+'@accounts.ssplitly.invalid', password);
+        const uid=result.user.uid;
+        const sessionId=crypto.randomUUID();
+        await update(ref(db,`users/${uid}`),{active:true,lastActive:Date.now(),lockOwner:sessionId});
+        sessionStorage.setItem('ssplitly_session',JSON.stringify({serial:uid,accountSerial:serial,sessionId,loginTime:Date.now()}));
+        return true;
+    } catch(e) {
+        await signOut(auth).catch(()=>{});
+        sessionStorage.removeItem('ssplitly_session');
+        errorEl.textContent=e.code==='auth/operation-not-allowed'?'Enable Email/Password in Firebase Authentication.':e.code==='PERMISSION_DENIED'?'Database access denied. Check UID rules and account migration.':'Login failed. Check your migrated serial/password and connection.';
+        return false;
+    } finally {loader.classList.remove('active');button.disabled=false;}
 };
 
 window.logout = async function() {
@@ -882,6 +860,7 @@ window.logout = async function() {
     if (session.serial) {
         try { await update(ref(db), { [`users/${session.serial}/active`]: false }); } catch (e) {}
     }
+    await signOut(auth);
     sessionStorage.removeItem('ssplitly_session');
     location.reload();
 };
@@ -891,7 +870,7 @@ window.checkSession = function() {
     if (!raw) return null;
     try {
         const session = JSON.parse(raw);
-        if (!session.serial) return null;
+        if (!auth.currentUser || session.serial !== auth.currentUser.uid) return null;
         return session;
     } catch (e) { return null; }
 };
@@ -899,6 +878,7 @@ window.checkSession = function() {
 window.markViewOnly = function() { document.getElementById('loginOverlay').classList.remove('active'); };
 
 window.addEventListener('beforeunload', function() {
+    if (/^#\/(?:p|portfolio)\//.test(location.hash)) return;
     const raw = sessionStorage.getItem('ssplitly_session');
     if (raw) {
         try {
@@ -929,9 +909,7 @@ function toast(msg, type='ok') {
 }
 
 function getCurrentSerial() {
-    const raw = sessionStorage.getItem('ssplitly_session');
-    if (!raw) return null;
-    try { return JSON.parse(raw).serial || null; } catch (e) { return null; }
+    return window.__auth?.currentUser?.uid || null;
 }
 
 /* ✅ DEBOUNCE HELPERS — typing stuck fix */
@@ -975,6 +953,7 @@ async function saveToFirebase() {
         showBehance: document.getElementById('showBehance').checked,
         showInstagram: document.getElementById('showInstagram').checked,
         showWhatsApp: document.getElementById('showWhatsApp').checked,
+        sharingPreferences: readSharingPreferences(),
         skillsInput: document.getElementById('skillsInput').value,
         customSoftwareIcons: customSoftwareIcons,
         colorTheme: colorTheme,
@@ -1051,6 +1030,7 @@ async function loadFromFirebase() {
         if (!snapshot.exists()) { resetBuilderState(); populateDefaultData(); await saveToFirebase(); return true; }
         const d = snapshot.val();
         resetBuilderState();
+        applySharingPreferences(d.sharingPreferences, d);
         window.__localLastSave = d.lastSavedAt || 0;
         if (d.fullName) document.getElementById('fullName').value = d.fullName;
         if (d.profTitle) document.getElementById('profTitle').value = d.profTitle;
@@ -1124,6 +1104,7 @@ function applyRemoteData(d) {
     }
 
     if (window.__localLastSave && d.lastSavedAt && d.lastSavedAt <= window.__localLastSave) return;
+    applySharingPreferences(d.sharingPreferences, d);
     console.log('🔄 Applying remote data…');
 
     if (d.fullName !== undefined) document.getElementById('fullName').value = d.fullName;
@@ -1190,6 +1171,7 @@ function applyRemoteData(d) {
 }
 
 function resetBuilderState() {
+    applySharingPreferences(null);
     customSoftwareIcons = {}; projectImages = {};
     window.croppedImageData = '';
     window.expCounter = 0; window.eduCounter = 0; window.projectCounter = 0;
@@ -1298,7 +1280,7 @@ function getSoftwareLogo(name) {
 
 function getSkillLogoHTML(name) {
     const logo = getSoftwareLogo(name);
-    if (logo) return `<img src="${logo}" alt="${name}" class="skill-logo" loading="lazy" onerror="this.style.display='none';">`;
+    if (logo) return `<img src="${logo}" alt="${escapeHTML(name)}" class="skill-logo" loading="lazy" onerror="this.style.display='none';">`;
     return `<i class="fas fa-cube" style="font-size:14px;color:#64748b;"></i>`;
 }
 
@@ -1658,7 +1640,7 @@ function generateCV() {
         if (summary) html += `<div class="summary">${escapeHTML(summary)}</div>`;
         html += `<div class="contact-row">`;
         html += `<span><i class="fas fa-envelope"></i> <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a></span>`;
-        html += `<span><i class="fas fa-phone"></i> <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
+        html += `<span><i class="fas fa-phone"></i> <a href="tel:${escapeHTML(dialNumber(phone))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
         html += `<span><i class="fas fa-map-marker-alt"></i> ${escapeHTML(location)}</span>`;
         if (showLinkedIn && linkedinUrl !== '#') html += `<span><i class="fab fa-linkedin-in"></i> <a href="${escapeHTML(linkedinUrl)}" target="_blank">${escapeHTML(linkedinUrl.replace(/^https?:\/\//,''))}</a></span>`;
         html += `</div>`;
@@ -1741,7 +1723,7 @@ function generateCoverLetter() {
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const skillsList = skills.slice(0, 4).join(', ');
     const lastRole = expCards.length > 0 ? (expCards[0].querySelector('.exp-role').value || 'Professional') : 'Professional';
-    const letterContent = `<div class="cover-letter-content"><div class="cover-header"><div class="cl-name">${escapeHTML(name)}</div><div class="cl-details">${escapeHTML(title)} | <a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}">${escapeHTML(phone)}</a> | <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a> | ${escapeHTML(location)}</div></div><div class="cover-date">${escapeHTML(today)}</div><div class="cover-subject">Subject: Application for ${escapeHTML(applyJob)} at ${escapeHTML(applyCompany)}</div><div class="cover-body"><p>Dear Hiring Manager,</p><p>I am writing to express my strong interest in the ${escapeHTML(applyJob)} position at ${escapeHTML(applyCompany)}. With over ${totalYears}+ years of experience as a ${escapeHTML(title)} and Architectural Draftsman, I have developed a comprehensive skill set that aligns perfectly with the requirements of this role.</p><p>In my recent role as ${escapeHTML(lastRole)}, I have successfully delivered high-quality 3D visualizations and technical drawings for luxury residential and commercial projects. My expertise includes ${escapeHTML(skillsList)}, enabling me to produce photorealistic renders and precise documentation.</p><p>I am particularly drawn to ${escapeHTML(applyCompany)} because of its reputation for innovative design and commitment to excellence. I am confident that my background would make me a valuable addition to your team.</p><p>Thank you for considering my application. I look forward to the opportunity to discuss how my expertise can support the goals of ${escapeHTML(applyCompany)}.</p><p>Yours sincerely,</p></div><div class="cover-signature">${escapeHTML(name)}<br>${escapeHTML(title)}</div></div>`;
+    const letterContent = `<div class="cover-letter-content"><div class="cover-header"><div class="cl-name">${escapeHTML(name)}</div><div class="cl-details">${escapeHTML(title)} | <a href="tel:${escapeHTML(dialNumber(phone))}">${escapeHTML(phone)}</a> | <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a> | ${escapeHTML(location)}</div></div><div class="cover-date">${escapeHTML(today)}</div><div class="cover-subject">Subject: Application for ${escapeHTML(applyJob)} at ${escapeHTML(applyCompany)}</div><div class="cover-body"><p>Dear Hiring Manager,</p><p>I am writing to express my strong interest in the ${escapeHTML(applyJob)} position at ${escapeHTML(applyCompany)}. With over ${totalYears}+ years of experience as a ${escapeHTML(title)} and Architectural Draftsman, I have developed a comprehensive skill set that aligns perfectly with the requirements of this role.</p><p>In my recent role as ${escapeHTML(lastRole)}, I have successfully delivered high-quality 3D visualizations and technical drawings for luxury residential and commercial projects. My expertise includes ${escapeHTML(skillsList)}, enabling me to produce photorealistic renders and precise documentation.</p><p>I am particularly drawn to ${escapeHTML(applyCompany)} because of its reputation for innovative design and commitment to excellence. I am confident that my background would make me a valuable addition to your team.</p><p>Thank you for considering my application. I look forward to the opportunity to discuss how my expertise can support the goals of ${escapeHTML(applyCompany)}.</p><p>Yours sincerely,</p></div><div class="cover-signature">${escapeHTML(name)}<br>${escapeHTML(title)}</div></div>`;
     document.getElementById('coverOutput').innerHTML = `<div class="a4-preview" style="margin:0 auto;">${letterContent}</div>`;
 }
 
@@ -2040,7 +2022,8 @@ function renderPortfolioWebsite(data) {
         if (company || role) experiences.push({ company, role, start, end, present });
     });
 
-    const photoHTML = data.photo ? `<img src="${data.photo}" alt="${escapeHTML(name)}">` : `<img src="https://ui-avatars.com/api/?name=${name.replace(' ','+')}&size=400&background=1e293b&color=38bdf8" alt="Profile">`;
+    if (Array.isArray(data.experiences)) experiences = data.experiences;
+    const photoHTML = data.photo ? `<img src="${data.photo}" alt="${escapeHTML(name)}">` : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=400&background=1e293b&color=38bdf8" alt="Profile">`;
 
     const socialLinks = [
         data.showLinkedIn && data.linkedin ? `<a href="${escapeHTML(data.linkedin)}" target="_blank"><i class="fab fa-linkedin-in"></i></a>` : '',
@@ -2051,7 +2034,7 @@ function renderPortfolioWebsite(data) {
 
     const cubesHTML = `<div class="hero-css-bg"><div class="cube-container">` + `<div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>`.repeat(6) + `</div></div>`;
 
-    let html = `<section class="site-hero">${cubesHTML}<div class="hero-wrap"><div class="hero-grid"><div class="hero-frame reveal">${photoHTML}</div><div class="hero-copy"><div class="eyebrow reveal"><span class="rule"></span> ${escapeHTML(title)}</div><h1 class="reveal">${escapeHTML(name)}</h1><div class="hero-title reveal">Bringing Architectural Concepts to Life.</div><div class="hero-meta reveal">${email ? `<a href="mailto:${escapeHTML(email)}"><i class="fas fa-envelope"></i> ${escapeHTML(email)}</a>` : ''}${phone ? `<a href="tel:${escapeHTML(phone.replace(/[^0-9+]/g,''))}"><i class="fas fa-phone"></i> ${escapeHTML(phone)}</a>` : ''}${location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHTML(location)}</span>` : ''}</div>${socialLinks ? `<div class="hero-social reveal">${socialLinks}</div>` : ''}</div></div></div></section>
+    let html = `<section class="site-hero">${cubesHTML}<div class="hero-wrap"><div class="hero-grid"><div class="hero-frame reveal">${photoHTML}</div><div class="hero-copy"><div class="eyebrow reveal"><span class="rule"></span> ${escapeHTML(title)}</div><h1 class="reveal">${escapeHTML(name)}</h1><div class="hero-title reveal">Bringing Architectural Concepts to Life.</div><div class="hero-meta reveal">${email ? `<a href="mailto:${escapeHTML(email)}"><i class="fas fa-envelope"></i> ${escapeHTML(email)}</a>` : ''}${phone ? `<a href="tel:${escapeHTML(dialNumber(phone))}"><i class="fas fa-phone"></i> ${escapeHTML(phone)}</a>` : ''}${location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHTML(location)}</span>` : ''}</div>${socialLinks ? `<div class="hero-social reveal">${socialLinks}</div>` : ''}</div></div></div></section>
     <section class="site-section"><div class="site-wrap"><div class="site-section-head reveal"><span class="sec-index">01</span><h2>About & Skills</h2><span class="rule-line"></span></div><p class="about-text reveal">${escapeHTML(about) || 'Creative professional with a passion for architectural visualization.'}</p><div class="software-skills-title reveal">Software Skills</div><div class="site-skills reveal">${skills.map((s,i) => `<span style="animation-delay:${i*0.05}s;transition-delay:${i*0.05}s">${getSkillLogoHTML(s)} ${escapeHTML(s)}</span>`).join('')}</div><div class="portfolio-stats reveal"><div class="portfolio-stat"><div class="stat-number" data-target="${Number.isFinite(totalProjects) ? totalProjects : 0}">0</div><div class="stat-label">Total Projects</div></div><div class="portfolio-stat"><div class="stat-number" data-target="${Number.isFinite(totalExperience) ? totalExperience : 0}" data-suffix="+">0</div><div class="stat-label">Years Experience</div></div><div class="portfolio-stat"><div class="stat-number" data-target="${Number.isFinite(finishedProjects) ? finishedProjects : 0}">0</div><div class="stat-label">Finished Projects</div></div></div></div></section>`;
 
     if (experiences.length > 0) {
@@ -2072,7 +2055,7 @@ function renderPortfolioWebsite(data) {
         const slideControls = galleryImages.length > 1 ? `<div class="project-slide-controls"><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,-1)"><i class="fas fa-chevron-left"></i></button><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,1)"><i class="fas fa-chevron-right"></i></button></div><div class="project-slideshow-progress"><span></span></div>` : '';
         return `<div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}"><div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" src="${firstImage}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>${galleryThumbs}<div class="plate-body"><div class="plate-title">${escapeHTML(p.title)}</div><div class="plate-desc">${escapeHTML(p.desc)}</div><div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div></div></div>`;
     }).join('')}</div></div></section>
-    <footer class="site-footer reveal"><div class="site-wrap"><h2>Let's Create Together.</h2><p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p><button class="site-btn solid" onclick="window.location.href='mailto:${escapeHTML(email)}'"><i class="fas fa-paper-plane"></i> Get In Touch</button></div><div class="ssplitly-footer-links"><button onclick="openSsplitlyInfo('about')">About</button><button onclick="openSsplitlyInfo('contact')">Contact Us</button><button onclick="openSsplitlyInfo('terms')">Terms &amp; Conditions</button></div></footer>`;
+    <footer class="site-footer reveal"><div class="site-wrap"><h2>Let's Create Together.</h2><p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p><button class="site-btn solid" onclick="window.location.href=this.dataset.contact" data-contact="mailto:${escapeHTML(email)}"><i class="fas fa-paper-plane"></i> Get In Touch</button></div><div class="ssplitly-footer-links"><button onclick="openSsplitlyInfo('about')">About</button><button onclick="openSsplitlyInfo('contact')">Contact Us</button><button onclick="openSsplitlyInfo('terms')">Terms &amp; Conditions</button></div></footer>`;
 
     document.getElementById('portfolioSiteContent').innerHTML = html;
     updateThemeLabel();
@@ -2408,7 +2391,7 @@ document.addEventListener('keydown', function(e) {
 
 document.getElementById('loginBtn').addEventListener('click', async function() {
     const serial = document.getElementById('loginSerial').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
+    const password = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
     errorEl.textContent = '';
     if (!serial || !password) { errorEl.textContent = 'Please fill both fields.'; return; }
@@ -2421,10 +2404,10 @@ document.getElementById('loginBtn').addEventListener('click', async function() {
         document.getElementById('page2').classList.remove('active');
         document.getElementById('page3').classList.remove('active');
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
-        await loadFromFirebase();
+        if (!await loadFromFirebase()) { toast('Could not load your saved data. Reload before editing.','err'); document.getElementById('formPanel').inert=true; return; }
         const sess = JSON.parse(sessionStorage.getItem('ssplitly_session'));
-        window.startSessionWatcher(serial, sess.sessionId);
-        window.startDataWatcher(serial, applyRemoteData);
+        window.startSessionWatcher(sess.serial, sess.sessionId);
+        window.startDataWatcher(sess.serial, applyRemoteData);
     }
 });
 document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
@@ -2438,6 +2421,11 @@ window.onload = async function() {
         setTimeout(updateThemeLabel, 100);
         return;
     }
+    try { if (!window.__authReady || !window.checkSession) throw new Error('Authentication unavailable'); await window.__authReady; } catch(e) {
+        document.getElementById('loginOverlay').classList.add('active');
+        document.getElementById('loginError').textContent='Authentication connection failed. Reload to retry.';
+        return;
+    }
     const session = window.checkSession();
     if (session) {
         document.getElementById('loginOverlay').classList.remove('active');
@@ -2446,7 +2434,7 @@ window.onload = async function() {
         document.getElementById('page3').classList.remove('active');
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         const loaded = await loadFromFirebase();
-        if (!loaded) { resetBuilderState(); populateDefaultData(); await saveToFirebase(); }
+        if (!loaded) { toast('Could not load your saved data. Reload before editing.','err'); document.getElementById('formPanel').inert=true; return; }
         window.startSessionWatcher(session.serial, session.sessionId);
         window.startDataWatcher(session.serial, applyRemoteData);
     } else {
@@ -3819,8 +3807,12 @@ ${pages.join('')}
   color:#424d5a;
 }
 .ref-contact a{
-  color:#111;
-  text-decoration:none;
+  color:#2563eb!important;
+  text-decoration:underline!important;
+  text-decoration-color:#2563eb!important;
+  text-underline-offset:2px;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
   overflow-wrap:anywhere;
   min-width:0;
 }
@@ -4006,6 +3998,12 @@ ${pages.join('')}
 @page{
   size:A4;
   margin:0;
+  @bottom-left { content:none; }
+  @bottom-center { content:none; }
+  @bottom-right { content:none; }
+  @top-left { content:none; }
+  @top-center { content:none; }
+  @top-right { content:none; }
 }
 @media print{
   html,body{
@@ -4114,7 +4112,7 @@ ${pages.join('')}
     if (read('phone')) {
       contacts.push([
         'fas fa-mobile-alt',
-        `<a href="tel:${escape(read('phone').replace(/[^0-9+]/g,''))}">
+        `<a href="tel:${escape(dialNumber(read('phone')))}">
           ${escape(read('phone'))}
         </a>`
       ]);
@@ -4140,6 +4138,9 @@ ${pages.join('')}
         url ? `<a href="${escape(url)}">${label}</a>` : label
       ]);
     });
+
+    const portfolioURL = safeURL(read('cvPortfolioUrl'));
+    if ($('showCVPortfolio')?.checked && portfolioURL) contacts.push(['fas fa-globe', `<a href="${escape(portfolioURL)}">Portfolio — ${escape(portfolioURL.replace(/^https?:\/\//,''))}</a>`]);
 
     if (contacts.length) {
       html += `<div class="ref-contact">${
@@ -5193,6 +5194,101 @@ ${source.innerHTML}
   };
 })();
 </script>
+<style>
+.view-only #page1,.view-only #page2,.view-only #loginOverlay,.view-only #page3 .site-actions>button:first-child,.view-only #siteColorTheme{display:none!important}
+#shareDialog{border:1px solid #cbd5e1;border-radius:18px;padding:24px;margin:auto;max-width:calc(100vw - 32px);width:430px;background:var(--surface);color:var(--text)}
+#shareDialog::backdrop{background:#0009}#shareDialog input{width:100%;padding:12px;margin:16px 0;border:1px solid #cbd5e1;border-radius:8px}#shareDialog p{line-height:1.6}
+</style>
+<script id="ssplitly-sharing-v2">
+function dialNumber(value) {
+ const normalized=String(value||'').normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).trim();
+ const digits=normalized.replace(/[^0-9]/g,'');
+ return digits ? (normalized.startsWith('+')?'+':'')+digits : '';
+}
+const sharingNetworks = ['LinkedIn','Behance','Instagram','WhatsApp'];
+function readSharingPreferences(){
+ return {portfolio:Object.fromEntries(sharingNetworks.map(n=>[n,document.getElementById('portfolioShow'+n).checked])),cvPortfolioUrl:document.getElementById('cvPortfolioUrl').value,showCVPortfolio:document.getElementById('showCVPortfolio').checked};
+}
+function applySharingPreferences(p,legacy={}){
+ sharingNetworks.forEach(n=>{const el=document.getElementById('portfolioShow'+n);if(el)el.checked=p?.portfolio?.[n]??legacy['show'+n]??true;});
+ const url=document.getElementById('cvPortfolioUrl');if(url)url.value=p?.cvPortfolioUrl||'';
+ const toggle=document.getElementById('showCVPortfolio');if(toggle)toggle.checked=p?.showCVPortfolio??true;
+}
+(function(){
+ const $=id=>document.getElementById(id);
+ const cvSocial=$('showLinkedIn').parentElement.parentElement;
+ cvSocial.querySelector('span').textContent='Show on CV:';
+ $('cvFormFields').prepend(cvSocial);
+ const field=document.createElement('div');field.className='form-group';
+ field.innerHTML='<label for="cvPortfolioUrl">Portfolio link — CV only</label><input type="url" id="cvPortfolioUrl" placeholder="https://…"><label style="display:flex;align-items:center;gap:8px;margin-top:8px;text-transform:none"><input type="checkbox" id="showCVPortfolio" checked style="width:auto">Show Portfolio link on CV</label>';
+ cvSocial.after(field);
+ const options=document.createElement('div');options.className='form-group';
+ options.innerHTML='<label>Show on Portfolio</label>'+sharingNetworks.map(n=>`<label style="display:inline-flex;gap:6px;margin:8px"><input style="width:auto" type="checkbox" id="portfolioShow${n}" checked>${n}</label>`).join('');
+ $('portfolioFormFields').prepend(options);
+ [field,options].forEach(el=>el.addEventListener('input',()=>{saveToFirebaseDebounced();updateLivePreviewDebounced();}));
+ document.querySelectorAll('#page2 button[onclick*="generateShareLink"]').forEach(b=>b.remove());
+ const baseBuild=buildShareData;
+ buildShareData=function(){
+  const data=baseBuild();
+  sharingNetworks.forEach(n=>{data['show'+n]=$('portfolioShow'+n).checked;const k={LinkedIn:'linkedin',Behance:'behance',Instagram:'instagram',WhatsApp:'whatsapp'}[n];if(!data['show'+n])data[k]='';});
+  data.experiences=Array.from(document.querySelectorAll('#experienceContainer .entry-card')).map(c=>({company:c.querySelector('.exp-company').value,role:c.querySelector('.exp-role').value,start:c.querySelector('.exp-start').value,end:c.querySelector('.exp-end').value,present:c.querySelector('.exp-present').checked}));
+  if(data.totalExperience==='')data.totalExperience=calculatePortfolioExperienceYears();
+  return data;
+ };
+ const cleanURL=v=>{try{const u=new URL(String(v).trim().match(/^https?:\/\//i)?v:'https://'+v);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
+ const cleanImage=v=>typeof v==='string'&&(/^(data:image\/(?:png|jpeg|webp|gif|svg\+xml);base64,[a-z0-9+/=\s]+)$/i.test(v)||/^https:\/\/[^<>"'\s]+$/i.test(v))?v:'';
+ function publicData(input){
+  if(!input||typeof input!=='object')throw Error('Invalid portfolio');
+  const d={};
+  ['name','title','email','phone','location','about','skills','totalProjects','totalExperience','finishedProjects'].forEach(k=>d[k]=String(input[k]??''));
+  sharingNetworks.forEach(n=>{const k={LinkedIn:'linkedin',Behance:'behance',Instagram:'instagram',WhatsApp:'whatsapp'}[n];d['show'+n]=!!input['show'+n];d[k]=d['show'+n]?cleanURL(input[k]||''):'';});
+  d.colorTheme=['blue','purple','green','orange','pink'].includes(input.colorTheme)?input.colorTheme:'blue';d.photo=cleanImage(input.photo);
+  d.customSoftwareIcons={};Object.entries(input.customSoftwareIcons||{}).forEach(([k,v])=>{if(k&&!/[.#$\/\[\]\x00-\x1f\x7f]/.test(k)&&cleanImage(v))d.customSoftwareIcons[k]=cleanImage(v);});
+  d.projects=(Array.isArray(input.projects)?input.projects:[]).map(p=>({title:String(p.title||''),desc:String(p.desc||''),tools:Array.isArray(p.tools)?p.tools.map(String).join(', '):String(p.tools||''),finished:!!p.finished,images:(Array.isArray(p.images)?p.images:[]).map(cleanImage).filter(Boolean)}));
+  d.experiences=(Array.isArray(input.experiences)?input.experiences:[]).map(e=>({company:String(e.company||''),role:String(e.role||''),start:/^\d{4}-\d{2}$/.test(e.start)?e.start:'',end:/^\d{4}-\d{2}$/.test(e.end)?e.end:'',present:!!e.present}));
+  return d;
+ }
+ const dialog=document.createElement('dialog');dialog.id='shareDialog';
+ dialog.innerHTML='<h3>Share portfolio</h3><p id="shareStatus" role="status"></p><input id="shortShareURL" readonly aria-label="Portfolio link"><div class="btn-group"><button class="btn btn-primary" id="nativeShare">Share to apps</button><button class="btn btn-success" id="copyShare">Copy link</button><button class="btn btn-outline" id="closeShare">Close</button></div>';
+ document.body.appendChild(dialog);
+ $('closeShare').onclick=()=>dialog.close();
+ $('copyShare').onclick=async()=>{try{await navigator.clipboard.writeText($('shortShareURL').value);toast('Link copied');}catch{$('shortShareURL').select();$('shareStatus').textContent='Select and copy this link.';}};
+ $('nativeShare').onclick=async()=>{if(!navigator.share){$('copyShare').click();return;}try{await navigator.share({title:'Portfolio',url:$('shortShareURL').value});}catch(e){if(e.name!=='AbortError')$('shareStatus').textContent='Please use Copy link on this browser.';}};
+ let busy=false,cachedJSON='',cachedURL='';
+ generateShareLink=async function(){
+  if(busy)return;
+  if(isViewOnly){$('shortShareURL').value=location.href;$('shareStatus').textContent='Choose an app or copy the link.';dialog.showModal();$('nativeShare').click();return;}
+  if(!getCurrentSerial())return toast('Log in to share your portfolio.','err');
+  const json=JSON.stringify({...publicData(buildShareData()),ownerUid:getCurrentSerial()});
+  if(json===cachedJSON&&cachedURL){$('shortShareURL').value=cachedURL;dialog.showModal();$('nativeShare').click();return;}
+  busy=true;$('shareStatus').textContent='Preparing portfolio link…';$('shortShareURL').value='';$('nativeShare').disabled=$('copyShare').disabled=true;dialog.showModal();
+  try{
+   const fb=window.__firebase;if(!fb)throw Error('Database connection unavailable');
+   const bytes=crypto.getRandomValues(new Uint8Array(12));const token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+   await Promise.race([fb.set(fb.ref(fb.db,'publicPortfolios/'+token),JSON.parse(json)),new Promise((_,reject)=>setTimeout(()=>reject(Error('Connection timed out. Please retry.')),20000))]);
+   cachedURL=location.href.split('#')[0]+'#/p/'+token;cachedJSON=json;$('shortShareURL').value=cachedURL;
+   $('shareStatus').textContent='Link ready. Tap Share to apps to choose WhatsApp or another app. This link contains a snapshot of your portfolio.';
+   $('nativeShare').disabled=$('copyShare').disabled=false;
+   if(navigator.userActivation?.isActive)$('nativeShare').click();
+  }catch(e){$('shareStatus').textContent='Could not create link: '+e.message;}
+  finally{busy=false;}
+ };
+ const originalLoad=window.onload;
+ window.onload=async function(...args){
+  const match=location.hash.match(/^#\/p\/([a-f0-9]{24})$/);
+  if(!location.hash.startsWith('#/p/'))return originalLoad.apply(this,args);
+  isViewOnly=true;document.body.classList.add('view-only');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('loginOverlay').classList.remove('active');$('page3').classList.add('active');
+  $('portfolioSiteContent').textContent='Loading portfolio…';
+  try{if(!match)throw Error('Invalid portfolio link');const fb=window.__firebase;if(!fb)throw Error('Database unavailable. Reload to retry.');
+   const snap=await fb.get(fb.ref(fb.db,'publicPortfolios/'+match[1]));if(!snap.exists())throw Error('Portfolio not found. Ask the owner for a new link.');
+   renderPortfolioWebsite(publicData(snap.val()));
+  }catch(e){$('portfolioSiteContent').textContent=e.message;}
+ };
+ const originalBack=goBackFromPortfolio;goBackFromPortfolio=function(){if(!isViewOnly)originalBack();};
+})();
+</script>
+
 </body>
 </html>
   
