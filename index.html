@@ -573,7 +573,10 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 }
 @media print{.ss-admin-launcher,#accountAdminDialog{display:none!important}}
 </style>
-</head>
+<style id="ss-robot-dock">
+@media screen{#ssAIDock{position:fixed;right:20px;bottom:22px;width:60px;height:60px;z-index:10002}#ssAIDock[hidden],#page2:not(.active) #ssAIDock{display:none!important}#ssAIDock #ssAIButton{width:60px;height:60px;padding:0;border-radius:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px #4338ca44;touch-action:none;cursor:grab}#ssAIDock #ssAIButton:active{cursor:grabbing}#ssAIDismiss{position:absolute;right:-7px;top:-9px;width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid #cbd5e1;color:#334155;display:grid;place-items:center;font:18px Arial;box-shadow:0 2px 8px #0002}#ssAIButton:focus-visible,#ssAIDismiss:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}#accountAdminDialog td:last-child .btn{display:flex;margin:5px 0;width:100%}}
+@media print{#ssAIDock{display:none!important}}
+</style></head>
 <body>
 
 <div id="loginOverlay">
@@ -591,7 +594,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         </div>
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
-        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v11</p>
+        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v12</p>
         <div class="login-loader" id="loginLoader"></div>
         <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
@@ -959,9 +962,10 @@ window.ensureAccountAccess=async function(uid){
 };
 function secureRandomChars(chars,length){let out='';const limit=256-256%chars.length;while(out.length<length){for(const b of crypto.getRandomValues(new Uint8Array(length*2))){if(b<limit)out+=chars[b%chars.length];if(out.length===length)break;}}return out;}
 function installAccountAdmin(){
+ const createdCredentials=new Map();
  const button=document.createElement('button');button.id='accountAdminButton';button.className='ss-admin-launcher';button.type='button';button.title='Manage accounts';button.setAttribute('aria-label','Manage accounts');button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','accountAdminDialog');button.setAttribute('aria-expanded','false');button.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true" fill="none"><path d="M16 3 27 7v8c0 7-6 11-11 14C11 26 5 22 5 15V7L16 3Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3" fill="currentColor"/><path d="M10 22c0-4 2-6 6-6s6 2 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="ss-admin-caption">Admin</span>';button.style.display='none';
  const dialog=document.createElement('dialog');dialog.id='accountAdminDialog';dialog.setAttribute('aria-labelledby','ssAccountTitle');dialog.style.cssText='margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:16px;width:1000px;max-width:calc(100vw - 24px);max-height:90vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#111)';
- dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>Copy the password before closing. It will not be saved in the account list.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
+ dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>New passwords are available here until refresh or sign-out. Copy and keep them safely; existing Firebase passwords cannot be retrieved.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
  document.getElementById('page1').append(button);document.body.append(dialog);
  button.onclick=()=>{if(auth.currentUser?.uid===ACCOUNT_ADMIN_UID){dialog.showModal();button.setAttribute('aria-expanded','true');}};
  const status=dialog.querySelector('#accountStatus'),output=dialog.querySelector('textarea'),copy=dialog.querySelector('#copyCredentials');
@@ -983,6 +987,7 @@ function installAccountAdmin(){
    }
    const kind=b.dataset.kind;grantAttempted=true;
    await update(ref(db),{['accountAccess/'+user.uid]:true,['accountPlans/'+user.uid]:{type:kind,serial,createdAt:serverTimestamp()}});
+   createdCredentials.set(user.uid,{serial,password});renderAccounts();
    output.value+=(output.value?'\n\n':'')+'Ssplitly '+(kind==='trial'?'1-hour Trial':'Paid')+' account\nSerial: '+serial+'\nPassword: '+password+'\nWebsite: '+location.href.split('#')[0]+(kind==='trial'?'\nTrial expires 1 hour after creation.':'');output.style.display='block';copy.hidden=false;status.textContent=(n+1)+' account(s) ready. Copy these details now.';
    }
   }catch(e){
@@ -990,7 +995,7 @@ function installAccountAdmin(){
    status.textContent='Batch stopped; keep any credentials already shown. Could not finish: '+(e.code||e.message)+(grantAttempted?'\nCheck Authentication for UID '+user.uid+' before retrying.':'\nPublish the supplied Rules first.');
   }finally{if(secondaryAuth)try{await signOut(secondaryAuth);}catch{}if(secondary)try{await deleteApp(secondary);}catch{}busy=false;dialog.querySelectorAll('button').forEach(x=>x.disabled=false);}
  });
- onAuthStateChanged(auth,u=>{button.style.display=u?.uid===ACCOUNT_ADMIN_UID&&!location.hash.startsWith('#/p/')?'':'none';if(!u){stopAccountWatch();if(dialog.open)dialog.close();}});
+ onAuthStateChanged(auth,u=>{button.style.display=u?.uid===ACCOUNT_ADMIN_UID&&!location.hash.startsWith('#/p/')?'':'none';if(!u){createdCredentials.clear();stopAccountWatch();if(dialog.open)dialog.close();}});
  const summary=document.createElement('p'),list=document.createElement('div');list.style.overflowX='auto';dialog.append(summary,list);
  let plans={},grants={},presence={},listStops=[],listTimer;
  const fmt=t=>Number.isFinite(t)?new Date(t).toLocaleString():'Not signed in';
@@ -998,13 +1003,19 @@ function installAccountAdmin(){
   const ids=[...new Set([...Object.keys(plans),...Object.keys(grants)])].filter(uid=>uid!==ACCOUNT_ADMIN_UID);
   let paid=0,trial=0,onlineCount=0;list.replaceChildren();
   const table=document.createElement('table');table.style.cssText='width:100%;font-size:13px;border-collapse:collapse';
-  const head=table.insertRow();['Serial / UID','Plan','First login','Expires','Status / Last seen','Access'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.append(th);});
+  const head=table.insertRow();['Serial / UID','Plan','First login','Expires','Status / Last seen','Password / Actions'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.append(th);});
   ids.forEach(uid=>{const p=plans[uid],end=expiry(p),enabled=grants[uid]===true,expired=end<=Date.now();if(p?.type==='trial')trial++;else paid++;
    const sessions=Object.values(presence[uid]||{}),last=Math.max(0,...sessions.map(x=>Number(x.lastSeen)||0));
    const online=enabled&&!expired&&sessions.some(x=>x.online===true&&Date.now()-x.lastSeen<90000);if(online)onlineCount++;
    const row=table.insertRow();[p?.serial||uid,p?.type||'Legacy paid',fmt(p?.startedAt),Number.isFinite(end)?fmt(end):'Starts on first login',(online?'Online':'Offline')+(last?' · '+fmt(last):'')].forEach(t=>{const cell=row.insertCell();cell.textContent=t;cell.style.cssText='padding:10px;border-bottom:1px solid #ddd';});
    const cell=row.insertCell(),stop=document.createElement('button');stop.className='btn btn-outline';stop.textContent=!enabled?'Access stopped':expired?'Expired — stop access':'Stop access';stop.disabled=!enabled;
    stop.onclick=async()=>{if(!confirm('Stop access for '+(p?.serial||uid)+'? Authentication record will remain.'))return;try{await set(ref(db,'accountAccess/'+uid),false);}catch(e){status.textContent=e.message;}};cell.append(stop);
+   const credential=createdCredentials.get(uid),show=document.createElement('button');show.className='btn btn-outline';show.textContent=credential?'Show / copy password':'Password unavailable';show.disabled=!credential;
+   show.onclick=()=>{output.value='Serial: '+credential.serial+'\nPassword: '+credential.password;output.style.display='block';copy.hidden=false;output.focus();};cell.append(show);
+   const remove=document.createElement('button');remove.className='btn btn-outline';remove.textContent='Remove account';remove.style.color='#dc2626';remove.onclick=async()=>{
+    if(!confirm('Remove '+(p?.serial||uid)+' from this list and stop access? Firebase Authentication, saved documents and published portfolios are not deleted.'))return;
+    remove.disabled=true;try{await update(ref(db),{['accountAccess/'+uid]:null,['accountPlans/'+uid]:null});createdCredentials.delete(uid);output.value='';output.style.display='none';copy.hidden=true;status.textContent='Account removed and access blocked. To delete the Authentication record, delete UID '+uid+' in Firebase Console → Authentication.';}catch(e){status.textContent=e.message;remove.disabled=false;}
+   };cell.append(remove);
   });summary.textContent='Paid: '+paid+' · Trial: '+trial+' · Online: '+onlineCount;list.append(table);
  }
  function homeVisibility(){const visible=auth.currentUser?.uid===ACCOUNT_ADMIN_UID&&document.getElementById('page1').classList.contains('active')&&!document.getElementById('loginOverlay').classList.contains('active');button.style.display=visible?'':'none';if(!visible&&dialog.open&&!busy)dialog.close();}
@@ -5597,16 +5608,27 @@ function applySharingPreferences(p,legacy={}){
 <script id="ssplitly-assistant">
 (function(){
  const $=id=>document.getElementById(id),page=$('page2');
- const button=document.createElement('button');button.id='ssAIButton';button.type='button';button.setAttribute('aria-controls','ssAIPanel');button.setAttribute('aria-expanded','false');button.innerHTML='<i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> AI Assistant';page.querySelector('.theme-controls').prepend(button);
+ const button=document.createElement('button');button.id='ssAIButton';button.type='button';button.setAttribute('aria-controls','ssAIPanel');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open AI assistant; drag to move');button.title='AI assistant — drag to move';button.innerHTML='<svg viewBox="0 0 40 40" width="32" height="32" fill="none" aria-hidden="true"><path d="M20 5v5" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="4" r="2" fill="currentColor"/><rect x="7" y="11" width="26" height="23" rx="8" stroke="currentColor" stroke-width="2.5"/><circle cx="15" cy="21" r="2.5" fill="currentColor"/><circle cx="25" cy="21" r="2.5" fill="currentColor"/><path d="M15 28h10M3 20v7m34-7v7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>';const dock=document.createElement('div');dock.id='ssAIDock';const dismiss=document.createElement('button');dismiss.id='ssAIDismiss';dismiss.type='button';dismiss.textContent='×';dismiss.setAttribute('aria-label','Hide AI assistant until refresh or next sign-in');dismiss.title='Hide until refresh or next sign-in';dock.append(button,dismiss);page.append(dock);
  const panel=document.createElement('section');panel.id='ssAIPanel';panel.hidden=true;panel.setAttribute('aria-label','Ssplitly AI Assistant');
  panel.innerHTML='<header><span class="ss-ai-avatar"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></span><div><strong>Ssplitly Assistant</strong><small id="ssAIScope">Your writing companion</small></div><div class="ss-ai-tools"><button type="button" id="ssAISettings" title="AI setup" aria-label="AI setup" hidden><i class="fas fa-gear"></i></button><button type="button" id="ssAIClear" title="Clear chat" aria-label="Clear chat"><i class="fas fa-rotate-right"></i></button><button type="button" id="ssAIClose" title="Close assistant" aria-label="Close assistant"><i class="fas fa-xmark"></i></button></div></header><div id="ssAIConfig" hidden><strong>Admin AI setup</strong><p>Enable Firebase AI Logic (Gemini Developer API), then register this website with App Check / reCAPTCHA Enterprise.</p><p><a href="https://firebase.google.com/docs/ai-logic/get-started" target="_blank" rel="noopener noreferrer">Setup guide ↗</a></p><label>reCAPTCHA Enterprise site key (public)<input id="ssAIKey" type="text" autocomplete="off" placeholder="Public site key — not a secret API key"></label><label>Gemini model<input id="ssAIModel" type="text" value="gemini-3.8-flash"></label><label><input id="ssAIEnabled" type="checkbox"> Enable AI assistant</label><button id="ssAISaveConfig" class="btn btn-primary btn-sm" type="button">Save AI settings</button></div><div id="ssAIMessages" role="log" aria-live="polite" aria-relevant="additions"></div><div id="ssAIChips"></div><p id="ssAIStatus" role="status"></p><form id="ssAIForm"><div class="ss-ai-options"><label><input type="checkbox" id="ssAIContext"> Include current draft text</label><select id="ssAILanguage" aria-label="Reply language"><option value="auto">Auto language</option><option value="ml">മലയാളം</option><option value="en">English</option></select></div><div class="ss-ai-compose"><textarea id="ssAIInput" maxlength="3000" rows="2" placeholder="Ask about your CV, letter or portfolio…" aria-label="Message to AI assistant" required></textarea><button type="submit" id="ssAISend" aria-label="Send message"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></div><p id="ssAIPrivacy">Messages go to Google Gemini. Draft sharing is optional; photos and contact fields are excluded. Review and copy suggestions before using them.</p></form>';
  page.append(panel);
- let history=[],busy=false,revision=0,scope='',chatUID=null;
+ let history=[],busy=false,revision=0,scope='',chatUID=null,hiddenForSession=false,suppressClick=false;
+ dismiss.onclick=()=>{hiddenForSession=true;dock.hidden=true;panel.hidden=true;button.setAttribute('aria-expanded','false');};
+ let drag=null;
+ function place(x,y){dock.style.left=Math.max(8,Math.min(innerWidth-72,x))+'px';dock.style.top=Math.max(8,Math.min(innerHeight-72,y))+'px';dock.style.right='auto';dock.style.bottom='auto';}
+ button.addEventListener('pointerdown',e=>{if(e.button!==0)return;const r=dock.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top,moved:false};suppressClick=false;button.setPointerCapture?.(e.pointerId);});
+ button.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>5)drag.moved=true;if(drag.moved){e.preventDefault();place(drag.left+dx,drag.top+dy);}});
+ function finishDrag(e){if(!drag||e.pointerId!==drag.id)return;suppressClick=drag.moved;drag=null;}
+ button.addEventListener('pointerup',finishDrag);button.addEventListener('pointercancel',finishDrag);
+ button.addEventListener('keydown',e=>{const d={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-20],ArrowDown:[0,20]}[e.key];if(d){e.preventDefault();const r=dock.getBoundingClientRect();place(r.left+d[0],r.top+d[1]);}});
+ window.addEventListener('resize',()=>{if(dock.style.left){const r=dock.getBoundingClientRect();place(r.left,r.top);}});
+
  function currentScope(){return typeof activeTab==='string'?activeTab:'cv';}
  function message(role,text,copyable=false){const box=document.createElement('div');box.className='ss-ai-message '+role;const p=document.createElement('p');p.textContent=text;box.append(p);if(copyable){const copy=document.createElement('button');copy.type='button';copy.className='ss-ai-copy';copy.textContent='Copy answer';copy.onclick=async()=>{try{await navigator.clipboard.writeText(text);copy.textContent='Copied';}catch{const range=document.createRange();range.selectNodeContents(p);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);$('ssAIStatus').textContent='Select and copy the answer.';}};box.append(copy);}$('ssAIMessages').append(box);$('ssAIMessages').scrollTop=$('ssAIMessages').scrollHeight;}
  function reset(){revision++;history=[];$('ssAIMessages').replaceChildren();$('ssAIInput').value='';$('ssAIStatus').textContent='';message('assistant','Hi! I can help refine your CV, write a cover letter or describe your portfolio projects. Ask in Malayalam or English.');}
  function refresh(){
   const next=currentScope(),uid=window.__auth?.currentUser?.uid||null;
+  if(uid!==chatUID)hiddenForSession=false;dock.hidden=hiddenForSession||!uid||!page.classList.contains('active')||$('loginOverlay').classList.contains('active');
   if(next!==scope||uid!==chatUID){scope=next;chatUID=uid;reset();$('ssAIContext').checked=false;}
   if(!page.classList.contains('active')||$('loginOverlay').classList.contains('active')||!uid){panel.hidden=true;button.setAttribute('aria-expanded','false');}
   $('ssAIScope').textContent=({cv:'CV · summaries & experience',cover:'Cover letter · clear, personal writing',portfolio:'Portfolio · projects & presentation'})[scope]||'Writing companion';
@@ -5622,7 +5644,7 @@ function applySharingPreferences(p,legacy={}){
   if(scope==='portfolio')d.projects=Array.from(document.querySelectorAll('#projectContainer .entry-card')).slice(0,8).map(c=>({title:c.querySelector('.proj-title')?.value||'',description:c.querySelector('.proj-desc')?.value||'',tools:c.querySelector('.proj-tools')?.value||''}));
   return JSON.stringify(d).slice(0,10000);
  }
- button.onclick=()=>{refresh();if(!chatUID)return;panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)$('ssAIInput').focus();};
+ button.onclick=()=>{if(suppressClick){suppressClick=false;return;}refresh();if(!chatUID)return;panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)$('ssAIInput').focus();};
  $('ssAIClose').onclick=()=>{panel.hidden=true;button.setAttribute('aria-expanded','false');button.focus();};
  panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();$('ssAIClose').click();}});
  $('ssAIClear').onclick=reset;
