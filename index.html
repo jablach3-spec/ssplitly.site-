@@ -594,7 +594,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         </div>
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
-        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v12</p>
+        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v14</p>
         <div class="login-loader" id="loginLoader"></div>
         <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
@@ -649,23 +649,23 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
                 </div>
             </div>
             <div class="row">
-                <div class="form-group"><label>Full Name</label><input type="text" id="fullName" value="Salih Muhammed"></div>
-                <div class="form-group"><label>Title</label><input type="text" id="profTitle" value="EXTERIOR VISUALIZER"></div>
+                <div class="form-group"><label>Full Name</label><input type="text" id="fullName" value=""></div>
+                <div class="form-group"><label>Title</label><input type="text" id="profTitle" value=""></div>
             </div>
             <div class="row">
-                <div class="form-group"><label>Email</label><input type="email" id="email" value="salihchnr65@gmail.com"></div>
-                <div class="form-group"><label>Phone</label><input type="text" id="phone" value="+971566412245"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="email" value=""></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="phone" value=""></div>
             </div>
             <div class="row">
-                <div class="form-group"><label>Location</label><input type="text" id="location" value="Al ain, United Arab Emirates"></div>
-                <div class="form-group"><label>LinkedIn</label><input type="text" id="linkedinUrl" value="https://linkedin.com/in/ssalih-muhammed"></div>
+                <div class="form-group"><label>Location</label><input type="text" id="location" value=""></div>
+                <div class="form-group"><label>LinkedIn</label><input type="text" id="linkedinUrl" value=""></div>
             </div>
             <div class="row">
-                <div class="form-group"><label>Behance</label><input type="text" id="behanceUrl" value="https://behance.net/salihmuhammed"></div>
-                <div class="form-group"><label>Instagram</label><input type="text" id="instagramUrl" value="https://instagram.com/salih_muhammed"></div>
+                <div class="form-group"><label>Behance</label><input type="text" id="behanceUrl" value=""></div>
+                <div class="form-group"><label>Instagram</label><input type="text" id="instagramUrl" value=""></div>
             </div>
             <div class="row">
-                <div class="form-group"><label>WhatsApp</label><input type="text" id="whatsappUrl" value="https://wa.me/971566412245"></div>
+                <div class="form-group"><label>WhatsApp</label><input type="text" id="whatsappUrl" value=""></div>
                 <div style="display:flex;align-items:center;gap:8px;padding-top:6px;flex-wrap:wrap">
                     <span style="font-size:12px;color:var(--text-muted);">Show:</span>
                     <label style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="showLinkedIn" checked> LinkedIn</label>
@@ -680,7 +680,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
             </div>
             <div class="section-title"><i class="fas fa-laptop-code"></i> Software &amp; Icons</div>
             <div class="software-help">Add software names and upload an SVG icon.</div>
-            <input type="hidden" id="skillsInput" value="SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY, ADOBE LIGHTROOM, ADOBE PHOTOSHOP, GEMINI AI">
+            <input type="hidden" id="skillsInput" value="">
             <div id="softwareManager" class="software-manager"></div>
             <button class="btn btn-outline btn-sm" onclick="addSoftware()"><i class="fas fa-plus-circle"></i> Add Software</button>
             <hr>
@@ -701,8 +701,8 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
             <div id="coverFormFields" style="display:none;">
                 <div class="section-title"><i class="fas fa-envelope"></i> Cover Letter Details</div>
                 <div class="row">
-                    <div class="form-group"><label>Applying for (Job Title)</label><input type="text" id="applyJob" value="Senior Architectural Visualizer"></div>
-                    <div class="form-group"><label>Target Company</label><input type="text" id="applyCompany" value="Design Studio"></div>
+                    <div class="form-group"><label>Applying for (Job Title)</label><input type="text" id="applyJob" value=""></div>
+                    <div class="form-group"><label>Target Company</label><input type="text" id="applyCompany" value=""></div>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px;">
                     <button class="match-btn" onclick="matchCVtoCover()"><i class="fas fa-arrows-rotate"></i> Match with CV</button>
@@ -871,19 +871,23 @@ window.__ssplitlyAI={
   await set(ref(db,'appConfig/ai'),config);
  },
  async ask(contents,language){
+  let stage='Account verification';
+  try {
   const user=auth.currentUser;if(!user)throw Error('Please sign in again.');
   // Server-authorized private-path read rejects disabled/expired accounts in this UI.
-  const token=await user.getIdToken();
-  const accessResponse=await fetch(firebaseConfig.databaseURL+'/users/'+encodeURIComponent(user.uid)+'/lastActive.json?auth='+encodeURIComponent(token),{cache:'no-store',signal:AbortSignal.timeout(10000)});
-  if(!accessResponse.ok)throw Error('Account access has ended or could not be verified.');
+  await get(ref(db,'users/'+user.uid+'/lastActive'));
+  stage='AI configuration';
   const config=await this.config();
   if(!config?.enabled||!config.siteKey)throw Error('AI is not connected yet. Ask the administrator to finish AI setup.');
-  const {initializeAppCheck,ReCaptchaEnterpriseProvider}=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-app-check.js');
+  stage='App Check verification';
+  const {initializeAppCheck,ReCaptchaEnterpriseProvider,getToken}=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-app-check.js');
   if(window.__ssplitlyAppCheckKey&&window.__ssplitlyAppCheckKey!==config.siteKey)throw Error('AI settings changed. Reload this page to reconnect.');
   if(!window.__ssplitlyAppCheckKey){
-   initializeAppCheck(app,{provider:new ReCaptchaEnterpriseProvider(config.siteKey),isTokenAutoRefreshEnabled:true});
+   window.__ssplitlyAppCheck=initializeAppCheck(app,{provider:new ReCaptchaEnterpriseProvider(config.siteKey),isTokenAutoRefreshEnabled:true});
    window.__ssplitlyAppCheckKey=config.siteKey;
   }
+  await getToken(window.__ssplitlyAppCheck,false);
+  stage='Gemini request';
   const {getAI,getGenerativeModel,GoogleAIBackend}=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-ai.js');
   const model=getGenerativeModel(getAI(app,{backend:new GoogleAIBackend()}),{
    model:config.model||'gemini-3.8-flash',
@@ -893,6 +897,7 @@ window.__ssplitlyAI={
   const result=await model.generateContent({contents});
   if(auth.currentUser?.uid!==user.uid)throw Error('Session changed. Please sign in again.');
   const text=result.response.text();if(!text.trim())throw Error('No answer was returned. Please rephrase your question.');return text.slice(0,14000);
+  }catch(error){const detail=String(error.message||error.code||'Unknown error').replace(/AIza[A-Za-z0-9_-]+/g,'[key]').replace(/https?:\/\/[^\s)]+/g,'[URL]').slice(0,650);throw Object.assign(new Error(stage+': '+detail),{code:error.code,aiStage:stage});}
  }
 };
 
@@ -1105,7 +1110,7 @@ window.loginUser = async function(serial, password) {
         sessionStorage.removeItem('ssplitly_session');
         const errorCode=String(e?.code || e?.name || 'unknown-error').replace(/[^a-zA-Z0-9_/-]/g,'').slice(0,100);
         const hints={
-            'account/expired':'Your 1-hour trial has ended. Contact the administrator for a paid account.',
+            'account/expired':e.message||'Your subscription has expired.',
             'account/disabled':'Account access has been stopped.',
             'login/timeout':'Connection took too long. Reload this page before trying again.',
             'auth/invalid-credential':'Firebase did not accept the account/password.',
@@ -1208,9 +1213,10 @@ function renderPortfolioDebounced(delay = 800) {
     }, delay);
 }
 
+window.__builderReadyUID=null;
 async function saveToFirebase() {
     const serial = getCurrentSerial();
-    if (!serial || !window.__firebase) return;
+    if (!serial || !window.__firebase || window.__builderReadyUID!==serial) return false;
     const { db, ref, set } = window.__firebase;
     const data = {
         fullName: document.getElementById('fullName').value,
@@ -1282,6 +1288,7 @@ async function saveToFirebase() {
         window.__lastSaveError = false;
         window.__sizeWarningShown = false;
         window.__localLastSave = data.lastSavedAt;
+        return true;
     } catch (e) {
         console.error('Save failed:', e);
         if (!window.__lastSaveError) {
@@ -1296,12 +1303,16 @@ async function saveToFirebase() {
 }
 
 async function loadFromFirebase() {
+    window.__builderReadyUID=null;clearTimeout(__saveTimer);
+    document.getElementById('formPanel').inert=true;
+    resetBuilderState();
     const serial = getCurrentSerial();
     if (!serial || !window.__firebase) return false;
     const { db, ref, get } = window.__firebase;
     try {
         const snapshot = await get(ref(db, `users/${serial}/builderData`));
-        if (!snapshot.exists()) { resetBuilderState(); if(window.__accountPlan){updateProjectCount();updateProjectStats();generateCV();generateCoverLetter();updateLivePreview();}else{populateDefaultData();} await saveToFirebase(); return true; }
+        if(getCurrentSerial()!==serial)return false;
+        if (!snapshot.exists()) { populateSampleProfile();window.__builderReadyUID=serial;const saved=await saveToFirebase();if(!saved){window.__builderReadyUID=null;return false;}document.getElementById('formPanel').inert=false;return true; }
         const d = snapshot.val();
         resetBuilderState();
         applySharingPreferences(d.sharingPreferences, d);
@@ -1334,13 +1345,11 @@ async function loadFromFirebase() {
         const expC = document.getElementById('experienceContainer');
         expC.innerHTML = ''; window.expCounter = 0;
         (d.experiences || []).forEach(exp => { window.expCounter++; expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end, exp.present, exp.bullets, exp.location)); });
-        if (!d.experiences || d.experiences.length === 0) { defaultExperiences.forEach(exp => { window.expCounter++; expC.insertAdjacentHTML('beforeend', createExperienceHTML(exp.company, exp.role, exp.start, exp.end, exp.present, exp.bullets, exp.location)); }); }
         initExpPresentListeners();
 
         const eduC = document.getElementById('educationContainer');
         eduC.innerHTML = ''; window.eduCounter = 0;
         (d.educations || []).forEach(edu => { window.eduCounter++; eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu.end, edu.present, edu.location)); });
-        if (!d.educations || d.educations.length === 0) { defaultEducations.forEach(edu => { window.eduCounter++; eduC.insertAdjacentHTML('beforeend', createEducationHTML(edu.institution, edu.degree, edu.start, edu.end, edu.present, edu.location)); }); }
         initEduPresentListeners();
 
         const projC = document.getElementById('projectContainer');
@@ -1353,9 +1362,7 @@ async function loadFromFirebase() {
             projectImages[idx] = proj.images || [];
             refreshProjectImagePreviews(card, idx);
         });
-        if ((!d.projects || d.projects.length === 0) && !window.__accountPlan) {
-            DEFAULT_PROJECTS.forEach(p => { window.projectCounter++; document.getElementById('projectContainer').insertAdjacentHTML('beforeend', createProjectHTML(p.title, p.desc, p.tools, [], !!p.finished)); });
-        }
+
         updateProjectCount(); updateProjectStats();
         if (document.getElementById('portfolioTotalExperience') && !document.getElementById('portfolioTotalExperience').value) {
             document.getElementById('portfolioTotalExperience').value = calculatePortfolioExperienceYears() || '';
@@ -1363,12 +1370,13 @@ async function loadFromFirebase() {
         renderSoftwareManagerFromInput();
         applySavedAppearance();
         generateCV(); generateCoverLetter(); updateLivePreview();
+        window.__builderReadyUID=serial;document.getElementById('formPanel').inert=false;
         return true;
     } catch (e) { console.error('Load error:', e); return false; }
 }
 
 function applyRemoteData(d) {
-    if (!d) return;
+    if (!d || window.__builderReadyUID!==getCurrentSerial()) return;
 
     // ✅ FIX 1: Prevent keyboard from closing when user is typing
     const activeEl = document.activeElement;
@@ -1457,15 +1465,15 @@ function resetBuilderState() {
     document.getElementById('cvOutput').innerHTML = '';
     document.getElementById('coverOutput').innerHTML = '';
     document.getElementById('livePreviewContent').innerHTML = '';
-    document.getElementById('fullName').value = 'Salih Muhammed';
-    document.getElementById('profTitle').value = 'EXTERIOR VISUALIZER';
-    document.getElementById('email').value = 'salihchnr65@gmail.com';
-    document.getElementById('phone').value = '+971566412245';
-    document.getElementById('location').value = 'Al ain, United Arab Emirates';
-    document.getElementById('linkedinUrl').value = 'https://linkedin.com/in/ssalih-muhammed';
-    document.getElementById('behanceUrl').value = 'https://behance.net/salihmuhammed';
-    document.getElementById('instagramUrl').value = 'https://instagram.com/salih_muhammed';
-    document.getElementById('whatsappUrl').value = 'https://wa.me/971566412245';
+    document.getElementById('fullName').value = '';
+    document.getElementById('profTitle').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('location').value = '';
+    document.getElementById('linkedinUrl').value = '';
+    document.getElementById('behanceUrl').value = '';
+    document.getElementById('instagramUrl').value = '';
+    document.getElementById('whatsappUrl').value = '';
     document.getElementById('aboutInput').value = '';
     document.getElementById('skillsInput').value = '';
     document.getElementById('applyJob').value = '';
@@ -1486,30 +1494,16 @@ const DEFAULT_PROJECTS = [
     { title: 'Interior Design Concept', desc: 'Detailed interior visualization for a modern penthouse.', tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
 ];
 
-const defaultExperiences = [
-    { company: 'ARCAL ENGINEERING CONSULTANT', role: 'EXTERIOR VISUALIZER', start: '2022-11', end: '2026-08', present: true, bullets: [
-        'Lead the creation of high-end 3D exterior renderings for residential and commercial projects.',
-        'Collaborate with architects and engineers to translate complex design briefs into visually stunning presentations.',
-        'Conduct material research and environmental mapping to provide clients with realistic previews.',
-        'Manage multiple design iterations based on client feedback while maintaining strict project deadlines.'
-    ], location: 'Alain, UAE' },
-    { company: 'AL MAGHREB AL ARABI ENGINEERING CONSULTANT', role: 'ARCHITECTURAL DRAFTMAN & VISUALIZER', start: '2019-11', end: '2022-11', present: false, bullets: [
-        'Architectural Documentation: Developed detailed structural and architectural drawings for private villas using AutoCAD.',
-        'Color Elevations: Produced detailed color elevations to define building aesthetics.',
-        'Technical Precision: Created and modified detailed layouts based on engineer specifications.',
-        'Multi-Disciplinary Design: Balanced roles between drafting and 3D visualizations.'
-    ], location: 'Alain, UAE' },
-    { company: 'ANGUS BUILDERS', role: 'ARCHITECTURAL DRAFTMAN & VISUALIZER', start: '2017-11', end: '2019-11', present: false, bullets: [
-        '3D Modeling & Visualization: Developed high-quality architectural 3D models using SketchUp and 3ds Max.',
-        'Design Coordination: Collaborated closely with head architects, contractors, and clients.',
-        'Technical Drafting: Prepared comprehensive architectural floor plans.',
-        'Site Management & Analysis: Performed on-site construction analysis.'
-    ], location: 'Kerala, India' }
-];
-
-const defaultEducations = [
-    { institution: 'Industrial Training Institute', degree: 'Draughtsman Civil', start: '2014-08', end: '2016-08', present: false, location: 'Kerala, India' }
-];
+const defaultExperiences = [{company:'Example Design Studio (sample)',role:'3D Visualizer',start:'2023-01',end:'',present:true,bullets:['Created concept renders for sample residential projects.','Prepared materials, lighting and presentation layouts.'],location:'Sample City'}];
+const defaultEducations = [{institution:'Example Design Institute (sample)',degree:'Diploma in Architectural Design',start:'2020-01',end:'2022-12',present:false,location:'Sample City'}];
+function populateSampleProfile(){
+ const uid=getCurrentSerial()||'sample';let h=0;for(const c of uid)h=(Math.imul(h,31)+c.charCodeAt(0))>>>0;
+ const names=['Alex Morgan','Jamie Taylor','Jordan Lee','Casey Parker','Riley Quinn'];
+ const sample={fullName:names[h%names.length]+' (Sample)',profTitle:'3D VISUALIZER',email:'demo'+(h%10000)+'@example.com',phone:'000 000 0000',location:'Sample City',linkedinUrl:'https://example.com/profile',behanceUrl:'https://example.com/portfolio',instagramUrl:'https://example.com/gallery',whatsappUrl:'',aboutInput:'Fictional sample profile. Creative 3D visualizer with experience in architectural modelling, lighting and exterior presentations. Replace this text with your own experience.',skillsInput:'3ds Max, V-Ray, Photoshop, AutoCAD',applyJob:'3D Visualizer',applyCompany:'Example Design Studio',portfolioTotalProjects:'3',portfolioTotalExperience:'3',portfolioFinishedProjects:'0'};
+ Object.entries(sample).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
+ document.getElementById('showWhatsApp').checked=false;
+ populateDefaultData();
+}
 
 function populateDefaultData() {
     const expC = document.getElementById('experienceContainer');
@@ -1864,11 +1858,11 @@ function addEducation() {
 
 function generateCV() {
     try {
-        const name = document.getElementById('fullName').value || 'Salih Muhammed';
+        const name = document.getElementById('fullName').value || 'Your Name';
         const title = document.getElementById('profTitle').value || 'EXTERIOR VISUALIZER';
-        const email = document.getElementById('email').value || 'salihchnr65@gmail.com';
-        const phone = document.getElementById('phone').value || '+971566412245';
-        const location = document.getElementById('location').value || 'Al ain, United Arab Emirates';
+        const email = document.getElementById('email').value || '';
+        const phone = document.getElementById('phone').value || '';
+        const location = document.getElementById('location').value || '';
         const linkedinUrl = document.getElementById('linkedinUrl').value || '#';
         const behanceUrl = document.getElementById('behanceUrl').value || '#';
         const instagramUrl = document.getElementById('instagramUrl').value || '#';
@@ -1972,10 +1966,10 @@ function generateCV() {
 }
 
 function generateCoverLetter() {
-    const name = document.getElementById('fullName').value || 'Salih Muhammed';
+    const name = document.getElementById('fullName').value || 'Your Name';
     const title = document.getElementById('profTitle').value || 'Exterior Visualizer';
-    const email = document.getElementById('email').value || 'salihchnr65@gmail.com';
-    const phone = document.getElementById('phone').value || '+971566412245';
+    const email = document.getElementById('email').value || '';
+    const phone = document.getElementById('phone').value || '';
     const location = document.getElementById('location').value || 'Al ain, UAE';
     const linkedinUrl = document.getElementById('linkedinUrl').value || '#';
     const applyJob = document.getElementById('applyJob').value || 'Architectural Visualizer';
@@ -2276,7 +2270,7 @@ function renderPortfolioWebsite(data) {
         page3.classList.remove('theme-blue', 'theme-purple', 'theme-green', 'theme-orange', 'theme-pink');
         page3.classList.add('theme-' + colorTheme);
     }
-    const name = data.name || 'Salih Muhammed';
+    const name = data.name || 'Your Name';
     const title = data.title || 'Exterior Visualizer';
     const email = data.email || '', phone = data.phone || '', location = data.location || '';
     const about = (data.about || '').trim();
@@ -5660,7 +5654,7 @@ function applySharingPreferences(p,legacy={}){
    const reply=await Promise.race([window.__ssplitlyAI.ask([...history.slice(-8),turn],$('ssAILanguage').value),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('AI took too long to respond. Please try again.')),55000);})]);
    if(revision!==taskRevision||window.__auth?.currentUser?.uid!==user)return;
    history.push({role:'user',parts:[{text:'Section: '+scope+'\nQuestion: '+text}]},{role:'model',parts:[{text:reply}]});history=history.slice(-8);message('assistant',reply,true);$('ssAIStatus').textContent='Suggestion ready — review before using.';
-  }catch(error){if(revision===taskRevision){const code=String(error.code||''),raw=String(error.message||'');$('ssAIStatus').textContent=/429|quota|resource.exhausted/i.test(code+raw)?'AI usage limit reached. Please try again later.':/403|app.check|appcheck|permission/i.test(code+raw)?'AI setup or access needs attention. Contact the administrator.':raw.slice(0,220);$('ssAIInput').value=text;}}
+  }catch(error){if(revision===taskRevision){const code=String(error.code||''),raw=String(error.message||'');$('ssAIStatus').textContent=/429|quota|resource.exhausted/i.test(code+raw)?'AI usage limit reached. Please try again later.':/403|app.check|appcheck|permission/i.test(code+raw)?(raw.slice(0,750)||'AI access denied. Contact the administrator.'):raw.slice(0,750);$('ssAIInput').value=text;}}
   finally{clearTimeout(timer);busy=false;$('ssAISend').disabled=false;}
  };
  new MutationObserver(refresh).observe(page,{attributes:true,attributeFilter:['class']});
