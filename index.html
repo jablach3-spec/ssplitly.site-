@@ -533,6 +533,46 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 }
 
 </style>
+
+<style id="ssplitly-polish-v11">
+@media screen {
+.ss-admin-launcher{position:absolute;top:22px;right:24px;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:60px;height:68px;border:1px solid #a5b4fc55;border-radius:20px;background:linear-gradient(145deg,#253556e6,#282146e6);color:#dceaff;box-shadow:0 8px 24px #0003,inset 0 1px 0 #ffffff25;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.ss-admin-launcher svg{width:29px;height:29px}.ss-admin-caption{font-size:10px;font-weight:700;letter-spacing:.7px}
+.ss-admin-launcher:hover{transform:translateY(-3px);border-color:#7dd3fc;box-shadow:0 10px 30px #6366f145}.ss-admin-launcher:active{transform:scale(.96)}
+.ss-admin-launcher:focus-visible,#accountAdminDialog button:focus-visible{outline:3px solid #38bdf8;outline-offset:4px}
+#accountAdminDialog{padding:30px!important;border-radius:26px!important;border:1px solid #c7d2fe!important;background:linear-gradient(145deg,#ffffff,#f5f7ff)!important;color:#172033!important;box-shadow:0 35px 100px #02061766;font-family:'Manrope','Inter',sans-serif}
+#accountAdminDialog[open]{animation:ssDialogEnter .28s cubic-bezier(.2,.75,.3,1) both}
+#accountAdminDialog::backdrop{background:#070e21b8;backdrop-filter:blur(7px)}
+.ss-account-eyebrow{display:block;color:#6366f1;font-size:10px;letter-spacing:2px;font-weight:800;margin-bottom:8px}
+#ssAccountTitle{font-size:clamp(23px,4vw,30px);letter-spacing:-1px;margin:0 0 12px}
+#accountAdminDialog p{font-size:13px;line-height:1.65;color:#526078;margin:12px 0}
+#accountAdminDialog .btn{border-radius:12px;min-height:42px}
+#accountAdminDialog .btn-outline{border:1px solid #cbd5e1;background:#fff;color:#334155}
+#accountAdminDialog textarea{border:1px solid #a5b4fc;border-radius:14px;background:#eef2ff;color:#172033;line-height:1.6}
+#accountAdminDialog table{margin-top:15px;background:white;border:1px solid #e2e8f0;border-radius:14px}
+#accountAdminDialog th{text-align:left;padding:12px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#64748b;background:#eef2ff;white-space:nowrap}
+#accountAdminDialog td{vertical-align:middle}#accountAdminDialog tr:hover td{background:#f8faff}
+#accountAdminDialog td .btn{font-size:11px;white-space:nowrap;padding:8px 10px}
+#closeAccounts{margin:4px 0 10px}
+#page1::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(#b3c9ff30 .8px,transparent .8px);background-size:30px 30px;mask-image:linear-gradient(transparent,#0008,transparent)}
+#page1.active .landing-content h1 span{background-size:200% 100%;animation:ssTitleLight 7s ease-in-out 2}
+#page1.active .landing-badge{box-shadow:0 0 35px #38bdf810,inset 0 1px 0 #ffffff15}
+#page1 .landing-buttons button{border:1px solid #ffffff22;box-shadow:0 12px 25px #0002;transition:transform .25s ease,box-shadow .25s ease,background .25s ease}
+#page1 .landing-buttons button:hover{box-shadow:0 15px 35px #6366f12b}
+#page2 .form-panel{border:1px solid #cbd5e175;box-shadow:0 15px 45px #1e293b08}
+#page2 .form-group input:focus,#page2 .form-group textarea:focus,#page2 .form-group select:focus{box-shadow:0 0 0 4px #6366f114;border-color:#818cf8}
+#page2 .entry-card{transition:border-color .2s ease,box-shadow .2s ease}
+#page2 .entry-card:hover{border-color:#a5b4fc;box-shadow:0 5px 20px #6366f109}
+#page2 .tab-group button{transition:background .2s,color .2s,box-shadow .2s}
+#page2 .tab-group button.active{box-shadow:0 4px 12px #6366f122}
+#loginOverlay .login-box{animation:ssDialogEnter .4s ease both}
+@keyframes ssDialogEnter{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes ssTitleLight{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(max-width:600px){.ss-admin-launcher{top:16px;right:16px;width:50px;height:58px;border-radius:16px}.ss-admin-launcher svg{width:25px;height:25px}#accountAdminDialog{padding:20px!important;border-radius:20px!important;max-height:85dvh!important}#accountAdminDialog .btn-group{gap:8px}#accountAdminDialog .btn-group .btn{font-size:12px}}
+@media(prefers-reduced-motion:reduce){#accountAdminDialog[open],#loginOverlay .login-box,#page1.active .landing-content h1 span{animation:none!important}.ss-admin-launcher,#page2 .entry-card,#page1 .landing-buttons button{transition:none!important}}
+}
+@media print{.ss-admin-launcher,#accountAdminDialog{display:none!important}}
+</style>
 </head>
 <body>
 
@@ -551,7 +591,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         </div>
         <button class="btn-login" id="loginBtn">Log In</button>
         <div class="error-msg" id="loginError"></div>
-        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v9</p>
+        <p style="font-size:11px;margin:8px 0;color:var(--text-muted)">Login check v11</p>
         <div class="login-loader" id="loginLoader"></div>
         <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">🔒 Only one device can use an account at a time.</p>
     </div>
@@ -799,7 +839,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 <script type="module">
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence, createUserWithEmailAndPassword, deleteUser, inMemoryPersistence, onAuthStateChanged } from "firebase/auth";
-import { getDatabase, ref, set, get, update, onValue, runTransaction, serverTimestamp } from "firebase/database";
+import { getDatabase, ref, set, get, update, onValue, runTransaction, serverTimestamp, onDisconnect } from "firebase/database";
 
 const firebaseConfig = {
   "apiKey": "AIzaSyD8feRzKZ-6k87cr5_6rdvJBLqWEMmHn7M",
@@ -856,11 +896,22 @@ window.__ssplitlyAI={
 
 const ACCOUNT_ADMIN_UID='mr8e4TJmXhXYAkCO4yviTkLqqXj1';
 let accountStops=[],trialClock,accountEnding=false;
+const YEAR=365*24*3600000;
+const expiry=p=>p?.type==='trial'?p.createdAt+3600000:p?.type==='paid'&&Number.isFinite(p.startedAt)?p.startedAt+YEAR:Infinity;
+let presenceStop=()=>{};
+function startPresence(uid,sid){
+ presenceStop();let timer,disconnect,connectionStop,closed=false;
+ const node=ref(db,'accountPresence/'+uid+'/'+sid);
+ const beat=()=>set(node,{online:true,lastSeen:serverTimestamp()}).catch(()=>{});
+ connectionStop=onValue(ref(db,'.info/connected'),async snap=>{if(snap.val()!==true)return;disconnect=onDisconnect(node);try{await disconnect.set({online:false,lastSeen:serverTimestamp()});if(closed)return;await beat();clearInterval(timer);timer=setInterval(beat,30000);}catch{}});
+ presenceStop=()=>{closed=true;clearInterval(timer);connectionStop?.();void set(node,{online:false,lastSeen:serverTimestamp()}).catch(()=>{});presenceStop=()=>{};};
+}
+
 const accountError=(code,message)=>Object.assign(new Error(message),{code});
 function stopAccountWatch(){accountStops.forEach(f=>f());accountStops=[];clearInterval(trialClock);document.getElementById('trialClock')?.remove();}
 async function endAccount(message){
  if(accountEnding)return;accountEnding=true;stopAccountWatch();
- window.stopSessionWatcher?.();window.stopDataWatcher?.();sessionStorage.removeItem('ssplitly_session');
+ presenceStop();window.stopSessionWatcher?.();window.stopDataWatcher?.();sessionStorage.removeItem('ssplitly_session');
  document.getElementById('loginOverlay').classList.add('active');document.getElementById('loginError').textContent=message;
  sessionStorage.setItem('accountNotice',message);try{await signOut(auth);}finally{location.reload();}
 }
@@ -884,16 +935,21 @@ window.ensureAccountAccess=async function(uid){
   );
 });
  const epoch=Date.now()+offset,origin=performance.now();
- if(plan?.type==='trial'){
-  if(!plan.startedAt){await runTransaction(ref(db,'accountPlans/'+uid+'/startedAt'),v=>v===null?serverTimestamp():undefined,{applyLocally:false});plan=(await get(ref(db,'accountPlans/'+uid))).val();}
-  if(!Number.isFinite(plan?.startedAt)||Math.max(Date.now()+offset,epoch+performance.now()-origin)>=plan.startedAt+3600000)throw accountError('account/expired','Your 1-hour trial has ended. Contact the administrator for a paid account.');
- }else if(plan&&plan.type!=='paid')throw accountError('account/disabled','Invalid account plan.');
+ if(uid!==ACCOUNT_ADMIN_UID){
+  if(!plan){const serial=auth.currentUser.email.split('@')[0];await runTransaction(ref(db,'accountPlans/'+uid),v=>v===null?{type:'paid',serial,createdAt:serverTimestamp(),startedAt:serverTimestamp()}:undefined,{applyLocally:false});plan=(await get(ref(db,'accountPlans/'+uid))).val();}
+  if(!['trial','paid'].includes(plan?.type))throw accountError('account/disabled','Invalid account plan.');
+  if(plan.type==='trial'&&Date.now()+offset>=expiry(plan))throw accountError('account/expired','Your 1-hour trial has ended. Please subscribe.');
+  if(!Number.isFinite(plan.startedAt)){await runTransaction(ref(db,'accountPlans/'+uid+'/startedAt'),v=>v===null?serverTimestamp():undefined,{applyLocally:false});plan=(await get(ref(db,'accountPlans/'+uid))).val();}
+  if(Date.now()+offset>=expiry(plan))throw accountError('account/expired','Please renew your subscription.');
+ }
  window.__accountPlan=plan;
  stopAccountWatch();
  const tick=()=>{
-  if(plan?.type!=='trial'){document.getElementById('trialClock')?.remove();return;}
-  const seconds=Math.ceil((plan.startedAt+3600000-(Math.max(Date.now()+offset,epoch+performance.now()-origin)))/1000);
-  if(!Number.isFinite(seconds)||seconds<=0){void endAccount('Your 1-hour trial has ended. Contact the administrator for a paid account.');return;}
+  if(uid===ACCOUNT_ADMIN_UID)return;
+  if(!plan||!['paid','trial'].includes(plan.type)){void endAccount('Account plan unavailable. Please contact the administrator.');return;}
+  const seconds=Math.ceil((expiry(plan)-(Math.max(Date.now()+offset,epoch+performance.now()-origin)))/1000);
+  if(!Number.isFinite(seconds)||seconds<=0){void endAccount(plan.type==='paid'?'Please renew your subscription.':'Your 1-hour trial has ended. Please subscribe.');return;}
+  if(plan.type!=='trial'){document.getElementById('trialClock')?.remove();return;}
   let el=document.getElementById('trialClock');if(!el){el=document.createElement('div');el.id='trialClock';el.style.cssText='position:fixed;bottom:12px;left:12px;z-index:9999;padding:8px 12px;background:#172554;color:white;border-radius:10px;font:14px system-ui;pointer-events:none';document.body.append(el);}
   el.textContent='Trial: '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+' remaining';
  };
@@ -903,15 +959,15 @@ window.ensureAccountAccess=async function(uid){
 };
 function secureRandomChars(chars,length){let out='';const limit=256-256%chars.length;while(out.length<length){for(const b of crypto.getRandomValues(new Uint8Array(length*2))){if(b<limit)out+=chars[b%chars.length];if(out.length===length)break;}}return out;}
 function installAccountAdmin(){
- const button=document.createElement('button');button.id='accountAdminButton';button.className='btn btn-primary';button.textContent='Manage accounts';button.style.cssText='position:fixed;bottom:14px;right:14px;z-index:9999;display:none';
- const dialog=document.createElement('dialog');dialog.id='accountAdminDialog';dialog.style.cssText='margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:16px;width:440px;max-width:calc(100vw - 24px);max-height:90vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#111)';
- dialog.innerHTML='<h3>Account manager</h3><p>Trial: 1 hour from first sign-in.<br>Paid: until you stop access.</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create Trial Account</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>Copy the password before closing. It will not be saved in the account list.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
- document.body.append(button,dialog);
- button.onclick=()=>{if(auth.currentUser?.uid===ACCOUNT_ADMIN_UID)dialog.showModal();};
+ const button=document.createElement('button');button.id='accountAdminButton';button.className='ss-admin-launcher';button.type='button';button.title='Manage accounts';button.setAttribute('aria-label','Manage accounts');button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','accountAdminDialog');button.setAttribute('aria-expanded','false');button.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true" fill="none"><path d="M16 3 27 7v8c0 7-6 11-11 14C11 26 5 22 5 15V7L16 3Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3" fill="currentColor"/><path d="M10 22c0-4 2-6 6-6s6 2 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="ss-admin-caption">Admin</span>';button.style.display='none';
+ const dialog=document.createElement('dialog');dialog.id='accountAdminDialog';dialog.setAttribute('aria-labelledby','ssAccountTitle');dialog.style.cssText='margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:16px;width:1000px;max-width:calc(100vw - 24px);max-height:90vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#111)';
+ dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>Copy the password before closing. It will not be saved in the account list.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
+ document.getElementById('page1').append(button);document.body.append(dialog);
+ button.onclick=()=>{if(auth.currentUser?.uid===ACCOUNT_ADMIN_UID){dialog.showModal();button.setAttribute('aria-expanded','true');}};
  const status=dialog.querySelector('#accountStatus'),output=dialog.querySelector('textarea'),copy=dialog.querySelector('#copyCredentials');
- dialog.querySelector('#closeAccounts').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{output.value='';output.style.display='none';copy.hidden=true;});
+ dialog.querySelector('#closeAccounts').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{button.setAttribute('aria-expanded','false');button.focus();output.value='';output.style.display='none';copy.hidden=true;});
  copy.onclick=async()=>{try{await navigator.clipboard.writeText(output.value);status.textContent='Copied.';}catch{output.focus();output.select();status.textContent='Select and copy the details.';}};
- let busy=false;dialog.addEventListener('cancel',e=>{if(busy)e.preventDefault();});
+ let busy=false;dialog.addEventListener('click',e=>{const r=dialog.getBoundingClientRect();if(!busy&&e.target===dialog&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))dialog.close();});dialog.addEventListener('cancel',e=>{if(busy)e.preventDefault();});
  dialog.querySelectorAll('[data-kind]').forEach(b=>b.onclick=async()=>{
   if(busy||auth.currentUser?.uid!==ACCOUNT_ADMIN_UID)return;
   busy=true;dialog.querySelectorAll('button').forEach(x=>x.disabled=true);output.value='';output.style.display='none';copy.hidden=true;status.textContent='Creating account…';
@@ -919,20 +975,42 @@ function installAccountAdmin(){
   try{
    await get(ref(db,'accountPlans'));
    secondary=initializeApp(firebaseConfig,'create-'+crypto.randomUUID());secondaryAuth=getAuth(secondary);await setPersistence(secondaryAuth,inMemoryPersistence);
-   let serial,password;
+   for(let n=0;n<(b.dataset.kind==='trial'?10:1);n++){
+   user=null;grantAttempted=false;let serial,password;
    for(let attempt=0;attempt<5;attempt++){
     serial=secureRandomChars('123456789',1)+secureRandomChars('0123456789',11);password=secureRandomChars('ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789',18)+'aA7!';
     try{user=(await createUserWithEmailAndPassword(secondaryAuth,serial+'@accounts.ssplitly.invalid',password)).user;break;}catch(e){if(e.code!=='auth/email-already-in-use'||attempt===4)throw e;}
    }
    const kind=b.dataset.kind;grantAttempted=true;
    await update(ref(db),{['accountAccess/'+user.uid]:true,['accountPlans/'+user.uid]:{type:kind,serial,createdAt:serverTimestamp()}});
-   output.value='Ssplitly '+(kind==='trial'?'1-hour Trial':'Paid')+' account\nSerial: '+serial+'\nPassword: '+password+'\nWebsite: '+location.href.split('#')[0]+(kind==='trial'?'\nTrial begins on first sign-in.':'');output.style.display='block';copy.hidden=false;status.textContent='Account ready. Copy these details now.';
+   output.value+=(output.value?'\n\n':'')+'Ssplitly '+(kind==='trial'?'1-hour Trial':'Paid')+' account\nSerial: '+serial+'\nPassword: '+password+'\nWebsite: '+location.href.split('#')[0]+(kind==='trial'?'\nTrial expires 1 hour after creation.':'');output.style.display='block';copy.hidden=false;status.textContent=(n+1)+' account(s) ready. Copy these details now.';
+   }
   }catch(e){
    if(user&&!grantAttempted){try{await deleteUser(user);}catch{}}
-   status.textContent='Could not finish: '+(e.code||e.message)+(grantAttempted?'\nCheck Authentication for UID '+user.uid+' before retrying.':'\nPublish the supplied Rules first.');
+   status.textContent='Batch stopped; keep any credentials already shown. Could not finish: '+(e.code||e.message)+(grantAttempted?'\nCheck Authentication for UID '+user.uid+' before retrying.':'\nPublish the supplied Rules first.');
   }finally{if(secondaryAuth)try{await signOut(secondaryAuth);}catch{}if(secondary)try{await deleteApp(secondary);}catch{}busy=false;dialog.querySelectorAll('button').forEach(x=>x.disabled=false);}
  });
  onAuthStateChanged(auth,u=>{button.style.display=u?.uid===ACCOUNT_ADMIN_UID&&!location.hash.startsWith('#/p/')?'':'none';if(!u){stopAccountWatch();if(dialog.open)dialog.close();}});
+ const summary=document.createElement('p'),list=document.createElement('div');list.style.overflowX='auto';dialog.append(summary,list);
+ let plans={},grants={},presence={},listStops=[],listTimer;
+ const fmt=t=>Number.isFinite(t)?new Date(t).toLocaleString():'Not signed in';
+ function renderAccounts(){
+  const ids=[...new Set([...Object.keys(plans),...Object.keys(grants)])].filter(uid=>uid!==ACCOUNT_ADMIN_UID);
+  let paid=0,trial=0,onlineCount=0;list.replaceChildren();
+  const table=document.createElement('table');table.style.cssText='width:100%;font-size:13px;border-collapse:collapse';
+  const head=table.insertRow();['Serial / UID','Plan','First login','Expires','Status / Last seen','Access'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.append(th);});
+  ids.forEach(uid=>{const p=plans[uid],end=expiry(p),enabled=grants[uid]===true,expired=end<=Date.now();if(p?.type==='trial')trial++;else paid++;
+   const sessions=Object.values(presence[uid]||{}),last=Math.max(0,...sessions.map(x=>Number(x.lastSeen)||0));
+   const online=enabled&&!expired&&sessions.some(x=>x.online===true&&Date.now()-x.lastSeen<90000);if(online)onlineCount++;
+   const row=table.insertRow();[p?.serial||uid,p?.type||'Legacy paid',fmt(p?.startedAt),Number.isFinite(end)?fmt(end):'Starts on first login',(online?'Online':'Offline')+(last?' · '+fmt(last):'')].forEach(t=>{const cell=row.insertCell();cell.textContent=t;cell.style.cssText='padding:10px;border-bottom:1px solid #ddd';});
+   const cell=row.insertCell(),stop=document.createElement('button');stop.className='btn btn-outline';stop.textContent=!enabled?'Access stopped':expired?'Expired — stop access':'Stop access';stop.disabled=!enabled;
+   stop.onclick=async()=>{if(!confirm('Stop access for '+(p?.serial||uid)+'? Authentication record will remain.'))return;try{await set(ref(db,'accountAccess/'+uid),false);}catch(e){status.textContent=e.message;}};cell.append(stop);
+  });summary.textContent='Paid: '+paid+' · Trial: '+trial+' · Online: '+onlineCount;list.append(table);
+ }
+ function homeVisibility(){const visible=auth.currentUser?.uid===ACCOUNT_ADMIN_UID&&document.getElementById('page1').classList.contains('active')&&!document.getElementById('loginOverlay').classList.contains('active');button.style.display=visible?'':'none';if(!visible&&dialog.open&&!busy)dialog.close();}
+ new MutationObserver(homeVisibility).observe(document.getElementById('page1'),{attributes:true,attributeFilter:['class']});
+ new MutationObserver(homeVisibility).observe(document.getElementById('loginOverlay'),{attributes:true,attributeFilter:['class']});
+ onAuthStateChanged(auth,u=>{listStops.forEach(f=>f());listStops=[];clearInterval(listTimer);homeVisibility();if(u?.uid===ACCOUNT_ADMIN_UID){[['accountPlans',v=>plans=v],['accountAccess',v=>grants=v],['accountPresence',v=>presence=v]].forEach(([path,assign])=>listStops.push(onValue(ref(db,path),snap=>{assign(snap.val()||{});renderAccounts();},e=>{status.textContent='Publish the new database Rules: '+e.message;})));listTimer=setInterval(renderAccounts,15000);}});
  const notice=sessionStorage.getItem('accountNotice');if(notice){document.getElementById('loginError').textContent=notice;sessionStorage.removeItem('accountNotice');}
 }
 installAccountAdmin();
@@ -941,6 +1019,7 @@ let sessionWatcherUnsubscribe = null;
 let dataWatcherUnsubscribe = null;
 
 window.startSessionWatcher = function(serial, mySessionId) {
+    startPresence(serial,mySessionId);
     if (sessionWatcherUnsubscribe) { sessionWatcherUnsubscribe(); sessionWatcherUnsubscribe = null; }
     sessionWatcherUnsubscribe = onValue(ref(db, `users/${serial}/lockOwner`), (snapshot) => {
         const currentOwner = snapshot.val();
@@ -955,6 +1034,7 @@ window.startSessionWatcher = function(serial, mySessionId) {
 };
 
 window.stopSessionWatcher = function() {
+    presenceStop();
     if (sessionWatcherUnsubscribe) { sessionWatcherUnsubscribe(); sessionWatcherUnsubscribe = null; }
 };
 
