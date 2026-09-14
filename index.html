@@ -867,7 +867,22 @@ async function endAccount(message){
 window.ensureAccountAccess=async function(uid){
  if((await get(ref(db,'accountAccess/'+uid))).val()!==true)throw accountError('account/disabled','Account access is disabled.');
  let plan=(await get(ref(db,'accountPlans/'+uid))).val();
- const offset=(await get(ref(db,'.info/serverTimeOffset'))).val()||0;
+ const offset = await new Promise(resolve => {
+  const timer = setTimeout(() => resolve(0), 3000);
+
+  onValue(
+    ref(db, '.info/serverTimeOffset'),
+    snapshot => {
+      clearTimeout(timer);
+      resolve(Number(snapshot.val()) || 0);
+    },
+    () => {
+      clearTimeout(timer);
+      resolve(0);
+    },
+    { onlyOnce: true }
+  );
+});
  const epoch=Date.now()+offset,origin=performance.now();
  if(plan?.type==='trial'){
   if(!plan.startedAt){await runTransaction(ref(db,'accountPlans/'+uid+'/startedAt'),v=>v===null?serverTimestamp():undefined,{applyLocally:false});plan=(await get(ref(db,'accountPlans/'+uid))).val();}
