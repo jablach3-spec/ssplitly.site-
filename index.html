@@ -851,8 +851,8 @@ const firebaseConfig = {
   "projectId": "splitwise-e3111",
   "storageBucket": "splitwise-e3111.firebasestorage.app",
   "messagingSenderId": "992417120470",
-  "appId": "1:992417120470:web:0e107b9e636debfe2d8977",
-  "measurementId": "G-L9MVKMVPKS"
+  "appId": "1:992417120470:web:3ee66e829fd3b5dc2d8977",
+  "measurementId": "G-HX34X4F9TX"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -970,7 +970,7 @@ function installAccountAdmin(){
  const createdCredentials=new Map();
  const button=document.createElement('button');button.id='accountAdminButton';button.className='ss-admin-launcher';button.type='button';button.title='Manage accounts';button.setAttribute('aria-label','Manage accounts');button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','accountAdminDialog');button.setAttribute('aria-expanded','false');button.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true" fill="none"><path d="M16 3 27 7v8c0 7-6 11-11 14C11 26 5 22 5 15V7L16 3Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3" fill="currentColor"/><path d="M10 22c0-4 2-6 6-6s6 2 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="ss-admin-caption">Admin</span>';button.style.display='none';
  const dialog=document.createElement('dialog');dialog.id='accountAdminDialog';dialog.setAttribute('aria-labelledby','ssAccountTitle');dialog.style.cssText='margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:16px;width:1000px;max-width:calc(100vw - 24px);max-height:90vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#111)';
- dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>New passwords are available here until refresh or sign-out. Copy and keep them safely; existing Firebase passwords cannot be retrieved.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
+ dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>New account passwords are saved with the account record so the admin can show/copy the same original password later. Existing accounts created before this update may still show Password unavailable.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
  document.getElementById('page1').append(button);document.body.append(dialog);
  button.onclick=()=>{if(auth.currentUser?.uid===ACCOUNT_ADMIN_UID){dialog.showModal();button.setAttribute('aria-expanded','true');}};
  const status=dialog.querySelector('#accountStatus'),output=dialog.querySelector('textarea'),copy=dialog.querySelector('#copyCredentials');
@@ -991,7 +991,7 @@ function installAccountAdmin(){
     try{user=(await createUserWithEmailAndPassword(secondaryAuth,serial+'@accounts.ssplitly.invalid',password)).user;break;}catch(e){if(e.code!=='auth/email-already-in-use'||attempt===4)throw e;}
    }
    const kind=b.dataset.kind;grantAttempted=true;
-   await update(ref(db),{['accountAccess/'+user.uid]:true,['accountPlans/'+user.uid]:{type:kind,serial,createdAt:serverTimestamp()}});
+   await update(ref(db),{['accountAccess/'+user.uid]:true,['accountPlans/'+user.uid]:{type:kind,serial,password,createdAt:serverTimestamp()}});
    createdCredentials.set(user.uid,{serial,password});renderAccounts();
    output.value+=(output.value?'\n\n':'')+'Ssplitly '+(kind==='trial'?'1-hour Trial':'Paid')+' account\nSerial: '+serial+'\nPassword: '+password+'\nWebsite: '+location.href.split('#')[0]+(kind==='trial'?'\nTrial expires 1 hour after creation.':'');output.style.display='block';copy.hidden=false;status.textContent=(n+1)+' account(s) ready. Copy these details now.';
    }
@@ -1015,7 +1015,7 @@ function installAccountAdmin(){
    const row=table.insertRow();[p?.serial||uid,p?.type||'Legacy paid',fmt(p?.startedAt),Number.isFinite(end)?fmt(end):'Starts on first login',(online?'Online':'Offline')+(last?' · '+fmt(last):'')].forEach(t=>{const cell=row.insertCell();cell.textContent=t;cell.style.cssText='padding:10px;border-bottom:1px solid #ddd';});
    const cell=row.insertCell(),stop=document.createElement('button');stop.className='btn btn-outline';stop.textContent=!enabled?'Access stopped':expired?'Expired — stop access':'Stop access';stop.disabled=!enabled;
    stop.onclick=async()=>{if(!confirm('Stop access for '+(p?.serial||uid)+'? Authentication record will remain.'))return;try{await set(ref(db,'accountAccess/'+uid),false);}catch(e){status.textContent=e.message;}};cell.append(stop);
-   const credential=createdCredentials.get(uid),show=document.createElement('button');show.className='btn btn-outline';show.textContent=credential?'Show / copy password':'Password unavailable';show.disabled=!credential;
+   const credential=createdCredentials.get(uid)||(p?.password?{serial:p.serial||uid,password:p.password}:null),show=document.createElement('button');show.className='btn btn-outline';show.textContent=credential?'Show / copy password':'Password unavailable';show.disabled=!credential;
    show.onclick=()=>{output.value='Serial: '+credential.serial+'\nPassword: '+credential.password;output.style.display='block';copy.hidden=false;output.focus();};cell.append(show);
    const remove=document.createElement('button');remove.className='btn btn-outline';remove.textContent='Remove account';remove.style.color='#dc2626';remove.onclick=async()=>{
     if(!confirm('Remove '+(p?.serial||uid)+' from this list and stop access? Firebase Authentication, saved documents and published portfolios are not deleted.'))return;
