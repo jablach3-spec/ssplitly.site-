@@ -970,7 +970,7 @@ function installAccountAdmin(){
  const createdCredentials=new Map();
  const button=document.createElement('button');button.id='accountAdminButton';button.className='ss-admin-launcher';button.type='button';button.title='Manage accounts';button.setAttribute('aria-label','Manage accounts');button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','accountAdminDialog');button.setAttribute('aria-expanded','false');button.innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true" fill="none"><path d="M16 3 27 7v8c0 7-6 11-11 14C11 26 5 22 5 15V7L16 3Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3" fill="currentColor"/><path d="M10 22c0-4 2-6 6-6s6 2 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="ss-admin-caption">Admin</span>';button.style.display='none';
  const dialog=document.createElement('dialog');dialog.id='accountAdminDialog';dialog.setAttribute('aria-labelledby','ssAccountTitle');dialog.style.cssText='margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:16px;width:1000px;max-width:calc(100vw - 24px);max-height:90vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#111)';
- dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>New account passwords are saved with the account record so the admin can show/copy the same original password later. Existing accounts created before this update may still show Password unavailable.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
+ dialog.innerHTML='<div class="ss-account-heading"><span class="ss-account-eyebrow">SSPLITLY · ADMIN</span><h3 id="ssAccountTitle">Account manager</h3></div><p>Trial: 1 hour from creation. Paid: 365 days from first sign-in. Repeat batches as needed (Firebase quotas apply).</p><div class="btn-group"><button class="btn btn-primary" data-kind="trial">Create 10 Trial Accounts</button><button class="btn btn-success" data-kind="paid">Create Paid Account</button></div><p id="accountStatus" role="status" style="white-space:pre-wrap"></p><textarea id="accountCredentials" readonly aria-label="New account credentials" style="display:none;width:100%;height:170px;padding:12px"></textarea><button id="copyCredentials" class="btn btn-outline" hidden>Copy details</button><p>New account passwords are saved in the admin credential record so the same original password can be shown/copied later. Existing accounts created before password persistence may still show Password unavailable.</p><button id="closeAccounts" class="btn btn-outline">Close</button>';
  document.getElementById('page1').append(button);document.body.append(dialog);
  button.onclick=()=>{if(auth.currentUser?.uid===ACCOUNT_ADMIN_UID){dialog.showModal();button.setAttribute('aria-expanded','true');}};
  const status=dialog.querySelector('#accountStatus'),output=dialog.querySelector('textarea'),copy=dialog.querySelector('#copyCredentials');
@@ -991,7 +991,11 @@ function installAccountAdmin(){
     try{user=(await createUserWithEmailAndPassword(secondaryAuth,serial+'@accounts.ssplitly.invalid',password)).user;break;}catch(e){if(e.code!=='auth/email-already-in-use'||attempt===4)throw e;}
    }
    const kind=b.dataset.kind;grantAttempted=true;
-   await update(ref(db),{['accountAccess/'+user.uid]:true,['accountPlans/'+user.uid]:{type:kind,serial,password,createdAt:serverTimestamp()}});
+   await update(ref(db),{
+    ['accountAccess/'+user.uid]:true,
+    ['accountPlans/'+user.uid]:{type:kind,serial,createdAt:serverTimestamp()},
+    ['accountCredentials/'+user.uid]:{serial,password,createdAt:serverTimestamp()}
+   });
    createdCredentials.set(user.uid,{serial,password});renderAccounts();
    output.value+=(output.value?'\n\n':'')+'Ssplitly '+(kind==='trial'?'1-hour Trial':'Paid')+' account\nSerial: '+serial+'\nPassword: '+password+'\nWebsite: '+location.href.split('#')[0]+(kind==='trial'?'\nTrial expires 1 hour after creation.':'');output.style.display='block';copy.hidden=false;status.textContent=(n+1)+' account(s) ready. Copy these details now.';
    }
@@ -1002,7 +1006,7 @@ function installAccountAdmin(){
  });
  onAuthStateChanged(auth,u=>{button.style.display=u?.uid===ACCOUNT_ADMIN_UID&&!location.hash.startsWith('#/p/')?'':'none';if(!u){createdCredentials.clear();stopAccountWatch();if(dialog.open)dialog.close();}});
  const summary=document.createElement('p'),list=document.createElement('div');list.style.overflowX='auto';dialog.append(summary,list);
- let plans={},grants={},presence={},listStops=[],listTimer;
+ let plans={},grants={},presence={},credentials={},listStops=[],listTimer;
  const fmt=t=>Number.isFinite(t)?new Date(t).toLocaleString():'Not signed in';
  function renderAccounts(){
   const ids=[...new Set([...Object.keys(plans),...Object.keys(grants)])].filter(uid=>uid!==ACCOUNT_ADMIN_UID);
@@ -1015,18 +1019,48 @@ function installAccountAdmin(){
    const row=table.insertRow();[p?.serial||uid,p?.type||'Legacy paid',fmt(p?.startedAt),Number.isFinite(end)?fmt(end):'Starts on first login',(online?'Online':'Offline')+(last?' · '+fmt(last):'')].forEach(t=>{const cell=row.insertCell();cell.textContent=t;cell.style.cssText='padding:10px;border-bottom:1px solid #ddd';});
    const cell=row.insertCell(),stop=document.createElement('button');stop.className='btn btn-outline';stop.textContent=!enabled?'Access stopped':expired?'Expired — stop access':'Stop access';stop.disabled=!enabled;
    stop.onclick=async()=>{if(!confirm('Stop access for '+(p?.serial||uid)+'? Authentication record will remain.'))return;try{await set(ref(db,'accountAccess/'+uid),false);}catch(e){status.textContent=e.message;}};cell.append(stop);
-   const credential=createdCredentials.get(uid)||(p?.password?{serial:p.serial||uid,password:p.password}:null),show=document.createElement('button');show.className='btn btn-outline';show.textContent=credential?'Show / copy password':'Password unavailable';show.disabled=!credential;
+   const credential=createdCredentials.get(uid)||credentials[uid]||(p?.password?{serial:p.serial||uid,password:p.password}:null),show=document.createElement('button');show.className='btn btn-outline';show.textContent=credential?'Show / copy password':'Password unavailable';show.disabled=!credential;
    show.onclick=()=>{output.value='Serial: '+credential.serial+'\nPassword: '+credential.password;output.style.display='block';copy.hidden=false;output.focus();};cell.append(show);
-   const remove=document.createElement('button');remove.className='btn btn-outline';remove.textContent='Remove account';remove.style.color='#dc2626';remove.onclick=async()=>{
-    if(!confirm('Remove '+(p?.serial||uid)+' from this list and stop access? Firebase Authentication, saved documents and published portfolios are not deleted.'))return;
-    remove.disabled=true;try{await update(ref(db),{['accountAccess/'+uid]:null,['accountPlans/'+uid]:null});createdCredentials.delete(uid);output.value='';output.style.display='none';copy.hidden=true;status.textContent='Account removed and access blocked. To delete the Authentication record, delete UID '+uid+' in Firebase Console → Authentication.';}catch(e){status.textContent=e.message;remove.disabled=false;}
+   const remove=document.createElement('button');remove.className='btn btn-outline';remove.textContent='Delete account data';remove.style.color='#dc2626';remove.onclick=async()=>{
+    if(!confirm('Permanently delete '+(p?.serial||uid)+' app data, CV/Cover Letter/Portfolio data, saved password record, presence and every shared portfolio website? This cannot be undone.\n\nThe Firebase Authentication login record must still be deleted separately in Firebase Console.'))return;
+    remove.disabled=true;status.textContent='Deleting account data and shared portfolio…';
+    try{
+     const updates={
+      ['accountAccess/'+uid]:null,
+      ['accountPlans/'+uid]:null,
+      ['accountCredentials/'+uid]:null,
+      ['accountPresence/'+uid]:null,
+      ['users/'+uid]:null
+     };
+     // Delete the currently active shared portfolio token, if present.
+     const activeSnap=await get(ref(db,'users/'+uid+'/activePortfolioToken'));
+     const activeToken=activeSnap.val();
+     if(activeToken&&/^[a-f0-9]{24}$/.test(String(activeToken)))updates['publicPortfolios/'+activeToken]=null;
+
+     // Also remove any older Ssplitly portfolio snapshots that belong to this UID.
+     // This catches links created before activePortfolioToken tracking was added,
+     // provided the snapshot contains ownerUid.
+     const publicSnap=await get(ref(db,'publicPortfolios'));
+     const published=publicSnap.val()||{};
+     Object.entries(published).forEach(([token,data])=>{
+      if(data&&data.ownerUid===uid)updates['publicPortfolios/'+token]=null;
+     });
+
+     await update(ref(db),updates);
+     createdCredentials.delete(uid);
+     output.value='';output.style.display='none';copy.hidden=true;
+     status.textContent='Account app data and shared portfolio websites deleted. The old shared links will no longer open. For complete account removal, also delete UID '+uid+' in Firebase Console → Authentication.';
+    }catch(e){
+     status.textContent='Delete failed: '+(e.code||e.message)+'. Check Realtime Database Rules for admin delete permission.';
+     remove.disabled=false;
+    }
    };cell.append(remove);
   });summary.textContent='Paid: '+paid+' · Trial: '+trial+' · Online: '+onlineCount;list.append(table);
  }
  function homeVisibility(){const visible=auth.currentUser?.uid===ACCOUNT_ADMIN_UID&&document.getElementById('page1').classList.contains('active')&&!document.getElementById('loginOverlay').classList.contains('active');button.style.display=visible?'':'none';if(!visible&&dialog.open&&!busy)dialog.close();}
  new MutationObserver(homeVisibility).observe(document.getElementById('page1'),{attributes:true,attributeFilter:['class']});
  new MutationObserver(homeVisibility).observe(document.getElementById('loginOverlay'),{attributes:true,attributeFilter:['class']});
- onAuthStateChanged(auth,u=>{listStops.forEach(f=>f());listStops=[];clearInterval(listTimer);homeVisibility();if(u?.uid===ACCOUNT_ADMIN_UID){[['accountPlans',v=>plans=v],['accountAccess',v=>grants=v],['accountPresence',v=>presence=v]].forEach(([path,assign])=>listStops.push(onValue(ref(db,path),snap=>{assign(snap.val()||{});renderAccounts();},e=>{status.textContent='Publish the new database Rules: '+e.message;})));listTimer=setInterval(renderAccounts,15000);}});
+ onAuthStateChanged(auth,u=>{listStops.forEach(f=>f());listStops=[];clearInterval(listTimer);homeVisibility();if(u?.uid===ACCOUNT_ADMIN_UID){[['accountPlans',v=>plans=v],['accountAccess',v=>grants=v],['accountPresence',v=>presence=v],['accountCredentials',v=>credentials=v]].forEach(([path,assign])=>listStops.push(onValue(ref(db,path),snap=>{assign(snap.val()||{});renderAccounts();},e=>{status.textContent='Publish the new database Rules: '+e.message;})));listTimer=setInterval(renderAccounts,15000);}});
  const notice=sessionStorage.getItem('accountNotice');if(notice){document.getElementById('loginError').textContent=notice;sessionStorage.removeItem('accountNotice');}
 }
 installAccountAdmin();
@@ -5531,11 +5565,11 @@ function applySharingPreferences(p,legacy={}){
   return d;
  }
  const dialog=document.createElement('dialog');dialog.id='shareDialog';
- dialog.innerHTML='<h3>Share portfolio</h3><p id="shareStatus" role="status"></p><input id="shortShareURL" readonly aria-label="Portfolio link"><div class="btn-group"><button class="btn btn-primary" id="nativeShare">Share to apps</button><button class="btn btn-success" id="copyShare">Copy link</button><button class="btn btn-outline" id="closeShare">Close</button></div>';
+ dialog.innerHTML='<h3>Share portfolio</h3><p id="shareStatus" role="status"></p><div id="shareDetails" style="display:none;margin:12px 0;padding:12px;border:1px solid #cbd5e1;border-radius:12px;line-height:1.55"></div><input id="shortShareURL" readonly aria-label="Portfolio link"><div class="btn-group"><button class="btn btn-primary" id="nativeShare">Share to apps</button><button class="btn btn-success" id="copyShare">Copy link</button><button class="btn btn-outline" id="closeShare">Close</button></div>';
  document.body.appendChild(dialog);
  $('closeShare').onclick=()=>dialog.close();
  $('copyShare').onclick=async()=>{try{await navigator.clipboard.writeText($('shortShareURL').value);toast('Link copied');}catch{$('shortShareURL').select();$('shareStatus').textContent='Select and copy this link.';}};
- $('nativeShare').onclick=async()=>{if(!navigator.share){$('copyShare').click();return;}try{await navigator.share({title:'Portfolio',url:$('shortShareURL').value});}catch(e){if(e.name!=='AbortError')$('shareStatus').textContent='Please use Copy link on this browser.';}};
+ $('nativeShare').onclick=async()=>{if(!navigator.share){$('copyShare').click();return;}try{const d=publicData(buildShareData()),title=[d.name,d.title].filter(Boolean).join(' — ')+(d.name||d.title?' Portfolio':'Portfolio');await navigator.share({title,text:title,url:$('shortShareURL').value});}catch(e){if(e.name!=='AbortError')$('shareStatus').textContent='Please use Copy link on this browser.';}};
  function addPortfolioLinkToCV(url){
   $('cvPortfolioUrl').value=url;
   $('showCVPortfolio').checked=true;
@@ -5546,15 +5580,21 @@ function applySharingPreferences(p,legacy={}){
   if(busy)return;
   if(isViewOnly){$('shortShareURL').value=location.href;$('shareStatus').textContent='Choose an app or copy the link.';dialog.showModal();$('nativeShare').click();return;}
   if(!getCurrentSerial())return toast('Log in to share your portfolio.','err');
-  const json=JSON.stringify({...publicData(buildShareData()),ownerUid:getCurrentSerial()});
-  if(json===cachedJSON&&cachedURL){addPortfolioLinkToCV(cachedURL);$('shortShareURL').value=cachedURL;dialog.showModal();$('nativeShare').click();return;}
-  busy=true;$('shareStatus').textContent='Preparing portfolio link…';$('shortShareURL').value='';$('nativeShare').disabled=$('copyShare').disabled=true;dialog.showModal();
+  const ownerUid=getCurrentSerial(),portfolio=publicData(buildShareData());
+  const json=JSON.stringify({...portfolio,ownerUid});
+  const shareTitle=[portfolio.name,portfolio.title].filter(Boolean).join(' — ')+(portfolio.name||portfolio.title?' Portfolio':'Portfolio');
+  busy=true;$('shareStatus').textContent='Preparing portfolio link…';$('shortShareURL').value='';$('shareDetails').style.display='none';$('nativeShare').disabled=$('copyShare').disabled=true;dialog.showModal();
   try{
    const fb=window.__firebase;if(!fb)throw Error('Database connection unavailable');
    const bytes=crypto.getRandomValues(new Uint8Array(12));const token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+   const activeRef=fb.ref(fb.db,'users/'+ownerUid+'/activePortfolioToken');
+   const oldSnap=await fb.get(activeRef),oldToken=oldSnap.val();
    await Promise.race([fb.set(fb.ref(fb.db,'publicPortfolios/'+token),JSON.parse(json)),new Promise((_,reject)=>setTimeout(()=>reject(Error('Connection timed out. Please retry.')),20000))]);
+   await fb.set(activeRef,token);
+   if(oldToken&&/^[a-f0-9]{24}$/.test(String(oldToken))&&oldToken!==token)await fb.set(fb.ref(fb.db,'publicPortfolios/'+oldToken),null);
    cachedURL=location.href.split('#')[0]+'#/p/'+token;cachedJSON=json;$('shortShareURL').value=cachedURL;addPortfolioLinkToCV(cachedURL);
-   $('shareStatus').textContent='Link ready and added to your CV. Tap Share to apps to choose WhatsApp or another app. This link contains a snapshot of your portfolio.';
+   $('shareDetails').style.display='block';$('shareDetails').textContent=shareTitle+'\n'+cachedURL;
+   $('shareStatus').textContent='New link ready. Your previous shared portfolio link has been removed. This new link was also added to your CV.';
    $('nativeShare').disabled=$('copyShare').disabled=false;
    if(navigator.userActivation?.isActive)$('nativeShare').click();
   }catch(e){$('shareStatus').textContent='Could not create link: '+e.message;}
