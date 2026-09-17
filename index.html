@@ -39,6 +39,56 @@ html.portfolio-opening #page1,html.portfolio-opening #loginOverlay{display:none!
 @keyframes portfolioOpening{0%,100%{transform:scaleX(.35);opacity:.35}50%{transform:scaleX(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){html.portfolio-opening::after{animation:none}}
 .portfolio-load-error{padding:48px 24px;text-align:center;color:var(--site-text);line-height:1.8}
+
+/* ===== SsPlitly fixed Undo / Redo dock ===== */
+#undoBuilderBtn,#redoBuilderBtn{
+    position:fixed !important;
+    bottom:18px !important;
+    z-index:99990 !important;
+    width:108px !important;
+    height:44px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:7px !important;
+    margin:0 !important;
+    border:1px solid rgba(255,255,255,.22) !important;
+    border-radius:15px !important;
+    background:#111827 !important;
+    color:#ffffff !important;
+    font-weight:800 !important;
+    font-size:13px !important;
+    box-shadow:0 10px 30px rgba(0,0,0,.28) !important;
+    opacity:1 !important;
+    visibility:visible !important;
+}
+#undoBuilderBtn{left:calc(50% - 112px) !important;}
+#redoBuilderBtn{left:calc(50% + 4px) !important;}
+#undoBuilderBtn:disabled,#redoBuilderBtn:disabled{
+    background:#334155 !important;
+    color:#cbd5e1 !important;
+    opacity:.78 !important;
+}
+body.builder-night #undoBuilderBtn,body.builder-night #redoBuilderBtn,
+body.night #undoBuilderBtn,body.night #redoBuilderBtn,
+[data-theme="dark"] #undoBuilderBtn,[data-theme="dark"] #redoBuilderBtn{
+    background:#f8fafc !important;
+    color:#0f172a !important;
+    border-color:#64748b !important;
+    box-shadow:0 10px 34px rgba(0,0,0,.55) !important;
+}
+body.builder-night #undoBuilderBtn:disabled,body.builder-night #redoBuilderBtn:disabled,
+body.night #undoBuilderBtn:disabled,body.night #redoBuilderBtn:disabled,
+[data-theme="dark"] #undoBuilderBtn:disabled,[data-theme="dark"] #redoBuilderBtn:disabled{
+    background:#334155 !important;
+    color:#e2e8f0 !important;
+}
+@media(max-width:520px){
+  #undoBuilderBtn,#redoBuilderBtn{bottom:14px !important;width:96px !important;height:42px !important;font-size:12px !important;}
+  #undoBuilderBtn{left:calc(50% - 100px) !important;}
+  #redoBuilderBtn{left:calc(50% + 4px) !important;}
+}
+
 </style>
 <script>
 if(location.hash.startsWith('#/p/')){
@@ -1978,17 +2028,22 @@ async function applyCrop() {
     toast('⏳ Uploading profile photo…');
     try {
         const r2Url = await uploadImageToR2(dataUrl, 'profile');
+        // Show the cropped image in the CV immediately; save only the R2 URL to Firebase.
         window.croppedImageData = r2Url;
-        document.getElementById('picPreviewSmall').src = r2Url;
-        // Wait until the new public R2 image is actually loadable before rebuilding previews.
-        await new Promise(resolve => {
+        document.getElementById('picPreviewSmall').src = dataUrl;
+        generateCV();
+        updateLivePreview();
+
+        const r2Works = await new Promise(resolve => {
             const probe = new Image();
             let done = false;
-            const finish = () => { if (!done) { done = true; resolve(); } };
-            probe.onload = finish; probe.onerror = finish;
+            const finish = ok => { if (!done) { done = true; resolve(ok); } };
+            probe.onload = () => finish(true);
+            probe.onerror = () => finish(false);
             probe.src = r2Url + (r2Url.includes('?') ? '&' : '?') + 'v=' + Date.now();
-            setTimeout(finish, 2500);
+            setTimeout(() => finish(false), 4000);
         });
+        if (r2Works) document.getElementById('picPreviewSmall').src = r2Url;
         await saveToFirebase();
         if (isSsplitlyR2Url(oldPhoto) && oldPhoto !== r2Url) deleteImageFromR2(oldPhoto);
         generateCV();
@@ -2137,7 +2192,8 @@ function generateCV() {
         const showWhatsApp = document.getElementById('showWhatsApp').checked;
         const skillsRaw = document.getElementById('skillsInput').value || 'SKETCHUP, 3DS MAX, REVIT, AUTOCAD, VRAY';
         const skills = skillsRaw.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
-        const photo = window.croppedImageData || '';
+        const previewPhoto = document.getElementById('picPreviewSmall')?.src || '';
+        const photo = previewPhoto || window.croppedImageData || '';
         const summary = document.getElementById('aboutInput').value || '';
 
         const expCards = document.querySelectorAll('#experienceContainer .entry-card');
