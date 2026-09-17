@@ -1316,31 +1316,39 @@ function dataUrlToBlob(dataUrl) {
 async function uploadImageToR2(image, kind='project') {
     const user = window.__auth?.currentUser;
     if (!user) throw new Error('Please sign in again.');
-    const token = await user.getIdToken();
+
     const blob = image instanceof Blob ? image : dataUrlToBlob(image);
     if (!blob.type.startsWith('image/')) throw new Error('Only image files are allowed.');
-    if (blob.size > 2 * 1024 * 1024) throw new Error('Image is too large after compression.');
-    const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
-    const response = await fetch(`${SSPLITLY_MEDIA_WORKER}/upload?kind=${encodeURIComponent(kind)}&ext=${ext}`, {
+    if (blob.size > 5 * 1024 * 1024) throw new Error('Image is larger than 5 MB.');
+
+    const ext = blob.type === 'image/png' ? 'png' :
+                blob.type === 'image/webp' ? 'webp' : 'jpg';
+
+    const formData = new FormData();
+    formData.append('file', blob, `${kind}-${crypto.randomUUID()}.${ext}`);
+
+    const response = await fetch(SSPLITLY_MEDIA_WORKER + '/upload', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': blob.type || 'image/jpeg' },
-        body: blob
+        body: formData
     });
+
     const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result.url) throw new Error(result.error || 'R2 upload failed.');
+    if (!response.ok || !result.success || !result.url) {
+        throw new Error(result.error || 'R2 upload failed.');
+    }
     return result.url;
 }
 async function deleteImageFromR2(url) {
-    if (!isSsplitlyR2Url(url)) return true;
-    const user = window.__auth?.currentUser;
-    if (!user) return false;
+    if (!isSsplitlyR2Url(url)) return true; // Old Firebase Base64 remains untouched.
     try {
-        const token = await user.getIdToken();
-        const response = await fetch(SSPLITLY_MEDIA_WORKER + '/delete', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
+        const parsed = new URL(url);
+        const key = decodeURIComponent(parsed.pathname.replace(/^\/+/, ''));
+        if (!key) return false;
+
+        const response = await fetch(
+            SSPLITLY_MEDIA_WORKER + '/?key=' + encodeURIComponent(key),
+            { method: 'DELETE' }
+        );
         return response.ok;
     } catch (error) {
         console.warn('R2 delete failed:', error);
