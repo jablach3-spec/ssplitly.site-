@@ -4801,8 +4801,13 @@ ${pages.join('')}
   }
 
   function generateReferenceCV() {
-    const photo = window.croppedImageData || '';
-    const photoOK = /^data:image\/(?:jpeg|png|webp);base64,/i.test(photo);
+    // Support BOTH old Firebase Base64 photos and new Cloudflare R2 image URLs.
+    const visiblePhoto = document.getElementById('picPreviewSmall')?.src || '';
+    const photo = visiblePhoto || window.croppedImageData || '';
+    const photoOK =
+      /^data:image\/(?:jpeg|png|webp);base64,/i.test(photo) ||
+      /^https:\/\/media\.ssplitly\.site\//i.test(photo) ||
+      /^https?:\/\//i.test(photo);
 
     let html = `
 <header class="ref-header">
