@@ -89,6 +89,13 @@ body.night #undoBuilderBtn:disabled,body.night #redoBuilderBtn:disabled,
   #redoBuilderBtn{left:calc(50% + 4px) !important;}
 }
 
+
+/* Final mobile placement: keep Undo/Redo clear of Portfolio Live Website button */
+#undoBuilderBtn,#redoBuilderBtn{bottom:78px !important;}
+@media(max-width:520px){
+  #undoBuilderBtn,#redoBuilderBtn{bottom:74px !important;}
+}
+
 </style>
 <script>
 if(location.hash.startsWith('#/p/')){
