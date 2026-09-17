@@ -699,6 +699,8 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
             <button data-tab="portfolio" onclick="switchTab('portfolio')"><i class="fas fa-folder-open"></i> Portfolio</button>
         </div>
         <div class="theme-controls">
+            <button class="btn btn-sm" id="undoBuilderBtn" onclick="builderUndo()" title="Undo" aria-label="Undo"><i class="fas fa-rotate-left"></i> Undo</button>
+            <button class="btn btn-sm" id="redoBuilderBtn" onclick="builderRedo()" title="Redo" aria-label="Redo"><i class="fas fa-rotate-right"></i> Redo</button>
             <button class="btn btn-success btn-sm" onclick="toggleBuilderTheme()"><i class="fas fa-adjust"></i> <span id="builderThemeLabel">Day</span></button>
             <select class="theme-select" id="builderColorTheme" onchange="setColorTheme(this.value)"><option value="blue">Blue</option><option value="purple">Purple</option><option value="green">Green</option><option value="orange">Orange</option><option value="pink">Pink</option></select>
             <button class="toggle-preview-btn" id="togglePreviewBtn" onclick="toggleMobilePreview()"><i class="fas fa-eye"></i> Preview</button>
@@ -1837,20 +1839,69 @@ function navigateTo(toId) {
     setTimeout(cleanup, 480);
 }
 
-function goToBuilder(tab) { applyBuilderTab(tab || 'cv'); navigateTo('page2'); }
-function goToLanding() { navigateTo('page1'); }
-function goBackFromPortfolio() { navigateTo('page2'); }
+const SSPLITLY_NAV_KEY = 'ssplitly_builder_location_v2';
+let __restoringNav = false;
 
-window.addEventListener('popstate', function() {
+function saveBuilderLocation(page='page2', tab=activeTab) {
     if (isViewOnly) return;
-    const currentPage = activePageId();
-    if (currentPage === 'page3') navigateTo('page2');
-    else if (currentPage === 'page2') navigateTo('page1');
+    try { sessionStorage.setItem(SSPLITLY_NAV_KEY, JSON.stringify({page, tab:tab || 'cv'})); } catch(e) {}
+}
+function setNavState(page, tab, mode='push') {
+    if (isViewOnly) return;
+    const state = { ssplitly:true, page, tab:tab || activeTab || 'cv' };
+    try {
+        if (mode === 'replace') history.replaceState(state, '');
+        else history.pushState(state, '');
+    } catch(e) {}
+    saveBuilderLocation(page, state.tab);
+}
+function goToBuilder(tab) {
+    const target = tab || 'cv';
+    applyBuilderTab(target);
+    navigateTo('page2');
+    setNavState('page2', target, 'push');
+}
+function goToLanding() {
+    navigateTo('page1');
+    setNavState('page1', 'cv', 'push');
+}
+function goBackFromPortfolio() {
+    applyBuilderTab('portfolio');
+    navigateTo('page2');
+    setNavState('page2', 'portfolio', 'replace');
+}
+window.addEventListener('popstate', function(e) {
+    if (isViewOnly) return;
+    const s = e.state;
+    if (s && s.ssplitly) {
+        __restoringNav = true;
+        if (s.page === 'page3') {
+            applyBuilderTab('portfolio');
+            renderPortfolioWebsite(buildShareData());
+            navigateTo('page3');
+        } else if (s.page === 'page2') {
+            applyBuilderTab(s.tab || 'cv');
+            navigateTo('page2');
+        } else {
+            navigateTo('page1');
+        }
+        saveBuilderLocation(s.page || 'page1', s.tab || 'cv');
+        __restoringNav = false;
+        return;
+    }
+    // Safe fallback: Portfolio website -> Portfolio -> Cover -> CV -> Home.
+    if (activePageId() === 'page3') { applyBuilderTab('portfolio'); navigateTo('page2'); }
+    else if (activePageId() === 'page2' && activeTab === 'portfolio') applyBuilderTab('cover');
+    else if (activePageId() === 'page2' && activeTab === 'cover') applyBuilderTab('cv');
+    else navigateTo('page1');
 });
+function pushHistoryForPage(pageId) { setNavState(pageId, activeTab, 'push'); }
 
-function pushHistoryForPage(pageId) { try { history.pushState({ page: pageId }, ''); } catch (e) {} }
-
-function switchTab(tab) { if (tab === activeTab) return; applyBuilderTab(tab); }
+function switchTab(tab) {
+    if (tab === activeTab) return;
+    applyBuilderTab(tab);
+    if (!__restoringNav) setNavState('page2', tab, 'push');
+}
 
 function applyBuilderTab(tab) {
     activeTab = tab || 'cv';
@@ -1865,6 +1916,7 @@ function applyBuilderTab(tab) {
     else { updateProjectCount(); setTimeout(updateLivePreview, 120); }
     const titles2 = { cv: 'CV Preview (A4)', cover: 'Cover Letter Preview (A4)', portfolio: 'Portfolio Preview' };
     document.getElementById('previewPanelTitle').innerHTML = `<i class="fas fa-eye"></i> ${titles2[activeTab] || 'Live Preview (A4)'}`;
+    if (!__restoringNav && activePageId() === 'page2') saveBuilderLocation('page2', activeTab);
 }
 
 function scrollToPreview() {
@@ -1928,10 +1980,22 @@ async function applyCrop() {
         const r2Url = await uploadImageToR2(dataUrl, 'profile');
         window.croppedImageData = r2Url;
         document.getElementById('picPreviewSmall').src = r2Url;
+        // Wait until the new public R2 image is actually loadable before rebuilding previews.
+        await new Promise(resolve => {
+            const probe = new Image();
+            let done = false;
+            const finish = () => { if (!done) { done = true; resolve(); } };
+            probe.onload = finish; probe.onerror = finish;
+            probe.src = r2Url + (r2Url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+            setTimeout(finish, 2500);
+        });
         await saveToFirebase();
         if (isSsplitlyR2Url(oldPhoto) && oldPhoto !== r2Url) deleteImageFromR2(oldPhoto);
-        if (activeTab === 'cv' || activeTab === 'cover') { generateCV(); generateCoverLetter(); updateLivePreview(); }
-        toast('✅ Profile photo uploaded & synced');
+        generateCV();
+        generateCoverLetter();
+        updateLivePreview();
+        setTimeout(() => { generateCV(); updateLivePreview(); fitA4MobilePreview(); }, 250);
+        toast('✅ Profile photo uploaded & CV updated');
     } catch (error) {
         console.error('Profile R2 upload failed:', error);
         document.getElementById('picPreviewSmall').src = oldPhoto || '';
@@ -2475,7 +2539,7 @@ function goToPortfolioSite() {
     const data = buildShareData();
     renderPortfolioWebsite(data);
     navigateTo('page3');
-    pushHistoryForPage('page3');
+    setNavState('page3', 'portfolio', 'push');
 }
 
 function renderPortfolioWebsite(data) {
@@ -2903,6 +2967,85 @@ document.getElementById('loginBtn').addEventListener('click', async function() {
 document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 document.getElementById('loginSerial').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 
+
+/* ===== Builder Undo / Redo ===== */
+const __builderUndo = [];
+const __builderRedo = [];
+let __builderApplyingHistory = false;
+const __builderBefore = new WeakMap();
+
+function builderFieldKey(el) {
+    if (el.id) return {type:'id', value:el.id};
+    const card = el.closest('.entry-card');
+    if (!card) return null;
+    const container = card.parentElement;
+    const cardIndex = Array.from(container.children).indexOf(card);
+    const cls = Array.from(el.classList).find(c => /^(exp|edu|proj|bullet|cover|portfolio)-/.test(c));
+    if (!container.id || !cls) return null;
+    const same = Array.from(card.querySelectorAll('.' + cls));
+    return {type:'entry', container:container.id, cardIndex, cls, fieldIndex:Math.max(0, same.indexOf(el))};
+}
+function builderResolveField(key) {
+    if (!key) return null;
+    if (key.type === 'id') return document.getElementById(key.value);
+    const c = document.getElementById(key.container);
+    const card = c?.children?.[key.cardIndex];
+    return card ? card.querySelectorAll('.' + key.cls)[key.fieldIndex] : null;
+}
+function builderValue(el) { return (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value; }
+function builderSetValue(el, value) {
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!value;
+    else el.value = value ?? '';
+    el.dispatchEvent(new Event('input', {bubbles:true}));
+    el.dispatchEvent(new Event('change', {bubbles:true}));
+}
+function updateUndoRedoButtons() {
+    const u=document.getElementById('undoBuilderBtn'), r=document.getElementById('redoBuilderBtn');
+    if(u) u.disabled=!__builderUndo.length;
+    if(r) r.disabled=!__builderRedo.length;
+}
+function builderUndo() {
+    const item=__builderUndo.pop(); if(!item) return;
+    const el=builderResolveField(item.key); if(!el) return;
+    __builderApplyingHistory=true;
+    const current=builderValue(el);
+    builderSetValue(el,item.before);
+    __builderApplyingHistory=false;
+    __builderRedo.push({...item,before:item.before,after:current});
+    updateUndoRedoButtons(); saveToFirebaseDebounced(250); refreshAllOutputs();
+}
+function builderRedo() {
+    const item=__builderRedo.pop(); if(!item) return;
+    const el=builderResolveField(item.key); if(!el) return;
+    __builderApplyingHistory=true;
+    const current=builderValue(el);
+    builderSetValue(el,item.after);
+    __builderApplyingHistory=false;
+    __builderUndo.push({...item,before:current});
+    updateUndoRedoButtons(); saveToFirebaseDebounced(250); refreshAllOutputs();
+}
+document.addEventListener('focusin', e => {
+    const el=e.target;
+    if(activePageId()!=='page2' || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+    __builderBefore.set(el,builderValue(el));
+}, true);
+document.addEventListener('change', e => {
+    if(__builderApplyingHistory || activePageId()!=='page2') return;
+    const el=e.target; if(!/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.type==='file') return;
+    const key=builderFieldKey(el); if(!key) return;
+    const before=__builderBefore.has(el)?__builderBefore.get(el):builderValue(el);
+    const after=builderValue(el);
+    if(before===after) return;
+    __builderUndo.push({key,before,after}); if(__builderUndo.length>100)__builderUndo.shift();
+    __builderRedo.length=0; __builderBefore.set(el,after); updateUndoRedoButtons();
+}, true);
+document.addEventListener('keydown', e => {
+    if(activePageId()!=='page2') return;
+    if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='z'){e.preventDefault();builderUndo();}
+    else if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y'||(e.shiftKey&&e.key.toLowerCase()==='z'))){e.preventDefault();builderRedo();}
+});
+updateUndoRedoButtons();
+
 window.onload = async function() {
     const viewOnlyDetected = detectViewOnly();
     if (viewOnlyDetected) {
@@ -2928,9 +3071,18 @@ window.onload = async function() {
         document.getElementById('page1').classList.add('active');
         document.getElementById('page2').classList.remove('active');
         document.getElementById('page3').classList.remove('active');
-        try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         const loaded = await loadFromFirebase();
         if (!loaded) { toast('Could not load your saved data. Reload before editing.','err'); document.getElementById('formPanel').inert=true; return; }
+        let remembered={page:'page1',tab:'cv'};
+        try { remembered=JSON.parse(sessionStorage.getItem(SSPLITLY_NAV_KEY)) || remembered; } catch(e) {}
+        __restoringNav=true;
+        if (remembered.page==='page3') {
+            applyBuilderTab('portfolio'); renderPortfolioWebsite(buildShareData()); navigateTo('page3');
+        } else if (remembered.page==='page2') {
+            applyBuilderTab(remembered.tab || 'cv'); navigateTo('page2');
+        } else navigateTo('page1');
+        __restoringNav=false;
+        setNavState(remembered.page || 'page1', remembered.tab || 'cv', 'replace');
         window.startSessionWatcher(session.serial, session.sessionId);
         window.startDataWatcher(session.serial, applyRemoteData);
     } else {
