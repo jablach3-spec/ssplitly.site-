@@ -1293,6 +1293,61 @@ function getCurrentSerial() {
     return window.__auth?.currentUser?.uid || null;
 }
 
+/* ===== SsPlitly Cloudflare R2 media =====
+   Old Firebase Base64 images remain supported.
+   New profile/project images are uploaded to R2 and only the returned URL is saved in Firebase.
+*/
+const SSPLITLY_MEDIA_WORKER = 'https://ssplitly-media-c226.jkchnr041.workers.dev';
+const SSPLITLY_MEDIA_ORIGIN = 'https://media.ssplitly.site';
+
+function isSsplitlyR2Url(value) {
+    try { return new URL(String(value || '')).origin === SSPLITLY_MEDIA_ORIGIN; }
+    catch { return false; }
+}
+function dataUrlToBlob(dataUrl) {
+    const parts = String(dataUrl).split(',');
+    if (parts.length < 2) throw new Error('Invalid image data');
+    const mime = (parts[0].match(/data:([^;]+)/) || [,'image/jpeg'])[1];
+    const bytes = atob(parts[1]);
+    const array = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) array[i] = bytes.charCodeAt(i);
+    return new Blob([array], { type: mime });
+}
+async function uploadImageToR2(image, kind='project') {
+    const user = window.__auth?.currentUser;
+    if (!user) throw new Error('Please sign in again.');
+    const token = await user.getIdToken();
+    const blob = image instanceof Blob ? image : dataUrlToBlob(image);
+    if (!blob.type.startsWith('image/')) throw new Error('Only image files are allowed.');
+    if (blob.size > 2 * 1024 * 1024) throw new Error('Image is too large after compression.');
+    const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
+    const response = await fetch(`${SSPLITLY_MEDIA_WORKER}/upload?kind=${encodeURIComponent(kind)}&ext=${ext}`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': blob.type || 'image/jpeg' },
+        body: blob
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.url) throw new Error(result.error || 'R2 upload failed.');
+    return result.url;
+}
+async function deleteImageFromR2(url) {
+    if (!isSsplitlyR2Url(url)) return true;
+    const user = window.__auth?.currentUser;
+    if (!user) return false;
+    try {
+        const token = await user.getIdToken();
+        const response = await fetch(SSPLITLY_MEDIA_WORKER + '/delete', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        return response.ok;
+    } catch (error) {
+        console.warn('R2 delete failed:', error);
+        return false;
+    }
+}
+
 /* ✅ DEBOUNCE HELPERS — typing stuck fix */
 let __saveTimer = null;
 function saveToFirebaseDebounced(delay = 900) {
@@ -1596,7 +1651,26 @@ const DEFAULT_PROJECTS = [
     { title: 'Interior Design Concept', desc: 'Detailed interior visualization for a modern penthouse.', tools: '3ds Max, Corona Renderer, Photoshop', images: [], finished: false }
 ];
 
-const defaultExperiences = [{company:'Example Design Studio (sample)',role:'3D Visualizer',start:'2023-01',end:'',present:true,bullets:['Created concept renders for sample residential projects.','Prepared materials, lighting and presentation layouts.'],location:'Sample City'}];
+const defaultExperiences = [
+ {company:'Example Design Studio (Sample)',role:'Senior 3D Visualizer',start:'2024-01',end:'',present:true,location:'Dubai, UAE',bullets:[
+  'Produced photorealistic exterior and interior visualizations for residential design concepts.',
+  'Developed lighting, materials and camera compositions for client presentation renders.',
+  'Coordinated with designers to translate drawings and references into accurate 3D scenes.',
+  'Prepared final presentation images and organized revisions for design review.'
+ ]},
+ {company:'Gulf Architecture Studio (Sample)',role:'3D Visualizer & Draftsman',start:'2022-01',end:'2023-12',present:false,location:'Abu Dhabi, UAE',bullets:[
+  'Created architectural 3D models from concept sketches and CAD drawings.',
+  'Prepared exterior day and night renders for villa and commercial design studies.',
+  'Produced AutoCAD drawings and updated documentation based on design revisions.',
+  'Supported presentation preparation with post-production and layout work.'
+ ]},
+ {company:'Creative Design Works (Sample)',role:'Junior 3D Visualizer',start:'2020-01',end:'2021-12',present:false,location:'Kochi, India',bullets:[
+  'Built 3D models for residential interiors and exterior visualization projects.',
+  'Applied materials, textures and basic lighting setups for realistic render outputs.',
+  'Assisted senior visualizers with scene preparation, rendering and image corrections.',
+  'Maintained organized project files and prepared images for client presentations.'
+ ]}
+];
 const defaultEducations = [{institution:'Example Design Institute (sample)',degree:'Diploma in Architectural Design',start:'2020-01',end:'2022-12',present:false,location:'Sample City'}];
 function populateSampleProfile(){
  const uid=getCurrentSerial()||'sample';let h=0;for(const c of uid)h=(Math.imul(h,31)+c.charCodeAt(0))>>>0;
@@ -1605,6 +1679,7 @@ function populateSampleProfile(){
  Object.entries(sample).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
  document.getElementById('showWhatsApp').checked=false;
  populateDefaultData();
+ if (typeof window.__setDemoLanguages === 'function') window.__setDemoLanguages();
 }
 
 function populateDefaultData() {
@@ -1833,22 +1908,37 @@ document.getElementById('profilePicInput').addEventListener('change', function(e
 });
 
 function closeCrop() { document.getElementById('cropModal').classList.remove('active'); if (cropper) { cropper.destroy(); cropper = null; } document.getElementById('profilePicInput').value = ''; }
-function applyCrop() {
+async function applyCrop() {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: 300, height: 300, imageSmoothingQuality: 'high' });
-    const dataUrl = canvas.toDataURL('image/jpeg');
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+    const oldPhoto = window.croppedImageData || '';
     document.getElementById('picPreviewSmall').src = dataUrl;
-    window.croppedImageData = dataUrl;
-    closeCrop(); saveToFirebase();
-    if (activeTab === 'cv' || activeTab === 'cover') { generateCV(); generateCoverLetter(); updateLivePreview(); }
-    toast('Profile photo updated');
+    closeCrop();
+    toast('⏳ Uploading profile photo…');
+    try {
+        const r2Url = await uploadImageToR2(dataUrl, 'profile');
+        window.croppedImageData = r2Url;
+        document.getElementById('picPreviewSmall').src = r2Url;
+        await saveToFirebase();
+        if (isSsplitlyR2Url(oldPhoto) && oldPhoto !== r2Url) deleteImageFromR2(oldPhoto);
+        if (activeTab === 'cv' || activeTab === 'cover') { generateCV(); generateCoverLetter(); updateLivePreview(); }
+        toast('✅ Profile photo uploaded & synced');
+    } catch (error) {
+        console.error('Profile R2 upload failed:', error);
+        document.getElementById('picPreviewSmall').src = oldPhoto || '';
+        window.croppedImageData = oldPhoto;
+        toast('❌ Photo upload failed: ' + error.message, 'err');
+    }
 }
-function removePic() {
+async function removePic() {
     if (isViewOnly) return;
+    const oldPhoto = window.croppedImageData || '';
     document.getElementById('profilePicInput').value = '';
     document.getElementById('picPreviewSmall').src = '';
     window.croppedImageData = '';
-    saveToFirebase();
+    await saveToFirebase();
+    if (isSsplitlyR2Url(oldPhoto)) deleteImageFromR2(oldPhoto);
     if (activeTab === 'cv' || activeTab === 'cover') { generateCV(); generateCoverLetter(); updateLivePreview(); }
     toast('Profile photo removed');
 }
@@ -2200,17 +2290,25 @@ async function handleProjectImages(input) {
         return;
     }
 
-    toast('⏳ Processing ' + files.length + ' photo(s)…');
+    toast('⏳ Compressing & uploading ' + files.length + ' photo(s)…');
     const results = await Promise.all(
-        files.map(f => compressImageFile(f).catch(err => { console.warn('Image failed:', err); return null; }))
+        files.map(async f => {
+            try {
+                const compressed = await compressImageFile(f);
+                return await uploadImageToR2(compressed, 'project');
+            } catch (err) {
+                console.warn('Image upload failed:', err);
+                return null;
+            }
+        })
     );
     const okImages = results.filter(Boolean);
-    if (!okImages.length) { toast('❌ Could not read photos.', 'err'); return; }
+    if (!okImages.length) { toast('❌ Could not upload photos.', 'err'); return; }
 
     projectImages[idx] = projectImages[idx].concat(okImages);
     refreshProjectImagePreviews(card, idx);
     await saveToFirebase();
-    toast('✅ ' + okImages.length + ' photo(s) added & synced');
+    toast('✅ ' + okImages.length + ' photo(s) uploaded to R2 & synced');
 }
 
 let draggedProjectImageIndex = null, draggedProjectId = null;
@@ -2292,12 +2390,20 @@ function calculatePortfolioExperienceYears() {
     return Math.max(0, Math.round(total * 2) / 2);
 }
 
-function removeProjectImage(btn, idx) {
+async function removeProjectImage(btn, idx) {
     if (isViewOnly) return;
     const card = btn.closest('.project-card');
     const projectIdx = card.dataset.projectIndex;
     const images = projectImages[projectIdx] || [];
-    if (idx >= 0 && idx < images.length) { images.splice(idx, 1); projectImages[projectIdx] = images; refreshProjectImagePreviews(card, projectIdx); saveToFirebase(); toast('Photo removed'); }
+    if (idx >= 0 && idx < images.length) {
+        const oldImage = images[idx];
+        images.splice(idx, 1);
+        projectImages[projectIdx] = images;
+        refreshProjectImagePreviews(card, projectIdx);
+        await saveToFirebase();
+        if (isSsplitlyR2Url(oldImage)) deleteImageFromR2(oldImage);
+        toast('Photo removed');
+    }
 }
 
 function addProject() {
@@ -3128,6 +3234,20 @@ document.addEventListener('visibilitychange', async () => {
     renderLanguages();
     cacheKey = '';
   }
+
+  window.__setDemoLanguages = function() {
+    preferences = normalize({
+      mode:'premium',
+      languages:[
+        {name:'English',level:'Fluent'},
+        {name:'Arabic',level:'Conversational'},
+        {name:'Malayalam',level:'Native'}
+      ]
+    });
+    $('cvxMode').value = preferences.mode;
+    renderLanguages();
+    cacheKey = '';
+  };
 
   function renderLanguages() {
     $('cvxLanguages').innerHTML = preferences.languages.map((l,i) => `
