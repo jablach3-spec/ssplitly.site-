@@ -1962,6 +1962,7 @@ function switchTab(tab) {
 
 function applyBuilderTab(tab) {
     activeTab = tab || 'cv';
+    document.getElementById('page2').classList.toggle('portfolio-editor', activeTab === 'portfolio');
     document.getElementById('cvFormFields').style.display = activeTab === 'cv' ? 'block' : 'none';
     document.getElementById('coverFormFields').style.display = activeTab === 'cover' ? 'block' : 'none';
     document.getElementById('portfolioFormFields').style.display = activeTab === 'portfolio' ? 'block' : 'none';
@@ -5081,12 +5082,10 @@ ${pages.join('')}
   updateLivePreview = function () {
     const container = $('livePreviewContent');
     const viewport = $('previewScroll');
+    $('page2').classList.toggle('portfolio-editor', activeTab === 'portfolio');
 
     if (activeTab === 'portfolio') {
-      container.innerHTML = `
-        <div style="padding:20px;text-align:center;color:var(--text-muted)">
-          Portfolio preview available in the <strong>Live Website</strong> view.
-        </div>`;
+      container.replaceChildren();
       return;
     }
 
@@ -6117,6 +6116,152 @@ function applySharingPreferences(p,legacy={}){
  new MutationObserver(refresh).observe($('loginOverlay'),{attributes:true,attributeFilter:['class']});
  new MutationObserver(refresh).observe($('tabGroup'),{subtree:true,attributes:true,attributeFilter:['class']});
  refresh();
+})();
+</script>
+
+<!-- SsPlitly mobile viewport + premium portfolio motion -->
+<style id="ssplitly-mobile-premium-v2">
+html{width:100%;min-height:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{width:100%;min-height:100%;height:100dvh;overflow-x:hidden;overscroll-behavior-x:none}
+.page{width:100%;height:100dvh;min-height:100dvh;inset:0;top:auto;left:auto}
+#page1{min-height:100dvh;padding-top:max(20px,env(safe-area-inset-top));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(20px,env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left))}
+#page2,#page3{height:100dvh;min-height:100dvh}#page3{overflow-x:hidden;scrollbar-gutter:stable}
+.builder-container,.builder-topbar,.form-panel,.preview-panel,.site-wrap,.hero-wrap,.hero-copy{min-width:0}img,video,canvas,svg{max-width:100%}
+.form-group input,.form-group select,.form-group textarea{font-size:max(16px,1rem)}
+#siteReadingProgress{position:sticky;top:0;z-index:1002;width:100%;height:3px;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,var(--site-primary),var(--site-accent),#f472b6);box-shadow:0 0 14px color-mix(in srgb,var(--site-primary) 65%,transparent);pointer-events:none}
+#page3 .site-topbar{top:3px}
+#page3 .site-hero::before,#page3 .site-hero::after{content:"";position:absolute;width:min(48vw,560px);aspect-ratio:1;border-radius:50%;filter:blur(70px);opacity:.13;pointer-events:none;will-change:transform}
+#page3 .site-hero::before{left:-15%;top:-20%;background:var(--site-primary);animation:ssOrbOne 13s ease-in-out infinite alternate}
+#page3 .site-hero::after{right:-18%;bottom:-30%;background:var(--site-accent);animation:ssOrbTwo 16s ease-in-out infinite alternate}
+@keyframes ssOrbOne{to{transform:translate3d(18vw,14vh,0) scale(1.18)}}@keyframes ssOrbTwo{to{transform:translate3d(-14vw,-10vh,0) scale(.82)}}
+#page3.portfolio-enter .hero-frame{animation:ssHeroPhotoIn .9s cubic-bezier(.16,1,.3,1) both}#page3.portfolio-enter .hero-copy>*{animation:ssHeroCopyIn .75s cubic-bezier(.16,1,.3,1) both}
+#page3.portfolio-enter .hero-copy>*:nth-child(2){animation-delay:.08s}#page3.portfolio-enter .hero-copy>*:nth-child(3){animation-delay:.15s}#page3.portfolio-enter .hero-copy>*:nth-child(4){animation-delay:.22s}#page3.portfolio-enter .hero-copy>*:nth-child(5){animation-delay:.29s}
+@keyframes ssHeroPhotoIn{from{opacity:0;transform:translate3d(-36px,12px,0) scale(.9);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}@keyframes ssHeroCopyIn{from{opacity:0;transform:translate3d(0,24px,0)}to{opacity:1;transform:none}}
+#page3 .site-plate{transform-style:preserve-3d;will-change:transform}#page3 .site-plate::after{content:"";position:absolute;inset:0;z-index:5;border-radius:inherit;background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.11) 45%,transparent 64%);transform:translateX(-130%);pointer-events:none}#page3 .site-plate.active::after{animation:ssCardGleam 1.25s .35s both}@keyframes ssCardGleam{to{transform:translateX(130%)}}
+@media(max-width:900px){
+#page2{padding:8px max(10px,env(safe-area-inset-right)) max(86px,calc(env(safe-area-inset-bottom) + 74px)) max(10px,env(safe-area-inset-left))}.builder-topbar{padding:6px 0 10px;display:grid;grid-template-columns:auto 1fr auto;gap:8px;position:sticky;top:0;z-index:80;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(16px)}.builder-topbar .back-btn{padding:9px 11px}.builder-topbar .tab-group{grid-column:1/-1;grid-row:2;width:100%;overflow-x:auto;scrollbar-width:none;justify-content:stretch}.builder-topbar .tab-group::-webkit-scrollbar{display:none}.builder-topbar .tab-group button{flex:1;min-width:max-content;padding:9px 12px}.builder-topbar .theme-controls{min-width:0;flex-wrap:nowrap;overflow-x:auto}.form-panel{padding:16px 14px;border-radius:16px;overflow:visible;max-height:none!important}.preview-panel.mobile-visible{height:min(72dvh,620px);max-height:none;padding:12px;overflow:hidden}.preview-scroll{min-height:0;overflow:auto!important;-webkit-overflow-scrolling:touch}.row{flex-direction:column;gap:0}.btn-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.btn-group .btn{min-width:0;width:100%}}
+@media(max-width:600px){
+.ssplitly-home-brand{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));font-size:16px;padding:5px 9px 5px 5px}.landing-content{padding:70px 4px 12px}.landing-content h1{font-size:clamp(34px,12vw,50px)}.landing-content p{font-size:15px;margin-bottom:28px}.landing-buttons{width:100%;gap:10px}.btn-landing{width:100%;justify-content:center;padding:14px 18px}
+#page3 .site-topbar{position:sticky;top:3px;padding:9px max(12px,env(safe-area-inset-right)) 9px max(12px,env(safe-area-inset-left));display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}#page3 .site-brand{width:auto;min-width:0;overflow:hidden}#page3 .ssplitly-brand-button{font-size:16px;max-width:100%}#page3 .site-actions{width:auto;min-width:0;display:flex;flex-wrap:nowrap;gap:5px;margin:0}#page3 .site-actions .site-btn{min-height:38px;padding:7px 9px;font-size:0;gap:0}#page3 .site-actions .site-btn i{font-size:14px}#page3 .site-theme-toggle{width:38px;height:38px;flex:0 0 38px}#page3 .theme-select{display:none}
+#page3 .site-hero{padding:36px 0 42px}#page3 .hero-wrap,#page3 .site-wrap{padding-left:16px;padding-right:16px}#page3 .hero-grid{gap:24px}#page3 .hero-frame{width:min(46vw,164px)!important;height:auto!important;aspect-ratio:1;border-radius:22px}#page3 .hero-copy h1{font-size:clamp(31px,10vw,46px);margin-bottom:12px}#page3 .hero-copy .hero-title{font-size:16px;line-height:1.5;margin-bottom:18px}#page3 .hero-meta{font-size:13px;gap:10px 14px;flex-direction:column;align-items:center}#page3 .site-section{padding:40px 0}#page3 .site-section-head{align-items:center;margin-bottom:22px}#page3 .site-section-head h2{font-size:21px}#page3 .about-text{font-size:15px;line-height:1.75}#page3 .site-skills{gap:7px;margin-top:12px;justify-content:center}#page3 .site-skills span{font-size:11px;padding:8px 9px}#page3 .portfolio-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:22px}#page3 .portfolio-stat{padding:14px 5px}#page3 .portfolio-stat .stat-number{font-size:clamp(21px,7vw,30px)}#page3 .portfolio-stat .stat-label{font-size:8px;letter-spacing:.45px;line-height:1.35}#page3 .site-projects{grid-template-columns:minmax(0,1fr);gap:16px}#page3 .site-plate .plate-body{padding:17px}.project-lightbox{padding:10px}.lightbox-inner{width:100%;height:92dvh}#undoBuilderBtn,#redoBuilderBtn{bottom:max(72px,calc(env(safe-area-inset-bottom) + 62px))!important}}
+@media(max-width:360px){#page3 .ssplitly-brand-button{font-size:0}#page3 .portfolio-stat .stat-label{font-size:7px}.builder-topbar .tab-group button{font-size:11px;padding-inline:8px}.btn-group{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#page3 .site-hero::before,#page3 .site-hero::after,#page3.portfolio-enter .hero-frame,#page3.portfolio-enter .hero-copy>*,#page3 .site-plate.active::after{animation:none!important}#page3 .site-plate{will-change:auto}}
+</style>
+<style id="ssplitly-layout-repair-v3">
+/* Keep legacy elements for existing JS references, but remove these controls
+   from the UI and keyboard navigation. Document previews remain available. */
+#builderColorTheme,#togglePreviewBtn{display:none!important}
+#page3:not(.unused) #siteColorTheme{display:block;max-width:110px;min-height:38px}
+body.view-only #page3 #siteColorTheme{display:none!important}
+@media(max-width:600px){
+ #page3 .site-topbar{grid-template-columns:minmax(0,1fr)}
+ #page3 .site-actions{width:100%;flex-wrap:wrap;justify-content:flex-end}
+ #page3 .site-brand{overflow:visible}
+}
+html,body{height:100%;overflow:hidden}
+#page1{position:fixed;inset:0;height:100dvh;min-height:0;max-height:100dvh;overflow:hidden;overscroll-behavior:none}
+#page1 .landing-content{min-height:0;flex:1 1 auto;padding:68px 8px 8px}
+#page1 .landing-footer{flex:0 0 auto;margin:8px auto 0;padding:10px 0 4px}
+#undoBuilderBtn,#redoBuilderBtn{bottom:calc(24px + env(safe-area-inset-bottom))!important}
+#page2:not(.active)>#undoBuilderBtn,#page2:not(.active)>#redoBuilderBtn{display:none!important}
+#page2 .builder-topbar{overflow:visible;flex-shrink:0}
+@media(max-width:900px){
+ #page2 .builder-topbar{display:flex;flex-wrap:wrap;position:relative;top:auto;gap:8px;backdrop-filter:none}
+ #page2 .builder-topbar .back-btn{order:0}
+ #page2 .builder-topbar .tab-group{order:2;flex:1 0 100%;min-width:0}
+ #page2 .builder-topbar .theme-controls{order:1;flex:1 1 220px;max-width:100%;margin-left:0;display:flex;flex-wrap:wrap;justify-content:flex-end;overflow:visible;gap:6px}
+ #page2 .theme-controls>button,#page2 .theme-controls>select{flex:0 0 auto;min-height:36px}
+ #page2 .logout-btn{white-space:nowrap;padding:8px 12px}
+ #page2 .builder-container{flex:0 0 auto}
+ #page2{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+}
+@media(max-width:600px){
+ #page1 .landing-content h1{font-size:clamp(28px,8vw,40px);margin-bottom:12px}
+ #page1 .landing-content p{font-size:14px;margin-bottom:16px}
+ #page1 .landing-badge{margin-bottom:14px;padding:6px 12px;font-size:10px}
+ #page1 .btn-landing{padding:11px 14px}
+ #page1 .landing-footer{gap:14px}
+}
+@media(max-height:620px){
+ #page1 .landing-content{padding-top:54px}
+ #page1 .landing-badge{display:none}
+ #page1 .landing-content h1{font-size:clamp(24px,5vh,34px);margin-bottom:8px}
+ #page1 .landing-content p{font-size:12px;line-height:1.4;margin-bottom:10px}
+ #page1 .landing-buttons{gap:6px}
+ #page1 .btn-landing{padding:9px 12px;font-size:12px}
+ #page1 .landing-footer{margin-top:4px;padding-top:5px}
+}
+@media(max-height:450px){
+ #page1 .landing-buttons{flex-wrap:nowrap}
+ #page1 .btn-landing{width:auto;flex:1;justify-content:center}
+ #page1 .landing-content p{display:none}
+}
+</style>
+<style id="portfolio-header-solid-v4">
+#page2.portfolio-editor #previewPanel{display:none!important}
+/* A single opaque sticky header covers scrolled content, including its edges. */
+#page3 .site-topbar{
+ position:sticky;top:0;z-index:1002;flex:0 0 auto;
+ display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:center;
+ background:var(--site-bg);backdrop-filter:none;-webkit-backdrop-filter:none;
+ isolation:isolate;gap:12px;
+}
+#page3 .site-brand{width:auto;min-width:0;flex:0 1 auto;overflow:visible}
+#page3 .site-actions{width:auto;margin-left:auto;flex:0 0 auto;flex-wrap:nowrap}
+#page3 #siteReadingProgress{
+ position:absolute;inset:auto 0 0;top:auto;height:3px;width:100%;
+ z-index:2;box-shadow:none;
+}
+@media(max-width:600px){
+ #page3 .site-topbar{
+   padding:10px max(8px,env(safe-area-inset-right)) 12px max(8px,env(safe-area-inset-left));
+   gap:6px;
+ }
+ #page3 .ssplitly-brand-button{font-size:14px;gap:6px;padding:0;white-space:nowrap}
+ #page3 .ssplitly-brand-button .ssplitly-logo-mark{width:30px;height:30px;flex-basis:30px}
+ #page3 .site-actions{gap:4px;justify-content:flex-end}
+ #page3 .site-actions .site-btn{width:32px;height:36px;min-height:36px;padding:0!important;justify-content:center}
+ #page3 .site-theme-toggle{width:32px;min-width:32px;height:36px;min-height:36px;flex-basis:32px;padding:0;font-size:14px}
+ #page3 #siteColorTheme{width:76px;max-width:76px;min-height:36px;padding:6px 3px;font-size:11px}
+}
+@media(max-width:350px){
+ #page3 .ssplitly-brand-button{font-size:12px;gap:4px}
+ #page3 .ssplitly-brand-button .ssplitly-logo-mark{width:26px;height:26px;flex-basis:26px}
+ #page3 #siteColorTheme{width:68px;max-width:68px}
+}
+</style>
+<script id="ssplitly-mobile-premium-motion-v2">
+(function(){
+  if(window.__ssPremiumMobileV2)return;
+  window.__ssPremiumMobileV2=true;
+  const page=document.getElementById('page3');
+  if(!page)return;
+  const progress=document.createElement('div');
+  progress.id='siteReadingProgress';progress.setAttribute('aria-hidden','true');
+  const topbar=page.querySelector('.site-topbar');
+  if(topbar)topbar.append(progress);
+  let ticking=false,wasActive=false;
+  function update(){
+    ticking=false;
+    const max=page.scrollHeight-page.clientHeight;
+    progress.style.transform='scaleX('+(max>0?Math.min(1,Math.max(0,page.scrollTop/max)):0)+')';
+  }
+  page.addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(update)}},{passive:true});
+  function enter(){
+    const active=page.classList.contains('active');
+    if(active===wasActive)return; // Ignore our own animation class mutation.
+    wasActive=active;
+    page.classList.toggle('portfolio-enter',active);
+    if(active)update();
+  }
+  new MutationObserver(enter).observe(page,{attributes:true,attributeFilter:['class']});
+  const content=document.getElementById('portfolioSiteContent');
+  if(content)new MutationObserver(update).observe(content,{childList:true});
+  window.addEventListener('resize',update,{passive:true});
+  // Outside the backdrop-filter topbar: fixed coordinates now use the viewport.
+  const builder=document.getElementById('page2');
+  ['undoBuilderBtn','redoBuilderBtn'].forEach(id=>{const button=document.getElementById(id);if(builder&&button)builder.append(button)});
+  enter();update();
 })();
 </script>
 
