@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
 <!-- SsPlitly compact social thumbnail -->
@@ -1793,12 +1794,31 @@ function getSoftwareLogo(name) {
 
 function getSkillLogoHTML(name) {
     const logo = getSoftwareLogo(name);
-    if (logo) return `<img src="${logo}" alt="${escapeHTML(name)}" class="skill-logo" loading="lazy" onerror="this.style.display='none';">`;
+    if (logo) return `<img src="${escapeHTML(ssSafeImage(logo))}" alt="${escapeHTML(name)}" class="skill-logo" loading="lazy" onerror="this.style.display='none';">`;
     return `<i class="fas fa-cube" style="font-size:14px;color:#64748b;"></i>`;
 }
 
 function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]); }
-function formatMonthYear(dateStr) { if (!dateStr) return ''; const parts = dateStr.split('-'); if (parts.length === 2) return parts[1] + '/' + parts[0]; return dateStr; }
+function formatMonthYear(dateStr) {
+    const value = String(dateStr || '');
+    return /^\d{4}-(0[1-9]|1[0-2])$/.test(value) ? value.slice(5) + '/' + value.slice(0,4) : escapeHTML(value);
+}
+// Validate URL schemes before inserting values into HTML attributes.
+function ssSafeLink(raw) {
+    if (typeof raw !== 'string' || /[\x00-\x1f\x7f]/.test(raw)) return '';
+    const value = raw.trim();
+    if (!/^https?:\/\//i.test(value)) return '';
+    try { const url = new URL(value); return url.username || url.password ? '' : url.href; }
+    catch { return ''; }
+}
+function ssSafeImage(raw) {
+    if (typeof raw !== 'string') return '';
+    const value = raw.trim();
+    // Uploaded SVGs remain image resources; never insert their markup inline.
+    if (/^data:image\/(?:png|jpeg|jpg|webp|gif|svg\+xml);base64,[a-z0-9+/=\s]+$/i.test(value)) return value;
+    if (/^blob:https?:\/\//i.test(value) && !/[<>"'\s]/.test(value)) return value;
+    return ssSafeLink(value);
+}
 
 function syncSkillsInputFromManager() {
     const names = Array.from(document.querySelectorAll('#softwareManager .software-name')).map(i => i.value.trim()).filter(Boolean);
@@ -1821,7 +1841,7 @@ function createSoftwareRow(name = '', icon = '') {
     row.className = 'software-row';
     row.dataset.lastName = (name || '').trim().toLowerCase();
     row.innerHTML = `<input class="software-name" type="text" value="${escapeHTML(name)}" placeholder="Software name">
-        <span class="software-icon-slot">${icon ? `<img class="software-icon-preview" src="${icon}" alt="Icon">` : `<span class="software-icon-empty"><i class="fas fa-image"></i></span>`}</span>
+        <span class="software-icon-slot">${icon ? `<img class="software-icon-preview" src="${escapeHTML(ssSafeImage(icon))}" alt="Icon">` : `<span class="software-icon-empty"><i class="fas fa-image"></i></span>`}</span>
         <input class="software-svg" type="file" accept=".svg,image/svg+xml" title="Upload SVG icon">
         <button class="remove-software">✕</button>`;
     manager.appendChild(row);
@@ -1833,7 +1853,7 @@ function createSoftwareRow(name = '', icon = '') {
             customSoftwareIcons[newKey] = customSoftwareIcons[oldKey];
             delete customSoftwareIcons[oldKey];
             const icon = customSoftwareIcons[newKey];
-            row.querySelector('.software-icon-slot').innerHTML = icon ? `<img class="software-icon-preview" src="${icon}" alt="Icon">` : `<span class="software-icon-empty"><i class="fas fa-image"></i></span>`;
+            row.querySelector('.software-icon-slot').innerHTML = icon ? `<img class="software-icon-preview" src="${escapeHTML(ssSafeImage(icon))}" alt="Icon">` : `<span class="software-icon-empty"><i class="fas fa-image"></i></span>`;
         }
         row.dataset.lastName = newKey;
         syncSkillsInputFromManager();
@@ -1846,7 +1866,7 @@ function createSoftwareRow(name = '', icon = '') {
             const n = row.querySelector('.software-name').value.trim();
             if (!n) { toast('Enter the software name first.', 'err'); this.value = ''; return; }
             customSoftwareIcons[n.toLowerCase()] = e.target.result;
-            row.querySelector('.software-icon-slot').innerHTML = `<img class="software-icon-preview" src="${e.target.result}" alt="Icon">`;
+            row.querySelector('.software-icon-slot').innerHTML = `<img class="software-icon-preview" src="${escapeHTML(ssSafeImage(e.target.result))}" alt="Icon">`;
             syncSkillsInputFromManager();
         };
         reader.readAsDataURL(file);
@@ -2231,7 +2251,7 @@ function generateCV() {
 
         let html = `<div class="a4-preview cv-clean">`;
         html += `<div class="header">`;
-        if (photo) html += `<img src="${photo}" class="profile-photo" alt="Profile Photo" onerror="this.style.display='none';">`;
+        if (photo) html += `<img src="${escapeHTML(ssSafeImage(photo))}" class="profile-photo" alt="Profile Photo" onerror="this.style.display='none';">`;
         html += `<div class="name-title"><h1>${escapeHTML(name)}</h1><div class="title">${escapeHTML(title)}</div></div>`;
         html += `</div>`;
         if (summary) html += `<div class="summary">${escapeHTML(summary)}</div>`;
@@ -2239,14 +2259,14 @@ function generateCV() {
         html += `<span><i class="fas fa-envelope"></i> <a href="mailto:${escapeHTML(email)}">${escapeHTML(email)}</a></span>`;
         html += `<span><i class="fas fa-phone"></i> <a href="tel:${escapeHTML(dialNumber(phone))}" style="color:#0f172a;text-decoration:none;font-weight:500;">${escapeHTML(phone)}</a></span>`;
         html += `<span><i class="fas fa-map-marker-alt"></i> ${escapeHTML(location)}</span>`;
-        if (showLinkedIn && linkedinUrl !== '#') html += `<span><i class="fab fa-linkedin-in"></i> <a href="${escapeHTML(linkedinUrl)}" target="_blank">${escapeHTML(linkedinUrl.replace(/^https?:\/\//,''))}</a></span>`;
+        if (showLinkedIn && linkedinUrl !== '#') html += `<span><i class="fab fa-linkedin-in"></i> <a href="${escapeHTML(ssSafeLink(linkedinUrl))}" target="_blank" rel="noopener noreferrer">${escapeHTML(linkedinUrl.replace(/^https?:\/\//,''))}</a></span>`;
         html += `</div>`;
 
         const socialItems = [];
         if (showBehance && behanceUrl && behanceUrl !== '#') socialItems.push({ icon: 'fab fa-behance', label: 'Behance', url: behanceUrl });
         if (showInstagram && instagramUrl && instagramUrl !== '#') socialItems.push({ icon: 'fab fa-instagram', label: 'Instagram', url: instagramUrl });
         if (showWhatsApp && whatsappUrl && whatsappUrl !== '#') socialItems.push({ icon: 'fab fa-whatsapp', label: 'WhatsApp', url: whatsappUrl });
-        if (socialItems.length > 0) { html += `<div class="social-row">`; socialItems.forEach(item => { html += `<a href="${escapeHTML(item.url)}" target="_blank"><i class="${item.icon}"></i> ${item.label}</a>`; }); html += `</div>`; }
+        if (socialItems.length > 0) { html += `<div class="social-row">`; socialItems.forEach(item => { html += `<a href="${escapeHTML(ssSafeLink(item.url))}" target="_blank" rel="noopener noreferrer"><i class="${item.icon}"></i> ${item.label}</a>`; }); html += `</div>`; }
 
         if (experiences.length > 0) {
             html += `<div class="section"><div class="section-heading">WORK EXPERIENCE</div>`;
@@ -2356,7 +2376,7 @@ function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
     if (imagesArray && imagesArray.length > 0) {
         previewHTML = imagesArray.map((img, idx) => {
             const label = idx === 0 ? '<span class="image-label-badge">Main</span>' : (idx === 1 ? '<span class="image-label-badge night">Night</span>' : '');
-            return `<div class="preview-thumb" draggable="true" data-image-index="${idx}" data-project-idx="${window.projectCounter}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${idx+1}" loading="lazy"><span class="image-order-badge">${idx+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)" title="Make this 1st">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${idx})">✕</button></div>`;
+            return `<div class="preview-thumb" draggable="true" data-image-index="${idx}" data-project-idx="${window.projectCounter}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${escapeHTML(ssSafeImage(img))}" class="project-preview-img" alt="Project Image ${idx+1}" loading="lazy"><span class="image-order-badge">${idx+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)" title="Make this 1st">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${idx})">✕</button></div>`;
         }).join('');
     }
     return `<div class="project-card" data-project-index="${window.projectCounter}">
@@ -2456,7 +2476,7 @@ function refreshProjectImagePreviews(card, projectIdx) {
     if (!images.length) { previewContainer.innerHTML = ''; return; }
     previewContainer.innerHTML = images.map((img, i) => {
         const label = i === 0 ? '<span class="image-label-badge">Main</span>' : (i === 1 ? '<span class="image-label-badge night">Night</span>' : '');
-        return `<div class="preview-thumb" draggable="true" data-image-index="${i}" data-project-idx="${projectIdx}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${img}" class="project-preview-img" alt="Project Image ${i+1}" loading="lazy"><span class="image-order-badge">${i+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${i})">✕</button></div>`;
+        return `<div class="preview-thumb" draggable="true" data-image-index="${i}" data-project-idx="${projectIdx}" ondragstart="dragProjectImage(event, this)" ondragover="handleDragOver(event)" ondrop="dropProjectImage(event, this)" onclick="event.stopPropagation()"><img src="${escapeHTML(ssSafeImage(img))}" class="project-preview-img" alt="Project Image ${i+1}" loading="lazy"><span class="image-order-badge">${i+1}</span>${label}<button class="set-main-image-btn" onclick="moveProjectImageToFront(this)">1st</button><button class="remove-image-btn" onclick="removeProjectImage(this, ${i})">✕</button></div>`;
     }).join('');
     updateProjectStats();
 }
@@ -2636,13 +2656,13 @@ function renderPortfolioWebsite(data) {
     });
 
     if (Array.isArray(data.experiences)) experiences = data.experiences;
-    const photoHTML = data.photo ? `<img src="${data.photo}" alt="${escapeHTML(name)}">` : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=400&background=1e293b&color=38bdf8" alt="Profile">`;
+    const photoHTML = data.photo ? `<img src="${escapeHTML(ssSafeImage(data.photo))}" alt="${escapeHTML(name)}">` : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=400&background=1e293b&color=38bdf8" alt="Profile">`;
 
     const socialLinks = [
-        data.showLinkedIn && data.linkedin ? `<a href="${escapeHTML(data.linkedin)}" target="_blank"><i class="fab fa-linkedin-in"></i></a>` : '',
-        data.showBehance && data.behance ? `<a href="${escapeHTML(data.behance)}" target="_blank"><i class="fab fa-behance"></i></a>` : '',
-        data.showInstagram && data.instagram ? `<a href="${escapeHTML(data.instagram)}" target="_blank"><i class="fab fa-instagram"></i></a>` : '',
-        data.showWhatsApp && data.whatsapp ? `<a href="${escapeHTML(data.whatsapp)}" target="_blank"><i class="fab fa-whatsapp"></i></a>` : ''
+        data.showLinkedIn && data.linkedin ? `<a href="${escapeHTML(ssSafeLink(data.linkedin))}" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>` : '',
+        data.showBehance && data.behance ? `<a href="${escapeHTML(ssSafeLink(data.behance))}" target="_blank" rel="noopener noreferrer"><i class="fab fa-behance"></i></a>` : '',
+        data.showInstagram && data.instagram ? `<a href="${escapeHTML(ssSafeLink(data.instagram))}" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>` : '',
+        data.showWhatsApp && data.whatsapp ? `<a href="${escapeHTML(ssSafeLink(data.whatsapp))}" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a>` : ''
     ].join('');
 
     const cubesHTML = `<div class="hero-css-bg"><div class="cube-container">` + `<div class="cube"><div class="cube-face front"></div><div class="cube-face back"></div><div class="cube-face right"></div><div class="cube-face left"></div><div class="cube-face top"></div><div class="cube-face bottom"></div></div>`.repeat(6) + `</div></div>`;
@@ -2664,9 +2684,9 @@ function renderPortfolioWebsite(data) {
         else if (typeof p.tools === 'string') toolList = p.tools.split(',').map(t => t.trim()).filter(t => t);
         const galleryImages = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
         const firstImage = galleryImages[0] || `https://source.unsplash.com/random/800x500/?architecture,modern&sig=${i}`;
-        const galleryThumbs = galleryImages.length > 1 ? `<div class="project-gallery-thumbs">${galleryImages.map((img, gi) => `<button type="button" class="${gi===0?'active':''}" onclick="switchProjectGallery(this)" data-image-index="${gi}"><img src="${img}" alt="Photo ${gi+1}" loading="lazy" decoding="async"></button>`).join('')}</div>` : '';
+        const galleryThumbs = galleryImages.length > 1 ? `<div class="project-gallery-thumbs">${galleryImages.map((img, gi) => `<button type="button" class="${gi===0?'active':''}" onclick="switchProjectGallery(this)" data-image-index="${gi}"><img src="${escapeHTML(ssSafeImage(img))}" alt="Photo ${gi+1}" loading="lazy" decoding="async"></button>`).join('')}</div>` : '';
         const slideControls = galleryImages.length > 1 ? `<div class="project-slide-controls"><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,-1)"><i class="fas fa-chevron-left"></i></button><button type="button" class="project-slide-btn" onclick="event.stopPropagation();changeProjectSlide(this,1)"><i class="fas fa-chevron-right"></i></button></div><div class="project-slideshow-progress"><span></span></div>` : '';
-        return `<div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}"><div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" loading="lazy" decoding="async" src="${firstImage}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>${galleryThumbs}<div class="plate-body"><div class="plate-title">${escapeHTML(p.title)}</div><div class="plate-desc">${escapeHTML(p.desc)}</div><div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div></div></div>`;
+        return `<div class="site-plate reveal" style="transition-delay:${i*0.1}s" data-project-images='${escapeHTML(JSON.stringify(galleryImages))}' data-project-title="${escapeHTML(p.title)}"><div class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))">${p.finished ? '<span class="project-finished-badge">Finished</span>' : ''}<img class="project-main-image" loading="lazy" decoding="async" src="${escapeHTML(ssSafeImage(firstImage))}" alt="${escapeHTML(p.title)}" data-slide-index="0">${slideControls}</div>${galleryThumbs}<div class="plate-body"><div class="plate-title">${escapeHTML(p.title)}</div><div class="plate-desc">${escapeHTML(p.desc)}</div><div class="plate-tools">${toolList.map(t => `<span>${getSkillLogoHTML(t)} ${escapeHTML(t)}</span>`).join('')}</div></div></div>`;
     }).join('')}</div></div></section>
     <footer class="site-footer reveal"><div class="site-wrap"><h2>Let's Create Together.</h2><p style="color:var(--site-text-muted);margin-bottom:20px;">Open for collaborations and freelance opportunities.</p><button class="site-btn solid" onclick="window.location.href=this.dataset.contact" data-contact="mailto:${escapeHTML(email)}"><i class="fas fa-paper-plane"></i> Get In Touch</button></div><div class="ssplitly-footer-links"><button onclick="openSsplitlyInfo('about')">About</button><button onclick="openSsplitlyInfo('contact')">Contact Us</button><button onclick="openSsplitlyInfo('terms')">Terms &amp; Conditions</button></div></footer>`;
 
@@ -3017,6 +3037,7 @@ document.getElementById('loginBtn').addEventListener('click', async function() {
 
     const success = await window.loginUser(serial, password);
     if (success) {
+        document.getElementById('loginPassword').value = '';
         document.getElementById('loginOverlay').classList.remove('active');
         document.getElementById('page1').classList.add('active');
         document.getElementById('page2').classList.remove('active');
@@ -4124,6 +4145,48 @@ body{
   Turn off browser headers and footers.
 </div>
 ${pages.join('')}
+
+<style id="iso-a4-pdf-fix-v3">
+@page { size: A4 portrait !important; margin: 0 !important; }
+@media print {
+  .ref-page-number,.cvx-page-number,[class*="page-number"]{display:none!important}
+}
+</style>
+<script id="iso-a4-pdf-fix-v3-script">
+(function(){
+  async function exportISOA4(kind){
+    try{
+      if(kind==='cv'){ generateCV(); updateLivePreview(); }
+      else { generateCoverLetter(); updateLivePreview(); }
+      toast('Generating ISO A4 PDF…');
+      await new Promise(r=>setTimeout(r,500));
+      const root=document.getElementById(kind==='cv'?'cvOutput':'coverOutput');
+      const source=root && (root.querySelector('.ref-sheet') || root.querySelector('.a4-preview') || root.firstElementChild);
+      if(!source) throw new Error('PDF source not found');
+      const clone=source.cloneNode(true);
+      clone.querySelectorAll('.ref-page-number,.cvx-page-number,[class*="page-number"]').forEach(n=>n.remove());
+      Object.assign(clone.style,{width:'210mm',height:'297mm',minWidth:'210mm',minHeight:'297mm',maxWidth:'210mm',maxHeight:'297mm',margin:'0',boxShadow:'none',transform:'none',boxSizing:'border-box',overflow:'hidden',background:'#fff'});
+      const stage=document.createElement('div');
+      Object.assign(stage.style,{position:'fixed',left:'-10000px',top:'0',width:'210mm',height:'297mm',margin:'0',padding:'0',background:'#fff',overflow:'hidden',zIndex:'-1'});
+      stage.appendChild(clone); document.body.appendChild(stage);
+      if(document.fonts && document.fonts.ready) await document.fonts.ready;
+      await Promise.all(Array.from(clone.images||[]).map(img=>img.complete?Promise.resolve():new Promise(r=>{img.onload=r;img.onerror=r})));
+      const canvas=await html2canvas(clone,{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false,width:clone.scrollWidth,height:clone.scrollHeight,windowWidth:clone.scrollWidth,windowHeight:clone.scrollHeight});
+      stage.remove();
+      const {jsPDF}=window.jspdf;
+      const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:[210,297],compress:true,putOnlyUsedFonts:true});
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.97),'JPEG',0,0,210,297,undefined,'FAST');
+      pdf.setProperties({title:kind==='cv'?'CV':'Cover Letter',subject:'ISO A4 210 × 297 mm'});
+      pdf.save(kind==='cv'?'CV_ISO_A4.pdf':'Cover_Letter_ISO_A4.pdf');
+      toast('✅ ISO A4 PDF downloaded');
+    }catch(e){console.error(e);toast('PDF generation failed.','err');}
+  }
+  window.downloadCVWithOptions=function(){return exportISOA4('cv')};
+  window.downloadCoverLetterPDF=function(){return exportISOA4('cover')};
+  window.showPDFOptions=function(type){pdfPendingType=type||'cv';try{closePDFOptions()}catch(e){}return exportISOA4(pdfPendingType)};
+})();
+</script>
+
 </body>
 </html>`);
 
@@ -4722,7 +4785,7 @@ ${pages.join('')}
   }
 }
 @page{
-  size:A4;
+  size:210mm 297mm;
   margin:0;
   @bottom-left { content:none; }
   @bottom-center { content:none; }
@@ -4780,7 +4843,6 @@ ${pages.join('')}
       ${cover?'':wave('ref-wave-top')}
       ${cover?'':wave('ref-wave-bottom')}
       <div class="ref-fit">${content}</div>
-      <div class="ref-page-number">1/1</div>
     </article>`;
   }
 
@@ -5198,9 +5260,31 @@ html,body{
   border:0;border-radius:8px;
   margin-right:12px;cursor:pointer;
 }
+@page{size:210mm 297mm;margin:0!important;}
 @media print{
-  html,body{background:#fff!important}
-  .ref-sheet{margin:0!important}
+  html,body{
+    width:210mm!important;
+    min-width:210mm!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+  }
+  .ref-print-toolbar{display:none!important;}
+  .ref-sheet{
+    width:210mm!important;
+    height:297mm!important;
+    min-width:210mm!important;
+    min-height:297mm!important;
+    max-width:210mm!important;
+    max-height:297mm!important;
+    margin:0!important;
+    padding:0!important;
+    box-shadow:none!important;
+    break-after:avoid!important;
+    page-break-after:avoid!important;
+  }
+  .ref-page-number{display:none!important;}
 }
 </style>
 </head>
