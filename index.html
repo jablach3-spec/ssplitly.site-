@@ -701,6 +701,20 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
   <!-- SsPlitly social share icon -->
 
 
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap">
+<style id="portfolio-bold-and-order">
+#page3{--font:'Outfit','Manrope',sans-serif;--font-head:'Outfit','Sora',sans-serif;--font-mono:'Outfit',sans-serif;font-family:var(--font)!important;font-weight:700}
+#page3 :where(h1,h2,h3,h4,p,a,span,div,button,label,li,small,strong,b,select){font-family:'Outfit','Manrope',sans-serif!important;font-weight:700!important}
+#page3 :where(h1,h2,h3,.plate-title,.site-brand,.stat-number){font-weight:900!important;letter-spacing:-.035em}
+#page3 :where(p,.plate-desc){line-height:1.75}
+.project-order-help,#portfolioSyncStatus{font-size:12px;line-height:1.6;color:var(--text-muted);margin:10px 0 16px}
+.project-order-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 25px 16px 0}
+.project-position{font-size:12px;font-weight:800;margin-right:auto}
+.project-order-controls button{min-width:36px;min-height:36px;padding:6px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font-weight:800}
+.project-order-controls button:disabled{opacity:.35;cursor:default}
+.project-order-controls button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+</style>
 </head>
 <body>
 
@@ -852,6 +866,7 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
                     <button class="match-btn" onclick="matchCVtoPortfolio()"><i class="fas fa-arrows-rotate"></i> Match with CV</button>
                 </div>
+                <p class="project-order-help">Arrange projects with ↑, ↓ or Make first. This order is used on your portfolio website.</p>
                 <div id="projectContainer"></div>
                 <button class="btn btn-outline btn-sm" onclick="addProject()"><i class="fas fa-plus-circle"></i> Add Project</button>
                 <hr>
@@ -984,7 +999,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-window.__firebase = { db, ref, set, get, update, onValue };
+window.__firebase = { db, ref, set, get, update, onValue, runTransaction };
 
 const auth = getAuth(app);
 window.__auth = auth;
@@ -2361,6 +2376,7 @@ function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
     }
     return `<div class="project-card" data-project-index="${window.projectCounter}">
         <button class="remove-btn" onclick="removeProject(this)">✕</button>
+        <div class="project-order-controls" aria-label="Project order"><span class="project-position"></span><button type="button" onclick="movePortfolioProject(this,-1)" aria-label="Move project up">↑</button><button type="button" onclick="movePortfolioProject(this,1)" aria-label="Move project down">↓</button><button type="button" onclick="movePortfolioProject(this,0)">Make first</button></div>
         <div class="form-group"><label>Project Title</label><input type="text" class="proj-title" value="${escapeHTML(title)}" placeholder="e.g. Luxury Villa Rendering"></div>
         <div class="form-group"><label>Description</label><textarea class="proj-desc" rows="2" placeholder="Brief description">${escapeHTML(desc)}</textarea></div>
         <div class="form-group"><label>Tools Used (comma)</label><input type="text" class="proj-tools" value="${escapeHTML(tools)}" placeholder="e.g. 3ds Max, V-Ray, Photoshop"></div>
@@ -2565,6 +2581,28 @@ function updateProjectCount() {
     const totalInput = document.getElementById('portfolioTotalProjects');
     if (totalInput && !totalInput.value) totalInput.value = count;
 }
+
+function movePortfolioProject(button, direction) {
+    if (isViewOnly) return;
+    const card=button.closest('.project-card'), container=card.parentElement;
+    if(direction===0) container.prepend(card);
+    else if(direction<0 && card.previousElementSibling) container.insertBefore(card,card.previousElementSibling);
+    else if(direction>0 && card.nextElementSibling) container.insertBefore(card.nextElementSibling,card);
+    refreshPortfolioProjectOrder();
+    saveToFirebaseDebounced(300); renderPortfolioDebounced(100);
+    container.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function refreshPortfolioProjectOrder() {
+    const cards=Array.from(document.querySelectorAll('#projectContainer .project-card'));
+    cards.forEach((card,index)=>{
+        const controls=card.querySelector('.project-order-controls'); if(!controls)return;
+        controls.querySelector('.project-position').textContent='Project '+(index+1);
+        const buttons=controls.querySelectorAll('button');
+        buttons[0].disabled=buttons[2].disabled=index===0;
+        buttons[1].disabled=index===cards.length-1;
+    });
+}
+new MutationObserver(refreshPortfolioProjectOrder).observe(document.getElementById('projectContainer'),{childList:true});
 
 function getProjectsData() {
     const cards = document.querySelectorAll('.project-card');
@@ -4116,6 +4154,20 @@ body{
 .cvx-page{margin:12px auto}
 @media print{.cvx-page{margin:0!important}}
 </style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap">
+<style id="portfolio-bold-and-order">
+#page3{--font:'Outfit','Manrope',sans-serif;--font-head:'Outfit','Sora',sans-serif;--font-mono:'Outfit',sans-serif;font-family:var(--font)!important;font-weight:700}
+#page3 :where(h1,h2,h3,h4,p,a,span,div,button,label,li,small,strong,b,select){font-family:'Outfit','Manrope',sans-serif!important;font-weight:700!important}
+#page3 :where(h1,h2,h3,.plate-title,.site-brand,.stat-number){font-weight:900!important;letter-spacing:-.035em}
+#page3 :where(p,.plate-desc){line-height:1.75}
+.project-order-help,#portfolioSyncStatus{font-size:12px;line-height:1.6;color:var(--text-muted);margin:10px 0 16px}
+.project-order-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 25px 16px 0}
+.project-position{font-size:12px;font-weight:800;margin-right:auto}
+.project-order-controls button{min-width:36px;min-height:36px;padding:6px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font-weight:800}
+.project-order-controls button:disabled{opacity:.35;cursor:default}
+.project-order-controls button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+</style>
 </head>
 <body>
 <div class="cvx-print-tools">
@@ -4780,6 +4832,7 @@ ${pages.join('')}
       ${cover?'':wave('ref-wave-top')}
       ${cover?'':wave('ref-wave-bottom')}
       <div class="ref-fit">${content}</div>
+      <div class="ref-page-number">1/1</div>
     </article>`;
   }
 
@@ -5201,6 +5254,20 @@ html,body{
   html,body{background:#fff!important}
   .ref-sheet{margin:0!important}
 }
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap">
+<style id="portfolio-bold-and-order">
+#page3{--font:'Outfit','Manrope',sans-serif;--font-head:'Outfit','Sora',sans-serif;--font-mono:'Outfit',sans-serif;font-family:var(--font)!important;font-weight:700}
+#page3 :where(h1,h2,h3,h4,p,a,span,div,button,label,li,small,strong,b,select){font-family:'Outfit','Manrope',sans-serif!important;font-weight:700!important}
+#page3 :where(h1,h2,h3,.plate-title,.site-brand,.stat-number){font-weight:900!important;letter-spacing:-.035em}
+#page3 :where(p,.plate-desc){line-height:1.75}
+.project-order-help,#portfolioSyncStatus{font-size:12px;line-height:1.6;color:var(--text-muted);margin:10px 0 16px}
+.project-order-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 25px 16px 0}
+.project-position{font-size:12px;font-weight:800;margin-right:auto}
+.project-order-controls button{min-width:36px;min-height:36px;padding:6px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font-weight:800}
+.project-order-controls button:disabled{opacity:.35;cursor:default}
+.project-order-controls button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -5989,29 +6056,59 @@ function applySharingPreferences(p,legacy={}){
   $('showCVPortfolio').checked=true;
   generateCV();updateLivePreviewDebounced();saveToFirebaseDebounced();
  }
- let busy=false,cachedJSON='',cachedURL='';
+ const syncStatus=document.createElement('p');syncStatus.id='portfolioSyncStatus';syncStatus.setAttribute('role','status');
+ syncStatus.textContent='Share once to create your permanent link. Saved edits will update it automatically.';
+ $('portfolioFormFields').prepend(syncStatus);
+ let publishQueue=Promise.resolve();
+ function enqueuePublish(task){const job=publishQueue.then(task);publishQueue=job.catch(()=>{});return job;}
+ async function publishPortfolio(ownerUid,portfolio,create=false){
+  const fb=window.__firebase;if(!fb)throw Error('Database connection unavailable');
+  if(getCurrentSerial()!==ownerUid||window.__builderReadyUID!==ownerUid)throw Error('Account changed. Please retry.');
+  const activeRef=fb.ref(fb.db,'users/'+ownerUid+'/activePortfolioToken');
+  let token=(await fb.get(activeRef)).val();
+  if(!/^[a-f0-9]{24}$/.test(String(token||''))){
+   if(!create)return '';
+   const candidate=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');
+   // Reserve once, including simultaneous first shares from another device.
+   const result=await fb.runTransaction(activeRef,current=>/^[a-f0-9]{24}$/.test(String(current||''))?current:candidate);
+   token=result.snapshot.val();
+   if(!/^[a-f0-9]{24}$/.test(String(token||'')))throw Error('Could not reserve portfolio link. Retry.');
+  }
+  if(getCurrentSerial()!==ownerUid)throw Error('Account changed. Please retry.');
+  await fb.set(fb.ref(fb.db,'publicPortfolios/'+token),{...portfolio,ownerUid});
+  syncStatus.textContent='Portfolio synced • Your share link stays the same.';
+  return location.href.split('#')[0]+'#/p/'+token;
+ }
+ const saveWithStablePortfolio=saveToFirebase;
+ saveToFirebase=function(...args){
+  if(isViewOnly||!getCurrentSerial()||window.__builderReadyUID!==getCurrentSerial())return saveWithStablePortfolio.apply(this,args);
+  const ownerUid=getCurrentSerial(),portfolio=publicData(buildShareData()),context=this;
+  syncStatus.textContent='Saving portfolio changes…';
+  return enqueuePublish(async()=>{
+   if(getCurrentSerial()!==ownerUid||window.__builderReadyUID!==ownerUid)return false;
+   const saved=await saveWithStablePortfolio.apply(context,args);
+   if(saved!==true){syncStatus.textContent='Changes are not saved. Check your connection and retry.';return saved;}
+   try{const url=await publishPortfolio(ownerUid,portfolio);if(!url)syncStatus.textContent='Changes saved. Share once to create your permanent link.';}
+   catch(e){syncStatus.textContent='Edits saved, but shared portfolio is not synced. Use Share to retry. '+e.message;}
+   return saved;
+  });
+ };
+ window.addEventListener('online',()=>{if(!isViewOnly&&window.__builderReadyUID===getCurrentSerial())saveToFirebaseDebounced(300);});
+ let busy=false;
  generateShareLink=async function(){
   if(busy)return;
   if(isViewOnly){$('shortShareURL').value=location.href;$('shareStatus').textContent='Choose an app or copy the link.';dialog.showModal();$('nativeShare').click();return;}
-  if(!getCurrentSerial())return toast('Log in to share your portfolio.','err');
+  if(!getCurrentSerial()||window.__builderReadyUID!==getCurrentSerial())return toast('Log in and wait for your portfolio to load.','err');
   const ownerUid=getCurrentSerial(),portfolio=publicData(buildShareData());
-  const json=JSON.stringify({...portfolio,ownerUid});
   const shareTitle=[portfolio.name,portfolio.title].filter(Boolean).join(' — ')+(portfolio.name||portfolio.title?' Portfolio':'Portfolio');
-  busy=true;$('shareStatus').textContent='Preparing portfolio link…';$('shortShareURL').value='';$('shareDetails').style.display='none';$('nativeShare').disabled=$('copyShare').disabled=true;dialog.showModal();
+  busy=true;$('shareStatus').textContent='Updating your permanent portfolio link…';$('shortShareURL').value='';$('shareDetails').style.display='none';$('nativeShare').disabled=$('copyShare').disabled=true;dialog.showModal();
   try{
-   const fb=window.__firebase;if(!fb)throw Error('Database connection unavailable');
-   const bytes=crypto.getRandomValues(new Uint8Array(12));const token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
-   const activeRef=fb.ref(fb.db,'users/'+ownerUid+'/activePortfolioToken');
-   const oldSnap=await fb.get(activeRef),oldToken=oldSnap.val();
-   await Promise.race([fb.set(fb.ref(fb.db,'publicPortfolios/'+token),JSON.parse(json)),new Promise((_,reject)=>setTimeout(()=>reject(Error('Connection timed out. Please retry.')),20000))]);
-   await fb.set(activeRef,token);
-   if(oldToken&&/^[a-f0-9]{24}$/.test(String(oldToken))&&oldToken!==token)await fb.set(fb.ref(fb.db,'publicPortfolios/'+oldToken),null);
-   cachedURL=location.href.split('#')[0]+'#/p/'+token;cachedJSON=json;$('shortShareURL').value=cachedURL;addPortfolioLinkToCV(cachedURL);
-   $('shareDetails').style.display='block';$('shareDetails').textContent=shareTitle+'\n'+cachedURL;
-   $('shareStatus').textContent='New link ready. Your previous shared portfolio link has been removed. This new link was also added to your CV.';
+   const url=await enqueuePublish(()=>publishPortfolio(ownerUid,portfolio,true));
+   $('shortShareURL').value=url;addPortfolioLinkToCV(url);
+   $('shareDetails').style.display='block';$('shareDetails').textContent=shareTitle+'\n'+url;
+   $('shareStatus').textContent='Your permanent link is ready. Saved portfolio edits update this same link automatically. This link is also on your CV.';
    $('nativeShare').disabled=$('copyShare').disabled=false;
-   if(navigator.userActivation?.isActive)$('nativeShare').click();
-  }catch(e){$('shareStatus').textContent='Could not create link: '+e.message;}
+  }catch(e){$('shareStatus').textContent='Could not update link: '+e.message;}
   finally{busy=false;}
  };
  const originalLoad=window.onload;
@@ -6026,6 +6123,13 @@ function applySharingPreferences(p,legacy={}){
   try{if(!match)throw Error('Invalid portfolio link');const fb=window.__firebase;if(!fb)throw Error('Database unavailable. Reload to retry.');
    const snap=await Promise.race([fb.get(fb.ref(fb.db,'publicPortfolios/'+match[1])),new Promise((_,reject)=>{loadTimer=setTimeout(()=>reject(Error('Connection timed out. Please reload to retry.')),20000);})]);if(!snap.exists())throw Error('Portfolio not found. Ask the owner for a new link.');
    renderPortfolioWebsite(publicData(snap.val()));
+   let lastPortfolio=JSON.stringify(snap.val());
+   const stop=fb.onValue(fb.ref(fb.db,'publicPortfolios/'+match[1]),next=>{
+    if(!next.exists()){$('portfolioSiteContent').textContent='This portfolio is no longer available.';return;}
+    const json=JSON.stringify(next.val());if(json===lastPortfolio)return;
+    lastPortfolio=json;renderPortfolioWebsite(publicData(next.val()));
+   },()=>{toast('Live updates paused. Reload to reconnect.','err');});
+   window.addEventListener('pagehide',stop,{once:true});
   }catch(e){
    const box=document.createElement('div');box.className='portfolio-load-error';
    const message=document.createElement('p');message.setAttribute('role','alert');message.textContent=e.message;
