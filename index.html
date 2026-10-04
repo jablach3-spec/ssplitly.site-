@@ -937,7 +937,8 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
         <div class="lightbox-inner">
             <button class="lightbox-close" onclick="closeProjectLightbox()"><i class="fas fa-times"></i></button>
             <button class="lightbox-nav prev" onclick="moveLightboxSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-            <img id="lightboxImage" class="lightbox-image" src="">
+            <div id="projectZoomViewport"><img id="lightboxImage" class="lightbox-image" src="" alt="Project photo" draggable="false"></div>
+            <div class="project-zoom-controls"><button type="button" id="projectZoomOut" aria-label="Zoom out">−</button><button type="button" id="projectZoomReset" aria-label="Reset zoom">100%</button><button type="button" id="projectZoomIn" aria-label="Zoom in">+</button></div>
             <button class="lightbox-nav next" onclick="moveLightboxSlide(1)"><i class="fas fa-chevron-right"></i></button>
             <div id="lightboxCaption" class="lightbox-caption"></div>
         </div>
@@ -2383,84 +2384,56 @@ function createProjectHTML(title, desc, tools, imagesArray, finished = false) {
         <div class="checkbox-group project-finished-toggle"><input type="checkbox" class="proj-finished" ${finished ? 'checked' : ''} onchange="updateProjectStats()"><label>Finished Project</label></div>
         <div class="project-upload">
             <input type="file" class="proj-image-input" accept="image/*" multiple onchange="handleProjectImages(this)">
-            <span class="upload-hint"><i class="fas fa-info-circle"></i> Select multiple photos. Auto-compressed & synced across devices.</span>
+            <span class="upload-hint"><i class="fas fa-info-circle"></i> Original size & quality preserved. Maximum 5 MB per photo.</span>
         </div>
+        <div class="project-upload-status" role="status" aria-live="polite" hidden></div>
         <div class="proj-image-previews">${previewHTML}</div>
     </div>`;
 }
 
-function compressImageFile(file, maxDim = 900, quality = 0.62) {
-    return new Promise((resolve, reject) => {
-        if (!file || !file.type || !file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Read failed'));
-        reader.onload = () => {
-            const img = new Image();
-            img.onerror = () => reject(new Error('Decode failed'));
-            img.onload = () => {
-                let w = img.naturalWidth || img.width;
-                let h = img.naturalHeight || img.height;
-                if (!w || !h) { resolve(reader.result); return; }
-                const scale = Math.min(1, maxDim / Math.max(w, h));
-                w = Math.max(1, Math.round(w * scale));
-                h = Math.max(1, Math.round(h * scale));
-                const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, w, h);
-                ctx.drawImage(img, 0, 0, w, h);
-                try {
-                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                    if (dataUrl.length > 280000) {
-                        const smaller = canvas.toDataURL('image/jpeg', 0.45);
-                        resolve(smaller);
-                    } else { resolve(dataUrl); }
-                } catch (e) { resolve(reader.result); }
-            };
-            img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
 async function handleProjectImages(input) {
-    if (isViewOnly) return;
+    if (isViewOnly || input.disabled) return;
     const files = Array.from(input.files || []);
     input.value = '';
     if (!files.length) return;
-
     const card = input.closest('.project-card');
-    if (!card) { toast('Error: project card not found.', 'err'); return; }
+    if (!card) return;
     const idx = card.dataset.projectIndex;
-    if (!projectImages[idx]) projectImages[idx] = [];
-
-    let totalSize = 0;
-    files.forEach(f => totalSize += f.size);
-    if (totalSize > 10 * 1024 * 1024) {
-        toast('❌ Total too large. Select fewer photos.', 'err');
+    const status = card.querySelector('.project-upload-status');
+    const invalid = files.find(f => !f.type.startsWith('image/') || f.size > 5 * 1024 * 1024);
+    if (invalid) {
+        status.hidden = false;
+        status.textContent = 'Upload not started: ' + invalid.name + ' — choose an image up to 5 MB. Originals are never resized.';
+        toast('Please select images up to 5 MB each.', 'err');
         return;
     }
-
-    toast('⏳ Compressing & uploading ' + files.length + ' photo(s)…');
-    const results = await Promise.all(
-        files.map(async f => {
-            try {
-                const compressed = await compressImageFile(f);
-                return await uploadImageToR2(compressed, 'project');
-            } catch (err) {
-                console.warn('Image upload failed:', err);
-                return null;
-            }
-        })
-    );
-    const okImages = results.filter(Boolean);
-    if (!okImages.length) { toast('❌ Could not upload photos.', 'err'); return; }
-
-    projectImages[idx] = projectImages[idx].concat(okImages);
-    refreshProjectImagePreviews(card, idx);
-    await saveToFirebase();
-    toast('✅ ' + okImages.length + ' photo(s) uploaded to R2 & synced');
+    input.disabled = true;
+    card.setAttribute('aria-busy', 'true');
+    status.hidden = false;
+    status.classList.add('processing');
+    const uploaded = [], failures = [];
+    try {
+        // Upload the original File bytes. Never draw or recompress project photos.
+        for (let i = 0; i < files.length; i++) {
+            status.textContent = 'Processing… Uploading photo ' + (i + 1) + ' of ' + files.length;
+            try { uploaded.push(await uploadImageToR2(files[i], 'project')); }
+            catch (err) { failures.push(files[i].name + ': ' + err.message); }
+        }
+        if (!card.isConnected) return;
+        if (uploaded.length) {
+            projectImages[idx] = (projectImages[idx] || []).concat(uploaded);
+            await saveToFirebase();
+            refreshProjectImagePreviews(card, idx);
+        }
+        status.textContent = uploaded.length + ' photo(s) uploaded.' + (failures.length ? ' Failed: ' + failures.join('; ') : ' Original size preserved.');
+        toast(uploaded.length ? '✅ Photos uploaded' : '❌ Upload failed', uploaded.length ? undefined : 'err');
+    } catch (err) {
+        status.textContent = 'Could not finish saving: ' + err.message + '. Please retry.';
+    } finally {
+        input.disabled = false;
+        card.removeAttribute('aria-busy');
+        status.classList.remove('processing');
+    }
 }
 
 let draggedProjectImageIndex = null, draggedProjectId = null;
@@ -2776,7 +2749,7 @@ function openProjectLightbox(card) {
     document.body.style.overflow = 'hidden';
     renderLightboxImage();
 }
-function renderLightboxImage() { const img = document.getElementById('lightboxImage'); img.src = lightboxImages[lightboxIndex]; document.getElementById('lightboxCaption').textContent = `${document.getElementById('projectLightbox').dataset.title || 'Project'} • ${lightboxIndex + 1} / ${lightboxImages.length}`; }
+function renderLightboxImage() { if (window.resetProjectZoom) window.resetProjectZoom(); const img = document.getElementById('lightboxImage'); img.src = lightboxImages[lightboxIndex]; document.getElementById('lightboxCaption').textContent = `${document.getElementById('projectLightbox').dataset.title || 'Project'} • ${lightboxIndex + 1} / ${lightboxImages.length}`; }
 function closeProjectLightbox() { document.getElementById('projectLightbox').classList.remove('active'); document.body.style.overflow = ''; }
 function moveLightboxSlide(dir) { if (!lightboxImages.length) return; lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length; renderLightboxImage(); }
 document.addEventListener('keydown', e => { const modal = document.getElementById('projectLightbox'); if (!modal?.classList.contains('active')) return; if (e.key === 'Escape') closeProjectLightbox(); if (e.key === 'ArrowRight') moveLightboxSlide(1); if (e.key === 'ArrowLeft') moveLightboxSlide(-1); });
@@ -6368,6 +6341,63 @@ html,body{height:100%;overflow:hidden}
 })();
 </script>
 
+
+<style>
+.project-upload-status{margin:10px 0;padding:12px;border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;overflow-wrap:anywhere}
+.project-upload-status[hidden]{display:none}
+.project-upload-status.processing:before{content:'';display:inline-block;width:14px;height:14px;margin-right:9px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:uploadSpin .8s linear infinite;vertical-align:middle}
+@keyframes uploadSpin{to{transform:rotate(360deg)}}
+#projectLightbox .lightbox-inner{grid-template-rows:minmax(0,1fr) auto auto}
+#projectZoomViewport{grid-row:1;position:relative;width:100%;height:100%;min-height:0;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}
+#projectZoomViewport:active{cursor:grabbing}
+#projectLightbox #lightboxImage{flex-shrink:0;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;animation:none;transform-origin:center;user-select:none;pointer-events:none;border-radius:0}
+#projectLightbox .project-zoom-controls{grid-row:2;display:flex;justify-content:center;gap:8px;z-index:3}
+.project-zoom-controls button{min-width:44px;min-height:44px;border:1px solid #64748b;background:#182234;color:white;border-radius:10px;font-size:18px;padding:5px 14px;cursor:pointer}
+#projectLightbox .lightbox-caption{grid-row:3}
+</style>
+<script>
+(function(){
+ const viewport=document.getElementById('projectZoomViewport'), img=document.getElementById('lightboxImage');
+ const label=document.getElementById('projectZoomReset');
+ let scale=1,x=0,y=0,points=new Map(),lastTap=0;
+ function paint(){
+  const maxX=Math.max(0,(img.clientWidth*scale-viewport.clientWidth)/2);
+  const maxY=Math.max(0,(img.clientHeight*scale-viewport.clientHeight)/2);
+  x=Math.max(-maxX,Math.min(maxX,x)); y=Math.max(-maxY,Math.min(maxY,y));
+  img.style.transform='translate('+x+'px,'+y+'px) scale('+scale+')';
+  label.textContent=Math.round(scale*100)+'%';
+ }
+ function zoom(value){scale=Math.max(1,Math.min(8,value));paint();}
+ window.resetProjectZoom=function(){scale=1;x=y=0;points.clear();paint();};
+ img.addEventListener('load',window.resetProjectZoom);
+ document.getElementById('projectZoomIn').onclick=()=>zoom(scale*1.4);
+ document.getElementById('projectZoomOut').onclick=()=>zoom(scale/1.4);
+ label.onclick=window.resetProjectZoom;
+ viewport.addEventListener('wheel',e=>{e.preventDefault();zoom(scale*Math.exp(-e.deltaY*.002));},{passive:false});
+ viewport.addEventListener('dblclick',()=>zoom(scale>1?1:2.5));
+ const distance=arr=>Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y);
+ viewport.addEventListener('pointerdown',e=>{
+  points.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY});viewport.setPointerCapture(e.pointerId);
+ });
+ viewport.addEventListener('pointermove',e=>{
+  if(!points.has(e.pointerId))return;
+  const old=points.get(e.pointerId),before=[...points.values()];
+  points.set(e.pointerId,{...old,x:e.clientX,y:e.clientY});
+  if(points.size===2){const d=distance(before);if(d>0)zoom(scale*distance([...points.values()])/d);}
+  else if(points.size===1){x+=e.clientX-old.x;y+=e.clientY-old.y;paint();}
+ });
+ function end(e){
+  const p=points.get(e.pointerId);
+  if(e.type==='pointerup'&&e.pointerType==='touch'&&points.size===1&&p&&Math.hypot(e.clientX-p.startX,e.clientY-p.startY)<8){
+   const now=Date.now();if(now-lastTap<300){zoom(scale>1?1:2.5);lastTap=0;}else lastTap=now;
+  }else lastTap=0;
+  points.delete(e.pointerId);
+ }
+ viewport.addEventListener('pointerup',end);viewport.addEventListener('pointercancel',end);
+ viewport.addEventListener('lostpointercapture',e=>points.delete(e.pointerId));
+ window.addEventListener('resize',paint);
+})();
+</script>
 </body>
 </html>
   
