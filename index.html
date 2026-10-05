@@ -2438,20 +2438,21 @@ function inspectProjectFile(file, type) {
         el.src=url;
     });
 }
-async function uploadProjectAsset(file, onProgress=()=>{}) {
+async function uploadProjectAsset(file, onProgress=()=>{}, refreshed=false) {
     const user=window.__auth?.currentUser;if(!user)throw Error('Please sign in again.');
-    const token=await user.getIdToken();
+    const token=await user.getIdToken(refreshed);
     return new Promise((resolve,reject)=>{
-        const xhr=new XMLHttpRequest();xhr.open('POST',SSPLITLY_MEDIA_WORKER+'/project-upload');xhr.timeout=180000;
-        xhr.setRequestHeader('Authorization','Bearer '+token);
+        const xhr=new XMLHttpRequest();xhr.open('POST',SSPLITLY_MEDIA_WORKER+'/project-upload');xhr.timeout=300000;
+        xhr.setRequestHeader('Authorization','Bearer '+token);xhr.setRequestHeader('Content-Type',file.type);
         xhr.upload.onprogress=e=>onProgress(e.lengthComputable?Math.round(e.loaded/e.total*100):null);
         xhr.onerror=()=>reject(Error('Upload connection failed. Check the media server setup and try again.'));
         xhr.ontimeout=()=>reject(Error('Upload timed out. Please retry.'));
         xhr.onload=()=>{let data;try{data=JSON.parse(xhr.responseText);}catch{}
           if(xhr.status>=200&&xhr.status<300&&data?.success&&projectMediaURL(data.url))resolve(data.url);
-          else reject(Error(data?.error || 'Video/music upload is unavailable. The project media Worker route must be installed.'));
+          else if(xhr.status===401&&!refreshed){uploadProjectAsset(file,onProgress,true).then(resolve,reject);}
+          else reject(Error('Upload failed (HTTP '+xhr.status+'): '+(data?.error || 'Server did not return a valid upload response. Please update the Worker code.')));
         };
-        const form=new FormData();form.append('file',file,file.name);xhr.send(form);
+        xhr.send(file);
     });
 }
 async function handleProjectImages(input) {
@@ -2500,7 +2501,7 @@ function renderProjectMediaTile(p,i) {
     return `<article class="site-plate ss-project-tile reveal" data-project-title="${escapeHTML(payload.title)}" data-project="${escapeHTML(JSON.stringify(payload))}">
       <button type="button" class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))" aria-label="Open ${escapeHTML(payload.title)}">
       ${photo?`<img class="project-main-image" src="${escapeHTML(photo.src)}" alt="${escapeHTML(payload.title)}" loading="lazy" decoding="async">`:'<span class="ss-no-cover">'+(hasVideo?'▶':'▧')+'<small>'+escapeHTML(payload.title)+'</small></span>'}
-      <span class="ss-tile-kind">${hasVideo?'▶':'▧'} ${data.media.length}</span><span class="ss-tile-title">${escapeHTML(payload.title)}</span></button></article>`;
+      <span class="ss-tile-kind">${hasVideo?'▶':'▧'} ${data.media.length}</span></button><div class="plate-body"><h3 class="plate-title">${escapeHTML(payload.title)}</h3><p class="plate-desc">${escapeHTML(payload.desc)}</p></div></article>`;
 }
 
 let draggedProjectImageIndex = null, draggedProjectId = null;
@@ -4191,6 +4192,14 @@ ${pages.join('')}
 #ssAudioCrop{font-family:var(--font);background:var(--surface);color:var(--text);border-color:var(--border);box-shadow:0 24px 80px #0005}#ssAudioCrop p,#ssAudioCrop .ss-crop-hint{color:var(--text-muted)}#ssCropTimes{color:var(--primary)}#ssAudioCrop button{padding:11px 18px;border-radius:var(--radius-sm,10px);background:var(--surface-2);color:var(--text);border:1px solid var(--border);font-weight:700}#ssAudioCrop #ssCropSave{background:var(--grad-primary);color:white;border:0}#ssAudioCrop input[type=range]{accent-color:var(--primary)}
 .project-music-editor{background:var(--surface-2);border-color:var(--border);color:var(--text)}.project-music-editor small{color:var(--text-muted)}.project-music-editor input[type=file]{max-width:100%;font-family:var(--font);color:var(--text)}.project-music-editor input::file-selector-button{background:var(--grad-primary);border:0;border-radius:6px;padding:8px 12px;color:#fff}.project-upload-status{color:var(--text);background:var(--surface-2);border-color:var(--border)}.project-upload-status.processing{color:var(--primary)}
 </style>
+<style id="ss-restored-project-cards">
+#page3 .site-projects{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px!important;align-items:start}
+#page3 .ss-project-tile{background:var(--site-surface);border:1px solid var(--site-border);border-radius:20px;box-shadow:var(--glass-shadow);color:var(--site-text)}
+#page3 .ss-project-tile .plate-media{aspect-ratio:auto;background:var(--site-surface-2);position:relative}
+#page3 .ss-project-tile .plate-media img{height:auto;max-height:560px;object-fit:contain;display:block;width:100%}
+#page3 .ss-project-tile .plate-body{padding:22px}#page3 .ss-project-tile .plate-title{font:800 21px/1.4 var(--font-head);margin:0 0 10px;color:var(--site-text)}#page3 .ss-project-tile .plate-desc{font-size:14px;line-height:1.75;color:var(--site-text-muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:0;display:block;-webkit-line-clamp:unset;max-height:none}
+@media(max-width:700px){#page3 .site-projects{grid-template-columns:minmax(0,1fr)!important;gap:20px!important}#page3 .ss-project-tile .plate-body{padding:18px}}
+</style>
 </body>
 </html>`);
 
@@ -5297,6 +5306,14 @@ ${source.innerHTML}
 #ssProjectViewer .ss-view-info,#ssProjectViewer .ss-dots{background:var(--site-bg,#030712);color:var(--site-text,#f8fafc)}#ssProjectViewer .ss-view-info{border-color:var(--site-border)}#ssProjectViewer .ss-view-info p{color:var(--site-text-muted,#94a3b8)}#ssProjectViewer .ss-like{color:var(--site-text)}#ssProjectViewer .ss-dot.active{background:var(--site-primary,#38bdf8)}#ssProjectViewer .ss-view-info h3{font-family:var(--font-head);font-weight:800}#ssProjectViewer button:focus-visible{outline-color:var(--site-primary)}
 #ssAudioCrop{font-family:var(--font);background:var(--surface);color:var(--text);border-color:var(--border);box-shadow:0 24px 80px #0005}#ssAudioCrop p,#ssAudioCrop .ss-crop-hint{color:var(--text-muted)}#ssCropTimes{color:var(--primary)}#ssAudioCrop button{padding:11px 18px;border-radius:var(--radius-sm,10px);background:var(--surface-2);color:var(--text);border:1px solid var(--border);font-weight:700}#ssAudioCrop #ssCropSave{background:var(--grad-primary);color:white;border:0}#ssAudioCrop input[type=range]{accent-color:var(--primary)}
 .project-music-editor{background:var(--surface-2);border-color:var(--border);color:var(--text)}.project-music-editor small{color:var(--text-muted)}.project-music-editor input[type=file]{max-width:100%;font-family:var(--font);color:var(--text)}.project-music-editor input::file-selector-button{background:var(--grad-primary);border:0;border-radius:6px;padding:8px 12px;color:#fff}.project-upload-status{color:var(--text);background:var(--surface-2);border-color:var(--border)}.project-upload-status.processing{color:var(--primary)}
+</style>
+<style id="ss-restored-project-cards">
+#page3 .site-projects{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px!important;align-items:start}
+#page3 .ss-project-tile{background:var(--site-surface);border:1px solid var(--site-border);border-radius:20px;box-shadow:var(--glass-shadow);color:var(--site-text)}
+#page3 .ss-project-tile .plate-media{aspect-ratio:auto;background:var(--site-surface-2);position:relative}
+#page3 .ss-project-tile .plate-media img{height:auto;max-height:560px;object-fit:contain;display:block;width:100%}
+#page3 .ss-project-tile .plate-body{padding:22px}#page3 .ss-project-tile .plate-title{font:800 21px/1.4 var(--font-head);margin:0 0 10px;color:var(--site-text)}#page3 .ss-project-tile .plate-desc{font-size:14px;line-height:1.75;color:var(--site-text-muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:0;display:block;-webkit-line-clamp:unset;max-height:none}
+@media(max-width:700px){#page3 .site-projects{grid-template-columns:minmax(0,1fr)!important;gap:20px!important}#page3 .ss-project-tile .plate-body{padding:18px}}
 </style>
 </body>
 </html>`);
@@ -6583,7 +6600,7 @@ function renderLocalToolIcons(tools){return String(tools||'').split(',').map(s=>
    video.addEventListener('play',()=>{slide.querySelector('.ss-replay').hidden=true;slide.querySelector('.ss-play').hidden=true;});
    slide.querySelector('.ss-replay').onclick=e=>{e.stopPropagation();video.currentTime=0;playActive();};slide.querySelector('.ss-play').onclick=e=>{e.stopPropagation();playActive();};
   });
-  if(!dialog.open)dialog.showModal();updateSound();reel.scrollLeft=0;activate(0);clearInterval(loopTimer);loopTimer=setInterval(enforceMusicClip,40);cancelAnimationFrame(frame);tick();$('ssViewerClose').focus({preventScroll:true});
+  if(!dialog.open)dialog.showModal();updateSound();const firstPhoto=project.media.findIndex(m=>m.type==='image'),startIndex=firstPhoto<0?0:firstPhoto;reel.scrollLeft=startIndex*reel.clientWidth;activate(startIndex);clearInterval(loopTimer);loopTimer=setInterval(enforceMusicClip,40);cancelAnimationFrame(frame);tick();$('ssViewerClose').focus({preventScroll:true});
  };
  function close(){++sequence;cancelAnimationFrame(slideFrame);slideTransition=false;clearTimeout(wheelTimer);clearTimeout(scrollTimer);clearTimeout(tapTimer);clearInterval(loopTimer);cancelAnimationFrame(frame);stopAll();if(dialog.open)dialog.close();document.body.style.overflow=oldOverflow;reel.innerHTML='';music.removeAttribute('src');music.load();project=null;index=-1;resetZoom();opener?.focus?.({preventScroll:true});}
  window.closeProjectLightbox=close;window.moveLightboxSlide=dir=>go(index+dir);
@@ -6639,5 +6656,13 @@ function renderLocalToolIcons(tools){return String(tools||'').split(',').map(s=>
 #ssProjectViewer .ss-view-info,#ssProjectViewer .ss-dots{background:var(--site-bg,#030712);color:var(--site-text,#f8fafc)}#ssProjectViewer .ss-view-info{border-color:var(--site-border)}#ssProjectViewer .ss-view-info p{color:var(--site-text-muted,#94a3b8)}#ssProjectViewer .ss-like{color:var(--site-text)}#ssProjectViewer .ss-dot.active{background:var(--site-primary,#38bdf8)}#ssProjectViewer .ss-view-info h3{font-family:var(--font-head);font-weight:800}#ssProjectViewer button:focus-visible{outline-color:var(--site-primary)}
 #ssAudioCrop{font-family:var(--font);background:var(--surface);color:var(--text);border-color:var(--border);box-shadow:0 24px 80px #0005}#ssAudioCrop p,#ssAudioCrop .ss-crop-hint{color:var(--text-muted)}#ssCropTimes{color:var(--primary)}#ssAudioCrop button{padding:11px 18px;border-radius:var(--radius-sm,10px);background:var(--surface-2);color:var(--text);border:1px solid var(--border);font-weight:700}#ssAudioCrop #ssCropSave{background:var(--grad-primary);color:white;border:0}#ssAudioCrop input[type=range]{accent-color:var(--primary)}
 .project-music-editor{background:var(--surface-2);border-color:var(--border);color:var(--text)}.project-music-editor small{color:var(--text-muted)}.project-music-editor input[type=file]{max-width:100%;font-family:var(--font);color:var(--text)}.project-music-editor input::file-selector-button{background:var(--grad-primary);border:0;border-radius:6px;padding:8px 12px;color:#fff}.project-upload-status{color:var(--text);background:var(--surface-2);border-color:var(--border)}.project-upload-status.processing{color:var(--primary)}
+</style>
+<style id="ss-restored-project-cards">
+#page3 .site-projects{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px!important;align-items:start}
+#page3 .ss-project-tile{background:var(--site-surface);border:1px solid var(--site-border);border-radius:20px;box-shadow:var(--glass-shadow);color:var(--site-text)}
+#page3 .ss-project-tile .plate-media{aspect-ratio:auto;background:var(--site-surface-2);position:relative}
+#page3 .ss-project-tile .plate-media img{height:auto;max-height:560px;object-fit:contain;display:block;width:100%}
+#page3 .ss-project-tile .plate-body{padding:22px}#page3 .ss-project-tile .plate-title{font:800 21px/1.4 var(--font-head);margin:0 0 10px;color:var(--site-text)}#page3 .ss-project-tile .plate-desc{font-size:14px;line-height:1.75;color:var(--site-text-muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:0;display:block;-webkit-line-clamp:unset;max-height:none}
+@media(max-width:700px){#page3 .site-projects{grid-template-columns:minmax(0,1fr)!important;gap:20px!important}#page3 .ss-project-tile .plate-body{padding:18px}}
 </style>
 </body></html>
