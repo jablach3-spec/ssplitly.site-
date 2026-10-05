@@ -1909,6 +1909,22 @@ function navigateTo(toId) {
 const SSPLITLY_NAV_KEY = 'ssplitly_builder_location_v2';
 let __restoringNav = false;
 
+const SSPLITLY_ROUTES={
+ '#/home':{page:'page1',tab:'cv'},
+ '#/cv':{page:'page2',tab:'cv'},
+ '#/cover-letter':{page:'page2',tab:'cover'},
+ '#/portfolio':{page:'page2',tab:'portfolio'},
+ '#/portfolio-preview':{page:'page3',tab:'portfolio'}
+};
+function readBuilderRoute(){return SSPLITLY_ROUTES[location.hash]||null;}
+function builderRouteURL(page,tab){return page==='page1'?'#/home':page==='page3'?'#/portfolio-preview':tab==='cover'?'#/cover-letter':tab==='portfolio'?'#/portfolio':'#/cv';}
+function applyBuilderRoute(state){
+ __restoringNav=true;
+ try{if(state.page==='page3'){applyBuilderTab('portfolio');renderPortfolioWebsite(buildShareData());navigateTo('page3');}
+ else if(state.page==='page2'){applyBuilderTab(state.tab||'cv');navigateTo('page2');}
+ else navigateTo('page1');saveBuilderLocation(state.page,state.tab);}
+ finally{__restoringNav=false;}
+}
 function saveBuilderLocation(page='page2', tab=activeTab) {
     if (isViewOnly) return;
     try { sessionStorage.setItem(SSPLITLY_NAV_KEY, JSON.stringify({page, tab:tab || 'cv'})); } catch(e) {}
@@ -1917,10 +1933,11 @@ function setNavState(page, tab, mode='push') {
     if (isViewOnly) return;
     const state = { ssplitly:true, page, tab:tab || activeTab || 'cv' };
     try {
-        if (mode === 'replace') history.replaceState(state, '');
-        else history.pushState(state, '');
+        const url=builderRouteURL(page,state.tab);
+        if (mode === 'replace'||location.hash===url) history.replaceState(state, '',url);
+        else history.pushState(state, '',url);
     } catch(e) {}
-    saveBuilderLocation(page, state.tab);
+    saveBuilderLocation(page, state.tab);lastHandledBuilderURL=location.href;
 }
 function goToBuilder(tab) {
     const target = tab || 'cv';
@@ -1937,31 +1954,17 @@ function goBackFromPortfolio() {
     navigateTo('page2');
     setNavState('page2', 'portfolio', 'replace');
 }
-window.addEventListener('popstate', function(e) {
-    if (isViewOnly) return;
-    const s = e.state;
-    if (s && s.ssplitly) {
-        __restoringNav = true;
-        if (s.page === 'page3') {
-            applyBuilderTab('portfolio');
-            renderPortfolioWebsite(buildShareData());
-            navigateTo('page3');
-        } else if (s.page === 'page2') {
-            applyBuilderTab(s.tab || 'cv');
-            navigateTo('page2');
-        } else {
-            navigateTo('page1');
-        }
-        saveBuilderLocation(s.page || 'page1', s.tab || 'cv');
-        __restoringNav = false;
-        return;
-    }
-    // Safe fallback: Portfolio website -> Portfolio -> Cover -> CV -> Home.
-    if (activePageId() === 'page3') { applyBuilderTab('portfolio'); navigateTo('page2'); }
-    else if (activePageId() === 'page2' && activeTab === 'portfolio') applyBuilderTab('cover');
-    else if (activePageId() === 'page2' && activeTab === 'cover') applyBuilderTab('cv');
-    else navigateTo('page1');
-});
+let lastHandledBuilderURL='';
+function handleBuilderURLChange(){
+ if(lastHandledBuilderURL===location.href)return;lastHandledBuilderURL=location.href;
+ if(/^#\/(?:p|portfolio)\//.test(location.hash)||isViewOnly){location.reload();return;}
+ const route=readBuilderRoute();if(!route)return;
+ // Keep the destination URL while the existing account/login checks run.
+ if(!window.__builderReadyUID)return;
+ applyBuilderRoute(route);history.replaceState({ssplitly:true,...route},'',location.hash);
+}
+window.addEventListener('popstate',handleBuilderURLChange);
+window.addEventListener('hashchange',handleBuilderURLChange);
 function pushHistoryForPage(pageId) { setNavState(pageId, activeTab, 'push'); }
 
 function switchTab(tab) {
@@ -3092,6 +3095,7 @@ document.getElementById('loginBtn').addEventListener('click', async function() {
         document.getElementById('page3').classList.remove('active');
         try { history.replaceState({ page: 'page1' }, ''); } catch (e) {}
         if (!await loadFromFirebase()) { toast('Could not load your saved data. Reload before editing.','err'); document.getElementById('formPanel').inert=true; return; }
+        const destination=readBuilderRoute()||{page:'page1',tab:'cv'};applyBuilderRoute(destination);setNavState(destination.page,destination.tab,'replace');
         const sess = JSON.parse(sessionStorage.getItem('ssplitly_session'));
         window.startSessionWatcher(sess.serial, sess.sessionId);
         window.startDataWatcher(sess.serial, applyRemoteData);
@@ -3208,6 +3212,7 @@ window.onload = async function() {
         if (!loaded) { toast('Could not load your saved data. Reload before editing.','err'); document.getElementById('formPanel').inert=true; return; }
         let remembered={page:'page1',tab:'cv'};
         try { remembered=JSON.parse(sessionStorage.getItem(SSPLITLY_NAV_KEY)) || remembered; } catch(e) {}
+        remembered=readBuilderRoute()||remembered;
         __restoringNav=true;
         if (remembered.page==='page3') {
             applyBuilderTab('portfolio'); renderPortfolioWebsite(buildShareData()); navigateTo('page3');
