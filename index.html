@@ -1455,6 +1455,16 @@ function renderPortfolioDebounced(delay = 800) {
 }
 
 window.__builderReadyUID=null;
+// Firebase emits this browser's writes before set() resolves.
+// Track submitted timestamps so those echoes never reconstruct the editor.
+window.__builderOwnSaveTimes = new Set();
+window.__builderSaveSequence = 0;
+function isOwnBuilderSave(d) {
+    return !!d && window.__builderOwnSaveTimes.has(d.lastSavedAt);
+}
+function hasActiveProjectUpload() {
+    return !!document.querySelector('#projectContainer .project-card[data-upload-busy="1"]');
+}
 async function saveToFirebase() {
     const serial = getCurrentSerial();
     if (!serial || !window.__firebase || window.__builderReadyUID!==serial) {window.__builderSaveMessage='Account is not ready. Please sign in again and wait for your projects to load.';return false;}
@@ -1507,7 +1517,8 @@ async function saveToFirebase() {
     });
     data.projects = getProjectsData();
 
-    data.lastSavedAt = Date.now();
+    data.lastSavedAt = Math.max(Date.now(), window.__builderSaveSequence + 1);
+    window.__builderSaveSequence = data.lastSavedAt;
     const jsonStr = JSON.stringify(data);
     if (jsonStr.length > 8 * 1024 * 1024) {
         window.__builderSaveMessage='Project data is too large to save. Existing embedded photos need to be moved to photo storage.';
@@ -1520,6 +1531,8 @@ async function saveToFirebase() {
     }
 
     try {
+        window.__builderOwnSaveTimes.add(data.lastSavedAt);
+        if(window.__builderOwnSaveTimes.size>256)window.__builderOwnSaveTimes.delete(window.__builderOwnSaveTimes.values().next().value);
         await set(ref(db, `users/${serial}/builderData`), data);
         window.__lastSaveError = false;
         window.__sizeWarningShown = false;
@@ -1613,7 +1626,7 @@ async function loadFromFirebase() {
 }
 
 function applyRemoteData(d) {
-    if (!d || window.__builderReadyUID!==getCurrentSerial()) return;
+    if (!d || window.__builderReadyUID!==getCurrentSerial() || isOwnBuilderSave(d) || hasActiveProjectUpload()) return;
 
     // ✅ FIX 1: Prevent keyboard from closing when user is typing
     const activeEl = document.activeElement;
@@ -2400,7 +2413,7 @@ function createProjectHTML(title, desc, tools, imagesArray, finished=false, save
         <div class="checkbox-group project-finished-toggle"><input type="checkbox" class="proj-finished" ${finished?'checked':''} onchange="updateProjectStats()"><label>Finished Project</label></div>
         <div class="project-upload"><label>Project photos</label>
           <input type="file" class="proj-image-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple onchange="handleProjectImages(this)">
-          <span class="upload-hint">Photos up to 10 MB. Automatically optimized without resizing or quality loss. The first photo is the project cover.</span>
+          <span class="upload-hint">Photos up to 10 MB. Automatically optimized without resizing or quality loss. The first photo is the project cover. · Upload fix 2</span>
         </div>
         <div class="project-upload-status" role="status" aria-live="polite" hidden></div>
         <div class="proj-image-previews ss-media-editor">${projectMediaEditorHTML(projectDetails[idx])}</div>
@@ -2501,7 +2514,9 @@ async function handleProjectImages(input) {
     const allowed=['image/jpeg','image/png','image/webp','image/gif'];
     const invalid=files.find(f=>!allowed.includes(f.type)||f.size>10*1024*1024);
     if(invalid){projectStatus(card,'Not uploaded: '+invalid.name+'. Choose JPG, PNG, WebP or GIF photos up to 10 MB.');return;}
-    const account=getCurrentSerial();lockProjectUpload(card,true);
+    const account=getCurrentSerial();
+    clearTimeout(__saveTimer);__saveTimer=null;
+    lockProjectUpload(card,true);
     const added=[],failed=[];let previous,savedBytes=0;
     try{
       for(let i=0;i<files.length;i++){
@@ -3075,6 +3090,8 @@ autoSaveCheckboxIds.forEach(id => {
 });
 
 document.addEventListener('input', function(e) {
+    // File selection is saved only after upload succeeds.
+    if(e.target.type==='file')return;
     const id = e.target.id;
     if (id === 'portfolioTotalProjects' || id === 'portfolioTotalExperience' || id === 'portfolioFinishedProjects') {
         saveToFirebaseDebounced(900);
@@ -3708,7 +3725,7 @@ document.addEventListener('visibilitychange', async () => {
   };
 
   applyRemoteData = function(d) {
-    if (!d || isViewOnly) return;
+    if (!d || isViewOnly || isOwnBuilderSave(d) || hasActiveProjectUpload()) return;
 
     const tag = document.activeElement?.tagName;
     if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
