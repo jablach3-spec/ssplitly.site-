@@ -6643,20 +6643,21 @@ function toggleProjectDescription(button){const expanded=button.getAttribute('ar
  function openZoom(index){sync(index);img.src=lightboxImages[index];img.alt=(document.getElementById('projectLightbox').dataset.title||'Project')+' — Photo '+(index+1);zoomLayer.hidden=false;viewport.style.overflowY='hidden';scale=2;x=y=0;paint();}
  window.buildProjectScroll=card=>{
  window.resetProjectZoom();viewport.replaceChildren();track=document.createElement('div');track.className='project-detail-track';const copy=document.createElement('div');copy.className='project-detail-copy';let data={};try{data=JSON.parse(card.dataset.project||'{}');}catch{}
- const title=document.createElement('h3');title.textContent=card.dataset.projectTitle||'Project';const desc=document.createElement('p');desc.textContent=data.desc||'';desc.tabIndex=0;copy.append(title,desc);
+ const title=document.createElement('h3');title.textContent=card.dataset.projectTitle||'Project';const desc=document.createElement('p');desc.textContent=data.desc||'';desc.tabIndex=0;copy.append(title,desc);const mobileDetails=document.createElement('details');mobileDetails.className='ss-mobile-project-about';const summary=document.createElement('summary');summary.textContent='Project description';const mobileDesc=desc.cloneNode(true);mobileDetails.append(summary,mobileDesc);if(data.desc)copy.append(mobileDetails);
  const photos=document.createElement('div');photos.className='project-detail-photos';
  lightboxImages.forEach((src,i)=>{const step=document.createElement('section');step.className='project-detail-photo';const button=document.createElement('button');button.type='button';button.setAttribute('aria-label','Zoom photo '+(i+1));const photo=document.createElement('img');photo.src=src;photo.alt=(card.dataset.projectTitle||'Project')+' — Photo '+(i+1);photo.loading=i===0?'eager':'lazy';photo.draggable=false;button.append(photo);button.onclick=()=>openZoom(i);step.append(button);photos.append(step);});
  track.append(copy,photos);viewport.append(track);height=Math.max(1,viewport.clientHeight);viewport.style.setProperty('--gallery-height',height+'px');viewport.scrollTop=0;
  };
- window.scrollProjectPhoto=index=>{if(!track)return;window.resetProjectZoom();viewport.scrollTo({top:index*height,behavior:'instant'});sync(index);};
- viewport.addEventListener('scroll',()=>{if(!zoomLayer.hidden||frame||!track)return;frame=requestAnimationFrame(()=>{frame=0;sync(Math.max(0,Math.min(lightboxImages.length-1,Math.floor((viewport.scrollTop+height*.5)/height))));});},{passive:true});
+ function photoTop(index){const photo=track?.querySelectorAll('.project-detail-photo')[index];return photo?Math.max(0,photo.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop):0;}
+ window.scrollProjectPhoto=index=>{if(!track)return;window.resetProjectZoom();viewport.scrollTo({top:photoTop(index),behavior:'instant'});sync(index);};
+ viewport.addEventListener('scroll',()=>{if(!zoomLayer.hidden||frame||!track)return;frame=requestAnimationFrame(()=>{frame=0;const items=[...track.querySelectorAll('.project-detail-photo')],r=viewport.getBoundingClientRect();let best=0,area=-1;items.forEach((el,i)=>{const b=el.getBoundingClientRect(),visible=Math.max(0,Math.min(b.bottom,r.bottom)-Math.max(b.top,r.top));if(visible>area){area=visible;best=i;}});sync(best);});},{passive:true});
  zoomLayer.addEventListener('pointerdown',e=>{if(e.button!==0)return;zoomLayer.setPointerCapture(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(points.size===1){multiple=false;down={x:e.clientX,y:e.clientY,moved:false};}else{multiple=true;const[a,b]=[...points.values()];distance=Math.hypot(a.x-b.x,a.y-b.y);}});
  zoomLayer.addEventListener('pointermove',e=>{if(!points.has(e.pointerId))return;const old=points.get(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)down.moved=true;if(points.size===2){const[a,b]=[...points.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(distance)scale=Math.max(1,Math.min(5,scale*d/distance));distance=d;}else{x+=e.clientX-old.x;y+=e.clientY-old.y;}paint();});
  zoomLayer.addEventListener('pointerup',e=>{points.delete(e.pointerId);if(down&&!down.moved&&!multiple)window.resetProjectZoom();if(!points.size){down=null;distance=0;}});
  zoomLayer.addEventListener('pointercancel',()=>{points.clear();down=null;distance=0;});
  zoomLayer.addEventListener('wheel',e=>{e.preventDefault();scale=Math.max(1,Math.min(5,scale*Math.exp(-e.deltaY*.002)));paint();},{passive:false});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!zoomLayer.hidden){e.preventDefault();e.stopImmediatePropagation();window.resetProjectZoom();}},true);
- new ResizeObserver(()=>{if(!track||!viewport.clientHeight)return;height=viewport.clientHeight;viewport.style.setProperty('--gallery-height',height+'px');viewport.scrollTop=lightboxIndex*height;paint();}).observe(viewport);
+ new ResizeObserver(()=>{if(!track||!viewport.clientHeight)return;height=viewport.clientHeight;viewport.style.setProperty('--gallery-height',height+'px');viewport.scrollTop=photoTop(lightboxIndex);paint();}).observe(viewport);
  img.addEventListener('load',paint);
 })();
 </script>
@@ -6749,6 +6750,90 @@ function toggleProjectDescription(button){const expanded=button.getAttribute('ar
  new ResizeObserver(schedule).observe(content);
  new MutationObserver(schedule).observe(page,{attributes:true,attributeFilter:['class']});
  mobile.addEventListener('change',schedule);document.fonts?.ready.then(schedule);schedule();
+})();
+</script>
+
+<style id="ss-mobile-full-gallery">
+.ss-mobile-project-about{display:none}
+@media(max-width:767px){
+ #projectLightbox{padding:8px;background:var(--site-bg)}
+ #projectLightbox .lightbox-inner{width:100%;height:calc(100dvh - 20px - env(safe-area-inset-bottom));grid-template-rows:minmax(0,1fr) auto 58px;gap:6px}
+ #projectLightbox .project-detail-track{display:flex;flex-direction:column;gap:18px;padding:0 6px 24px;width:100%;box-sizing:border-box}
+ #projectLightbox .project-detail-copy{position:static;top:auto;height:auto;min-height:0;max-height:none;width:100%;padding:16px 10px 0;overflow:visible;display:block}
+ #projectLightbox .project-detail-copy h3{font-size:23px;line-height:1.4;margin:0 0 10px;padding:0}
+ #projectLightbox .project-detail-copy>p{display:none}
+ #projectLightbox .ss-mobile-project-about{display:block;border-bottom:1px solid var(--site-border);padding-bottom:8px}
+ #projectLightbox .ss-mobile-project-about summary{cursor:pointer;min-height:44px;line-height:44px;font-size:13px;color:var(--site-primary);font-weight:700}
+ #projectLightbox .ss-mobile-project-about p{display:block;font-size:14px;line-height:1.8;padding:8px 0 16px;margin:0;max-height:none;overflow:visible}
+ #projectLightbox .project-detail-photos{display:flex;flex-direction:column;gap:18px;width:100%;min-width:0}
+ #projectLightbox .project-detail-photo{display:block;position:relative;width:100%;height:auto;min-height:120px;padding:0;border-radius:16px;border:1px solid var(--site-border);background:var(--site-surface-2);overflow:hidden;box-sizing:border-box}
+ #projectLightbox .project-detail-photo button{display:flex;min-height:120px;height:auto;width:100%;padding:0;align-items:center;justify-content:center}
+ #projectLightbox .project-detail-photo img{display:block;width:100%;height:auto;max-width:100%;max-height:78dvh;object-fit:contain}
+ #projectLightbox .lightbox-nav{display:none}
+ #projectLightbox .lightbox-caption{font-size:11px;max-height:42px;padding:3px 8px}
+ #projectPhotoThumbs button{flex-basis:58px;height:48px}
+ #projectDetailZoom{inset:0 0 94px;border-radius:12px}
+}
+</style>
+
+<style id="portfolio-compact-motion">
+/* A lighter statistics hierarchy on every screen. */
+#page3 .portfolio-stat .stat-number{font-weight:500!important;font-size:clamp(25px,3.2vw,37px)!important;line-height:1.2!important;letter-spacing:-.025em!important;text-shadow:none!important}
+#page3 .portfolio-stat .stat-label{font-weight:500!important;font-size:10px!important;letter-spacing:.7px!important;line-height:1.5!important}
+#page3 .portfolio-stats{gap:12px;margin-top:24px}
+#page3 .portfolio-stat{padding:19px 12px;border-radius:14px;box-shadow:none}
+#page3 .site-wrap,#page3 .hero-wrap{max-width:1080px}
+#page3 .site-section{padding-top:48px;padding-bottom:48px}
+#page3 .site-projects .ss-work-row{min-height:0;padding-top:20px;padding-bottom:32px;margin-bottom:24px}
+#page3 .ss-work-copy{padding-bottom:12px}
+#page3 .ss-work-title{font-size:clamp(22px,2.4vw,31px);line-height:1.4;margin-bottom:15px}
+#page3 .ss-work-description{font-size:14px;line-height:1.8}
+#page3 .ss-work-cover{height:min(52dvh,420px)}
+#projectLightbox .lightbox-inner{width:min(1000px,100%);height:min(88dvh,800px)}
+#projectLightbox .project-detail-track{gap:28px;padding-inline:30px}
+#projectLightbox .project-detail-copy h3{font-size:26px;line-height:1.4}
+#projectLightbox .project-detail-copy p{font-size:13px;line-height:1.8}
+#projectLightbox .project-detail-photo{padding-block:18px}
+#page3 .ss-work-cover,#projectLightbox .project-detail-photo button{transition:box-shadow .3s ease,background .3s ease}
+@media(hover:hover) and (pointer:fine){#page3 .ss-work-cover:hover{box-shadow:0 14px 35px #0002}#projectLightbox .project-detail-photo button:hover{background:var(--site-surface-2)}}
+@media(prefers-reduced-motion:no-preference){
+ .ss-photo-arrive{animation:ssPhotoArrive .65s cubic-bezier(.2,.7,.2,1) both}
+ @keyframes ssPhotoArrive{from{opacity:.45;translate:0 24px;filter:brightness(.85)}to{opacity:1;translate:0 0;filter:brightness(1)}}
+ #projectLightbox.active .lightbox-inner{animation:ssGalleryEnter .38s cubic-bezier(.2,.7,.2,1)}
+ @keyframes ssGalleryEnter{from{opacity:.25;translate:0 18px;scale:.98}to{opacity:1;translate:0 0;scale:1}}
+ #projectDetailZoom:not([hidden]){animation:ssZoomEnter .2s ease-out}
+ @keyframes ssZoomEnter{from{opacity:.3}to{opacity:1}}
+}
+@media(max-width:767px){
+ #page3 .site-section{padding-top:34px;padding-bottom:34px}
+ #page3 .site-projects .ss-work-row{padding:0;margin:0 0 20px;min-height:0}
+ #page3 .ss-work-row .ss-work-copy{padding:17px 16px 16px}
+ #page3 .ss-work-row .ss-work-title{font-size:20px;margin-bottom:10px}
+ #page3 .ss-work-row .ss-work-cover img{max-height:370px}
+ #page3 .portfolio-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ #page3 .portfolio-stat{padding:14px 6px}
+ #page3 .portfolio-stat .stat-number{font-size:27px!important;font-weight:500!important}
+ #page3 .portfolio-stat .stat-label{font-size:9px!important;letter-spacing:.2px!important}
+ #projectLightbox .lightbox-inner{width:100%;height:calc(100dvh - 20px - env(safe-area-inset-bottom));max-height:none}
+ #projectLightbox .project-detail-track{gap:14px;padding:0 5px 20px}
+ #projectLightbox .project-detail-copy{padding:12px 8px 0}
+ #projectLightbox .project-detail-copy h3{font-size:21px;margin-bottom:6px}
+ #projectLightbox .project-detail-photo{padding:0;border-radius:14px}
+ #projectLightbox .project-detail-photo img{max-height:70dvh}
+ #projectLightbox .project-detail-photos{gap:14px}
+}
+</style>
+<script id="portfolio-photo-motion">
+(()=>{
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches||!window.IntersectionObserver)return;
+ const page=document.getElementById('page3'),content=document.getElementById('portfolioSiteContent'),gallery=document.getElementById('projectZoomViewport');
+ const createObserver=root=>new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('ss-photo-arrive');entry.target.addEventListener('animationend',()=>entry.target.classList.remove('ss-photo-arrive'),{once:true});}});},{root,threshold:.12});
+ const homeObserver=createObserver(page),galleryObserver=createObserver(gallery);
+ function home(){homeObserver.disconnect();content?.querySelectorAll('.ss-work-cover img').forEach(el=>homeObserver.observe(el));}
+ function photos(){galleryObserver.disconnect();gallery?.querySelectorAll('.project-detail-photo').forEach(el=>galleryObserver.observe(el));}
+ if(content)new MutationObserver(home).observe(content,{childList:true});
+ if(gallery)new MutationObserver(photos).observe(gallery,{childList:true});
+ home();photos();
 })();
 </script>
 </body></html>
