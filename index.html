@@ -6705,4 +6705,50 @@ function toggleProjectDescription(button){const expanded=button.getAttribute('ar
 #projectLightbox .project-detail-copy p{flex:0 0 auto;max-height:none;height:auto;overflow:visible;padding-bottom:16px}
 @media(max-width:600px){#page3 .site-projects .ss-work-row{gap:14px;min-height:65dvh;padding:20px 0 36px;margin-bottom:24px}#page3 .ss-work-copy{flex:1.15 1 0;padding-inline:2px}#page3 .ss-work-title{font-size:21px;line-height:1.45;margin-bottom:16px}#page3 .ss-work-description{font-size:14px;line-height:1.9}#page3 .ss-work-cover{height:44dvh}#page3 .ss-work-count{font-size:10px;right:3px;top:3px;padding:4px 6px}}
 </style>
+
+<style id="ss-mobile-selected-works">
+/* Desktop rules stay intact; phones receive a full-width photo card. */
+#page3 .ss-work-more{display:none}
+@media(max-width:767px){
+ #page3 .site-projects{width:100%;max-width:100%;display:block!important}
+ #page3 .site-projects .ss-work-row{display:flex!important;flex-direction:column;align-items:stretch;gap:0;min-height:0!important;height:auto!important;width:100%;max-width:100%;margin:0 0 24px;padding:0;border:1px solid var(--site-border);border-radius:18px;background:var(--site-surface);box-shadow:0 8px 24px #0000000b;overflow:visible!important}
+ #page3 .ss-work-row .ss-work-cover{order:0;position:relative!important;top:auto!important;flex:0 0 auto;align-self:stretch;width:100%;height:auto!important;min-height:0;max-height:none!important;aspect-ratio:auto;padding:0;border-radius:17px 17px 0 0;background:var(--site-surface-2);overflow:hidden}
+ #page3 .ss-work-row .ss-work-cover img{width:100%;height:auto;max-width:100%;max-height:430px;object-fit:contain;display:block;border-radius:0}
+ #page3 .ss-work-row .ss-work-copy{order:1;flex:0 0 auto;align-self:stretch;width:100%;min-width:0;min-height:0!important;height:auto;max-height:none;padding:20px 18px 18px;box-sizing:border-box}
+ #page3 .ss-work-row .ss-work-title{font-size:21px;line-height:1.4;letter-spacing:-.02em;margin:0 0 12px;padding:0;white-space:normal;overflow-wrap:anywhere}
+ #page3 .ss-work-row .ss-work-description{font-size:14px;line-height:1.8;font-weight:500;color:var(--site-text-muted);padding:0;margin:0;max-height:none;overflow-wrap:anywhere}
+ #page3 .ss-work-row .ss-work-description.ss-mobile-collapsed{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden}
+ #page3 .ss-work-row .ss-work-more{display:inline-flex;align-items:center;min-height:44px;padding:8px 0;margin:2px 0 0;border:0;background:none;color:var(--site-primary);font:700 13px var(--font,Arial,sans-serif);text-align:left;cursor:pointer}
+ #page3 .ss-work-row .ss-work-more[hidden]{display:none!important}
+ #page3 .ss-work-row .ss-card-tools{gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--site-border);align-items:center;flex-wrap:wrap}
+ #page3 .ss-work-row .ss-card-tools:empty{display:none}
+ #page3 .ss-work-row .ss-card-tools img,#page3 .ss-work-row .ss-card-tools svg{width:23px;height:23px}
+ #page3 .ss-work-row .ss-work-count{top:12px;right:12px;padding:6px 10px;border:1px solid #ffffff30;border-radius:999px;background:#101827b8;backdrop-filter:blur(8px);color:#fff;font-size:11px;line-height:1.4}
+ #page3 .ss-work-row .ss-work-empty{min-height:200px;border:0;border-radius:17px 17px 0 0;margin:0}
+}
+</style>
+<script id="ss-mobile-project-descriptions">
+(()=>{
+ const content=document.getElementById('portfolioSiteContent'),page=document.getElementById('page3');if(!content||!page)return;
+ const mobile=matchMedia('(max-width:767px)');let frame=0,id=0;
+ function update(){frame=0;content.querySelectorAll('.ss-work-row').forEach(card=>{
+  const desc=card.querySelector('.ss-work-description');if(!desc)return;
+  let button=card.querySelector('.ss-work-more');
+  if(!mobile.matches){desc.classList.remove('ss-mobile-collapsed');if(button)button.hidden=true;return;}
+  if(!desc.clientWidth)return;
+  const wasExpanded=button?.getAttribute('aria-expanded')==='true';
+  desc.classList.remove('ss-mobile-collapsed');
+  const lineHeight=parseFloat(getComputedStyle(desc).lineHeight)||25.2;
+  const needsMore=desc.scrollHeight>lineHeight*4+3;
+  if(!needsMore){if(button)button.hidden=true;return;}
+  if(!button){button=document.createElement('button');button.type='button';button.className='ss-work-more';desc.id=desc.id||'ss-mobile-project-text-'+(++id);button.setAttribute('aria-controls',desc.id);button.setAttribute('aria-expanded','false');desc.after(button);button.onclick=()=>{const expanded=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'Show less ↑':'Read full description ↓';desc.classList.toggle('ss-mobile-collapsed',!expanded);if(!expanded)card.scrollIntoView({block:'nearest',behavior:'instant'});};}
+  button.hidden=false;button.setAttribute('aria-expanded',String(wasExpanded));button.textContent=wasExpanded?'Show less ↑':'Read full description ↓';desc.classList.toggle('ss-mobile-collapsed',!wasExpanded);
+ });}
+ function schedule(){if(!frame)frame=requestAnimationFrame(update);}
+ new MutationObserver(schedule).observe(content,{childList:true});
+ new ResizeObserver(schedule).observe(content);
+ new MutationObserver(schedule).observe(page,{attributes:true,attributeFilter:['class']});
+ mobile.addEventListener('change',schedule);document.fonts?.ready.then(schedule);schedule();
+})();
+</script>
 </body></html>
