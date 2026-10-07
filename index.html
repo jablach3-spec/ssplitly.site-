@@ -1457,7 +1457,8 @@ function renderPortfolioDebounced(delay = 800) {
 window.__builderReadyUID=null;
 async function saveToFirebase() {
     const serial = getCurrentSerial();
-    if (!serial || !window.__firebase || window.__builderReadyUID!==serial) return false;
+    if (!serial || !window.__firebase || window.__builderReadyUID!==serial) {window.__builderSaveMessage='Account is not ready. Please sign in again and wait for your projects to load.';return false;}
+    window.__builderSaveMessage='';
     const { db, ref, set } = window.__firebase;
     const data = {
         fullName: document.getElementById('fullName').value,
@@ -1509,6 +1510,7 @@ async function saveToFirebase() {
     data.lastSavedAt = Date.now();
     const jsonStr = JSON.stringify(data);
     if (jsonStr.length > 8 * 1024 * 1024) {
+        window.__builderSaveMessage='Project data is too large to save. Existing embedded photos need to be moved to photo storage.';
         console.error('Data too large:', jsonStr.length);
         if (!window.__sizeWarningShown) {
             window.__sizeWarningShown = true;
@@ -1524,6 +1526,7 @@ async function saveToFirebase() {
         window.__localLastSave = data.lastSavedAt;
         return true;
     } catch (e) {
+        window.__builderSaveMessage='Project save failed: '+(e.code||'')+' '+(e.message||'Check your connection.');
         console.error('Save failed:', e);
         if (!window.__lastSaveError) {
             window.__lastSaveError = true;
@@ -2409,9 +2412,14 @@ function projectMusicHTML(data) {
 function projectMediaEditorHTML(data) {
     let firstPhoto=data.media.findIndex(m=>m.type==='image');
     return data.media.map((m,i)=>({m,i})).filter(({m})=>m.type==='image').map(({m,i})=>`<div class="ss-media-thumb" data-media-index="${i}">
-      ${m.type==='image'?`<img src="${escapeHTML(m.src)}" alt="Photo ${i+1}" loading="lazy">`:`<video src="${escapeHTML(m.src)}#t=0.1" preload="metadata" muted playsinline aria-label="Video ${i+1}"></video>`}
+      ${m.type==='image'?`<img src="${escapeHTML(m.src)}" alt="Photo ${i+1}" loading="lazy" onerror="projectPhotoDisplayError(this)">`:`<video src="${escapeHTML(m.src)}#t=0.1" preload="metadata" muted playsinline aria-label="Video ${i+1}"></video>`}
       <span class="ss-media-tag">${i+1} · ${m.type==='video'?'▶ Video':i===firstPhoto?'Thumbnail':'Photo'}</span>
       <div class="ss-media-actions"><button type="button" onclick="moveProjectMedia(this,-1)" ${i===0?'disabled':''} aria-label="Move media left">←</button><button type="button" onclick="moveProjectMedia(this,1)" ${i===data.media.length-1?'disabled':''} aria-label="Move media right">→</button><button type="button" onclick="removeProjectMedia(this)" aria-label="Remove media">✕</button></div></div>`).join('');
+}
+function projectPhotoDisplayError(img) {
+    const card=img.closest('.project-card');
+    if(!card||card.dataset.uploadBusy==='1')return;
+    projectStatus(card,'Photo is saved, but its image URL could not load. Check your connection and media.ssplitly.site storage access.');
 }
 function renderProjectMediaEditor(card, idx) {
     const data=projectMediaData(card);
@@ -2442,13 +2450,14 @@ function inspectProjectFile(file, type) {
 }
 async function uploadProjectAsset(file, onProgress=()=>{}, refreshed=false) {
     const user=window.__auth?.currentUser;if(!user)throw Error('Please sign in again.');
-    const token=await user.getIdToken(refreshed);
+    const token=await projectWithTimeout(user.getIdToken(refreshed),20000,'Sign-in verification timed out. Please sign in again.');
     return new Promise((resolve,reject)=>{
-        const xhr=new XMLHttpRequest();xhr.open('POST',SSPLITLY_MEDIA_WORKER+'/project-upload');xhr.timeout=300000;
+        const xhr=new XMLHttpRequest();xhr.open('POST',SSPLITLY_MEDIA_WORKER+'/project-upload');xhr.timeout=90000;
         xhr.setRequestHeader('Authorization','Bearer '+token);xhr.setRequestHeader('Content-Type',file.type);
         xhr.upload.onprogress=e=>onProgress(e.lengthComputable?Math.round(e.loaded/e.total*100):null);
         xhr.onerror=()=>reject(Error('Upload connection failed. Check the media server setup and try again.'));
-        xhr.ontimeout=()=>reject(Error('Upload timed out. Please retry.'));
+        xhr.ontimeout=()=>reject(Error('Photo upload timed out after 90 seconds. Check your connection and retry.'));
+        xhr.onabort=()=>reject(Error('Photo upload was cancelled. Please retry.'));
         xhr.onload=()=>{let data;try{data=JSON.parse(xhr.responseText);}catch{}
           if(xhr.status>=200&&xhr.status<300&&data?.success&&projectMediaURL(data.url))resolve(data.url);
           else if(xhr.status===401&&!refreshed){uploadProjectAsset(file,onProgress,true).then(resolve,reject);}
@@ -2458,6 +2467,12 @@ async function uploadProjectAsset(file, onProgress=()=>{}, refreshed=false) {
     });
 }
 
+function projectWithTimeout(promise, milliseconds, message) {
+    return new Promise((resolve,reject)=>{
+        const timer=setTimeout(()=>reject(Error(message)),milliseconds);
+        Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value);},error=>{clearTimeout(timer);reject(error);});
+    });
+}
 async function optimizeProjectPhotoLossless(file){
  try{
   const bytes=new Uint8Array(await file.arrayBuffer());let result=null;
@@ -2493,7 +2508,8 @@ async function handleProjectImages(input) {
         const original=files[i],type='image';let file=original;
         projectStatus(card,'Processing… '+(i+1)+' / '+files.length+' · '+file.name,true);
         try{
-          const duration=await inspectProjectFile(file,type);projectStatus(card,'Processing… Optimizing '+file.name,true);file=await optimizeProjectPhotoLossless(original);
+          const duration=await inspectProjectFile(file,type);projectStatus(card,'Processing… Optimizing '+file.name,true);file=await projectWithTimeout(optimizeProjectPhotoLossless(original),8000,'Optimization timed out').catch(()=>original);
+          projectStatus(card,'Processing… Connecting to photo storage…',true);
           if(account!==getCurrentSerial()||!card.isConnected)throw Error('Account or project changed.');
           const src=await uploadProjectAsset(file,p=>projectStatus(card,'Processing… Uploading '+(i+1)+' / '+files.length+(p===null?'':' · '+p+'%'),true));
           added.push({id:crypto.randomUUID(),type,src,name:file.name,duration});savedBytes+=original.size-file.size;
@@ -2502,7 +2518,17 @@ async function handleProjectImages(input) {
       if(account!==getCurrentSerial()||!card.isConnected)return;
       const data=projectMediaData(card);previous=data.media.slice();data.media.push(...added);
       projectImages[card.dataset.projectIndex]=data.media.filter(m=>m.type==='image').map(m=>m.src);
-      if(added.length){projectStatus(card,'Processing… Saving project…',true);const saved=await saveToFirebase();if(saved!==true){data.media=previous;projectImages[card.dataset.projectIndex]=previous.filter(m=>m.type==='image').map(m=>m.src);throw Error('Save was not confirmed. Please retry.');}}
+      if(added.length){
+        projectStatus(card,'Processing… Saving project…',true);
+        // A pending Firebase write can still commit when the connection returns.
+        // Keep it pending rather than rolling back or submitting it twice.
+        const waitNotice=setTimeout(()=>{
+          if(card.isConnected)projectStatus(card,'Photo reached storage. Waiting for database confirmation. Check your internet connection; keep this page open.',true);
+        },20000);
+        let saved;
+        try{saved=await saveToFirebase();}finally{clearTimeout(waitNotice);}
+        if(saved!==true){data.media=previous;projectImages[card.dataset.projectIndex]=previous.filter(m=>m.type==='image').map(m=>m.src);throw Error(window.__builderSaveMessage||'Project save was not confirmed. Please sign in again and retry.');}
+      }
       projectStatus(card,(added.length?added.length+' item(s) uploaded. ':'')+(failed.length?'Not uploaded: '+failed.join(' • '):'Original quality preserved.'+(savedBytes>0?' Saved '+(savedBytes/1024/1024).toFixed(2)+' MB.':' Already optimized; original kept.')));
     }catch(e){if(previous&&card.isConnected&&account===getCurrentSerial()){projectMediaData(card).media=previous;projectImages[card.dataset.projectIndex]=previous.filter(m=>m.type==='image').map(m=>m.src);}projectStatus(card,e.message);}
     finally{lockProjectUpload(card,false);if(card.isConnected){renderProjectMediaEditor(card,card.dataset.projectIndex);card.querySelector('.project-upload-status').classList.remove('processing');}}
@@ -6137,7 +6163,7 @@ function applySharingPreferences(p,legacy={}){
   const fb=window.__firebase;if(!fb)throw Error('Database connection unavailable');
   if(getCurrentSerial()!==ownerUid||window.__builderReadyUID!==ownerUid)throw Error('Account changed. Please retry.');
   const activeRef=fb.ref(fb.db,'users/'+ownerUid+'/activePortfolioToken');
-  let token=(await fb.get(activeRef)).val();
+  let token=(await projectWithTimeout(fb.get(activeRef),20000,'Could not read the share link. Check your connection.')).val();
   if(!/^[a-f0-9]{24}$/.test(String(token||''))){
    if(!create)return '';
    const candidate=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');
@@ -6147,23 +6173,30 @@ function applySharingPreferences(p,legacy={}){
    if(!/^[a-f0-9]{24}$/.test(String(token||'')))throw Error('Could not reserve portfolio link. Retry.');
   }
   if(getCurrentSerial()!==ownerUid)throw Error('Account changed. Please retry.');
-  await fb.set(fb.ref(fb.db,'publicPortfolios/'+token),{...portfolio,ownerUid});
+  const syncNotice=setTimeout(()=>{if(getCurrentSerial()===ownerUid)syncStatus.textContent='Edits saved. Shared portfolio is waiting for a database connection.';},20000);
+  try{await fb.set(fb.ref(fb.db,'publicPortfolios/'+token),{...portfolio,ownerUid});}finally{clearTimeout(syncNotice);} 
   syncStatus.textContent='Portfolio synced • Your share link stays the same.';
   return location.href.split('#')[0]+'#/p/'+token;
  }
  const saveWithStablePortfolio=saveToFirebase;
- saveToFirebase=function(...args){
+ saveToFirebase=async function(...args){
   if(isViewOnly||!getCurrentSerial()||window.__builderReadyUID!==getCurrentSerial())return saveWithStablePortfolio.apply(this,args);
-  const ownerUid=getCurrentSerial(),portfolio=publicData(buildShareData()),context=this;
+  const ownerUid=getCurrentSerial(),context=this;
   syncStatus.textContent='Saving portfolio changes…';
-  return enqueuePublish(async()=>{
-   if(getCurrentSerial()!==ownerUid||window.__builderReadyUID!==ownerUid)return false;
-   const saved=await saveWithStablePortfolio.apply(context,args);
-   if(saved!==true){syncStatus.textContent='Changes are not saved. Check your connection and retry.';return saved;}
-   try{const url=await publishPortfolio(ownerUid,portfolio);if(!url)syncStatus.textContent='Changes saved. Share once to create your permanent link.';}
-   catch(e){syncStatus.textContent='Edits saved, but shared portfolio is not synced. Use Share to retry. '+e.message;}
-   return saved;
-  });
+  // Private save confirmation controls the editor. Public sharing must not block it.
+  const saved=await saveWithStablePortfolio.apply(context,args);
+  if(saved!==true){syncStatus.textContent='Changes are not saved. Check your connection and retry.';return saved;}
+  if(getCurrentSerial()!==ownerUid||window.__builderReadyUID!==ownerUid)return saved;
+  syncStatus.textContent='Changes saved. Syncing shared portfolio…';
+  enqueuePublish(async()=>{
+   if(getCurrentSerial()!==ownerUid||window.__builderReadyUID!==ownerUid)return;
+   try{
+    const portfolio=publicData(buildShareData());
+    const url=await publishPortfolio(ownerUid,portfolio);
+    if(!url)syncStatus.textContent='Changes saved. Share once to create your permanent link.';
+   }catch(e){if(getCurrentSerial()===ownerUid)syncStatus.textContent='Changes saved. Shared portfolio sync needs a retry: '+e.message;}
+  }).catch(e=>console.warn('Portfolio sync failed:',e));
+  return true;
  };
  window.addEventListener('online',()=>{if(!isViewOnly&&window.__builderReadyUID===getCurrentSerial())saveToFirebaseDebounced(300);});
  let busy=false;
