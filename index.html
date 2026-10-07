@@ -935,12 +935,12 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
     <div id="portfolioSiteContent"></div>
     <div id="projectLightbox" class="project-lightbox" onclick="if(event.target===this) closeProjectLightbox()">
         <div class="lightbox-inner">
-            <button class="lightbox-close" onclick="closeProjectLightbox()"><i class="fas fa-times"></i></button>
+
             <button class="lightbox-nav prev" onclick="moveLightboxSlide(-1)"><i class="fas fa-chevron-left"></i></button>
             <div id="projectZoomViewport"><img id="lightboxImage" class="lightbox-image" src="" alt="Project photo" draggable="false"></div>
             
             <button class="lightbox-nav next" onclick="moveLightboxSlide(1)"><i class="fas fa-chevron-right"></i></button>
-            <div id="lightboxCaption" class="lightbox-caption"></div>
+            <div id="lightboxCaption" class="lightbox-caption"></div><div id="projectPhotoThumbs" aria-label="Project photos"></div>
         </div>
     </div>
 </div>
@@ -2560,13 +2560,14 @@ function moveProjectMedia(btn,dir){const card=btn.closest('.project-card'),i=Num
 function removeProjectMedia(btn){const card=btn.closest('.project-card'),i=Number(btn.closest('[data-media-index]').dataset.mediaIndex);return changeProjectMedia(card,d=>d.media.splice(i,1));}
 function removeProjectMusic(btn){return changeProjectMedia(btn.closest('.project-card'),d=>{d.music=null;});}
 function renderProjectMediaTile(p,i) {
-    const data=normaliseProjectMedia(p),photo=data.media.find(m=>m.type==='image');
-    const payload={...data,title:String(p.title||'Untitled'),desc:String(p.desc||''),tools:Array.isArray(p.tools)?p.tools.join(', '):String(p.tools||'')};
-    const hasVideo=false;
-    return `<article class="site-plate ss-project-tile reveal" data-project-title="${escapeHTML(payload.title)}" data-project-images="${escapeHTML(JSON.stringify(data.media.filter(m=>m.type==='image').map(m=>m.src)))}" data-project="${escapeHTML(JSON.stringify(payload))}">
-      <button type="button" class="plate-media" onclick="openProjectLightbox(this.closest('.site-plate'))" aria-label="Open ${escapeHTML(payload.title)}">
-      ${photo?`<img class="project-main-image" src="${escapeHTML(photo.src)}" alt="${escapeHTML(payload.title)}" loading="lazy" decoding="async">`:'<span class="ss-no-cover">'+(hasVideo?'▶':'▧')+'<small>'+escapeHTML(payload.title)+'</small></span>'}
-      <span class="ss-tile-kind">▧ ${data.media.filter(m=>m.type==='image').length}</span></button><div class="plate-body"><h3 class="plate-title">${escapeHTML(payload.title)}</h3><p class="plate-desc ${payload.desc.length>160?'ss-description-short':''}">${escapeHTML(payload.desc)}</p>${payload.desc.length>160?'<button type="button" class="ss-more-description" aria-expanded="false" onclick="toggleProjectDescription(this)">More</button>':''}<div class="ss-card-tools">${renderLocalToolIcons(payload.tools)}</div></div></article>`;
+ const data=normaliseProjectMedia(p),images=data.media.filter(m=>m.type==='image').map(m=>m.src);
+ const title=String(p.title||'Untitled'),desc=String(p.desc||'');
+ const payload={...data,title,desc,tools:Array.isArray(p.tools)?p.tools.join(', '):String(p.tools||'')};
+ return `<article class="site-plate ss-work-row" data-project-title="${escapeHTML(title)}" data-project-images="${escapeHTML(JSON.stringify(images))}" data-project="${escapeHTML(JSON.stringify(payload))}">
+ <div class="ss-work-copy"><h3 class="ss-work-title">${escapeHTML(title)}</h3><div class="ss-work-description">${escapeHTML(desc)}</div><div class="ss-card-tools">${renderLocalToolIcons(payload.tools)}</div></div>
+ <button type="button" class="ss-work-cover" onclick="openProjectLightbox(this.closest('.site-plate'))" aria-label="Open ${escapeHTML(title)}" ${images.length?'':'disabled'}>
+ ${images.length?`<img class="project-main-image" src="${escapeHTML(images[0])}" alt="${escapeHTML(title)}" loading="lazy" decoding="async"><span class="ss-work-count">${images.length} photos</span>`:'<span class="ss-work-empty">No photos added</span>'}
+ </button></article>`;
 }
 
 let draggedProjectImageIndex = null, draggedProjectId = null;
@@ -2840,21 +2841,52 @@ function initProjectSlideshows() {
 }
 
 let lightboxImages = [], lightboxIndex = 0;
+let viewerReturnFocus=null, viewerOverflow='', viewerPageOverflow='', viewerScroll=0;
 function openProjectLightbox(card) {
-    const images = getProjectGalleryImages(card);
-    if (!images.length) { const src = card.querySelector('.project-main-image')?.src; if (src) images.push(src); }
-    if (!images.length) return;
-    lightboxImages = images;
-    lightboxIndex = Number(card.querySelector('.project-main-image')?.dataset.slideIndex || 0);
-    document.getElementById('projectLightbox').dataset.title = card.dataset.projectTitle || '';
-    document.getElementById('projectLightbox').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    renderLightboxImage();
+ const images=getProjectGalleryImages(card).filter(src=>typeof src==='string'&&src);
+ if(!images.length)return;
+ const modal=document.getElementById('projectLightbox');
+ if(!modal.classList.contains('active')){
+  viewerReturnFocus=document.activeElement;viewerOverflow=document.body.style.overflow;
+  const page=document.getElementById('page3');viewerScroll=page.scrollTop;viewerPageOverflow=page.style.overflow;page.style.overflow='hidden';
+  history.pushState({...history.state,ssPhotoViewer:true},'',location.href);
+ }
+ lightboxImages=images;lightboxIndex=Math.min(images.length-1,Number(card.querySelector('.project-main-image')?.dataset.slideIndex||0));
+ modal.dataset.title=card.dataset.projectTitle||'Project';modal.classList.add('active');
+ modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label',modal.dataset.title);modal.tabIndex=-1;
+ document.body.style.overflow='hidden';
+ const thumbs=document.getElementById('projectPhotoThumbs');thumbs.replaceChildren();
+ images.forEach((src,i)=>{const button=document.createElement('button');button.type='button';button.setAttribute('aria-label','Photo '+(i+1));const img=document.createElement('img');img.src=src;img.alt='Photo '+(i+1);img.loading='lazy';button.append(img);button.onclick=()=>{lightboxIndex=i;renderLightboxImage();};thumbs.append(button);});
+ window.buildProjectScroll?.(card);renderLightboxImage();modal.focus({preventScroll:true});
 }
-function renderLightboxImage() { if (window.resetProjectZoom) window.resetProjectZoom(); const img = document.getElementById('lightboxImage'); img.src = lightboxImages[lightboxIndex]; document.getElementById('lightboxCaption').textContent = `${document.getElementById('projectLightbox').dataset.title || 'Project'} • ${lightboxIndex + 1} / ${lightboxImages.length}`; }
-function closeProjectLightbox() { document.getElementById('projectLightbox').classList.remove('active'); document.body.style.overflow = ''; }
-function moveLightboxSlide(dir) { if (!lightboxImages.length) return; lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length; renderLightboxImage(); }
-document.addEventListener('keydown', e => { const modal = document.getElementById('projectLightbox'); if (!modal?.classList.contains('active')) return; if (e.key === 'Escape') closeProjectLightbox(); if (e.key === 'ArrowRight') moveLightboxSlide(1); if (e.key === 'ArrowLeft') moveLightboxSlide(-1); });
+function renderLightboxImage(){
+ if(window.scrollProjectPhoto){window.scrollProjectPhoto(lightboxIndex);return;}
+ window.resetProjectZoom?.();const img=document.getElementById('lightboxImage');img.src=lightboxImages[lightboxIndex];
+ img.alt=(document.getElementById('projectLightbox').dataset.title||'Project')+' — Photo '+(lightboxIndex+1);
+ document.getElementById('lightboxCaption').textContent=`${document.getElementById('projectLightbox').dataset.title} • ${lightboxIndex+1} / ${lightboxImages.length}`;
+ document.querySelectorAll('#projectPhotoThumbs button').forEach((b,i)=>{b.setAttribute('aria-pressed',String(i===lightboxIndex));if(i===lightboxIndex)b.scrollIntoView({block:'nearest',inline:'nearest'});});
+ document.querySelectorAll('#projectLightbox .lightbox-nav').forEach(b=>{b.hidden=lightboxImages.length<2;});
+}
+function hideProjectLightbox(){
+ document.getElementById('projectLightbox').classList.remove('active');document.body.style.overflow=viewerOverflow;
+ const page=document.getElementById('page3');page.style.overflow=viewerPageOverflow;page.scrollTop=viewerScroll;
+ window.resetProjectZoom?.();viewerReturnFocus?.focus({preventScroll:true});
+}
+function closeProjectLightbox(){if(history.state?.ssPhotoViewer)history.back();else hideProjectLightbox();}
+window.addEventListener('popstate',e=>{
+ const modal=document.getElementById('projectLightbox');
+ if(modal.classList.contains('active')){hideProjectLightbox();e.stopImmediatePropagation();}
+ else if(e.state?.ssPhotoViewer){history.replaceState({...e.state,ssPhotoViewer:false},'',location.href);}
+},true);
+// A refreshed viewer history entry should reopen the portfolio, not an empty overlay.
+if(history.state?.ssPhotoViewer)history.replaceState({...history.state,ssPhotoViewer:false},'',location.href);
+function moveLightboxSlide(dir){if(!lightboxImages.length)return;lightboxIndex=(lightboxIndex+dir+lightboxImages.length)%lightboxImages.length;renderLightboxImage();}
+document.addEventListener('keydown',e=>{
+ const modal=document.getElementById('projectLightbox');if(!modal.classList.contains('active'))return;
+ if(e.key==='Escape')closeProjectLightbox();
+ if(e.key==='ArrowRight')moveLightboxSlide(1);if(e.key==='ArrowLeft')moveLightboxSlide(-1);
+ if(e.key==='Tab'){const buttons=[...modal.querySelectorAll('button:not([hidden])')];const first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===modal)){e.preventDefault();last?.focus();}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===modal)){e.preventDefault();first?.focus();}}
+});
 
 function animatePortfolioStats(container) {
     if (container.dataset.counted === '1') return;
@@ -6541,5 +6573,136 @@ function toggleProjectDescription(button){const expanded=button.getAttribute('ar
 <style id="ss-simple-project-popup">
 #ssProjectViewer .ss-view-layout{display:block!important;position:relative;max-width:1200px}#ssProjectViewer .ss-view-main{height:100%!important}#ssProjectViewer .ss-view-info{position:absolute;bottom:24px;left:12px;width:auto;padding:2px 8px;border:0;background:#07101bbb;border-radius:24px;color:white;z-index:15;overflow:visible}#ssProjectViewer .ss-view-info h3,#ssProjectViewer .ss-view-info p{display:none}#ssProjectViewer .ss-like{color:white}#ssProjectViewer .ss-media-topbar .ss-tools{display:none}
 #page3 .ss-project-tile .plate-desc.ss-description-short{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;max-height:5.25em}#page3 .ss-more-description{color:var(--site-primary);font:700 13px var(--font);padding:8px 0;border:0;background:none;cursor:pointer}#page3 .ss-card-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}#page3 .ss-card-tools img,#page3 .ss-card-tools svg,#ssToolIcons img{width:24px;height:24px;object-fit:contain;display:block}.ss-card-tools span{font-size:11px}#ssToolIcons img[hidden],.ss-card-tools img[hidden]{display:none}
+</style>
+
+<style id="portfolio-viewer-final-fix">
+#page3 .site-projects{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important;max-width:1120px;margin-inline:auto}
+#page3 .ss-project-tile .plate-media{height:240px!important;aspect-ratio:auto!important;display:grid;place-items:center}
+#page3 .ss-project-tile .plate-media img{width:100%!important;height:100%!important;max-height:240px!important;object-fit:contain!important}
+#page3 .ss-project-tile .plate-body{padding:16px}#page3 .ss-project-tile .plate-title{font-size:18px}
+#projectLightbox{padding:16px;overscroll-behavior:contain}
+#projectLightbox .lightbox-inner{width:min(960px,100%);height:min(90dvh,780px);grid-template-rows:minmax(0,1fr) auto 64px;gap:8px}
+#projectZoomViewport{grid-row:1;position:relative;width:100%;height:100%;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;cursor:zoom-in}
+#projectLightbox #lightboxImage{flex:none;width:auto;height:auto;max-width:100%;max-height:100%;border-radius:4px;animation:none;transform-origin:center;pointer-events:none;will-change:transform}
+#projectLightbox .lightbox-caption{grid-row:2;max-height:64px;padding:5px 10px;font-size:12px}
+#projectPhotoThumbs{grid-row:3;display:flex;gap:8px;overflow-x:auto;min-width:0;align-items:center;overscroll-behavior:contain}
+#projectPhotoThumbs button{flex:0 0 70px;height:56px;padding:2px;background:#111827;border:2px solid transparent;border-radius:6px;cursor:pointer}
+#projectPhotoThumbs button[aria-pressed=true]{border-color:#38bdf8}#projectPhotoThumbs img{width:100%;height:100%;object-fit:contain}
+#projectLightbox .lightbox-nav{top:calc(50% - 50px);width:34px;height:34px}#projectLightbox .lightbox-nav[hidden]{display:none}
+@media(max-width:1000px){#page3 .site-projects{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:600px){#page3 .site-projects{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}#projectLightbox{padding:8px}#projectLightbox .lightbox-inner{height:calc(100dvh - 32px - env(safe-area-inset-bottom));width:100%}#page3 .ss-project-tile .plate-media{height:250px!important}}
+</style>
+<style id="project-sticky-scroll-style">
+/* Selected Works: each project contains its own pinned cover and full flowing copy. */
+#page3 .site-projects{display:block!important;max-width:1120px;perspective:none}
+#page3 .ss-project-tile{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:start;position:relative;min-height:85dvh;margin:0 0 48px;padding:24px 0 64px;overflow:visible!important;contain:none;transform:none!important;will-change:auto;backdrop-filter:none;border:0;border-bottom:1px solid var(--site-border);border-radius:0;background:none;box-shadow:none}
+#page3 .ss-project-tile .plate-media{grid-column:2;grid-row:1;position:sticky!important;top:110px;align-self:start;display:flex;align-items:center;justify-content:center;width:100%;height:min(64dvh,520px)!important;max-height:none;aspect-ratio:auto!important;background:transparent;border:0;overflow:hidden}
+#page3 .ss-project-tile .plate-media img{width:auto!important;height:auto!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+#page3 .ss-project-tile .plate-body{grid-column:1;grid-row:1;min-height:75dvh;padding:12dvh 0 10dvh!important;align-self:start}
+#page3 .ss-project-tile .plate-title{font-size:clamp(24px,3vw,42px);line-height:1.2;margin-bottom:24px}
+#page3 .ss-project-tile .plate-desc,#page3 .ss-project-tile .plate-desc.ss-description-short{display:block!important;-webkit-line-clamp:unset!important;max-height:none!important;height:auto;overflow:visible!important;white-space:pre-wrap;font-size:15px;line-height:1.9}
+#page3 .ss-project-tile .ss-more-description{display:none!important}
+/* Open project: a single pinned description beside the moving photo column. */
+#projectLightbox{background:var(--site-bg,#030712);backdrop-filter:none;color:var(--site-text,#f8fafc);padding:16px}
+#projectLightbox .lightbox-inner{width:min(1180px,100%);height:calc(100dvh - 40px);max-height:none;grid-template-rows:minmax(0,1fr) auto 64px;position:relative}
+#projectZoomViewport{display:block;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;cursor:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.project-detail-track{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:40px;padding:0 44px;position:relative;align-items:start}
+.project-detail-copy{position:sticky;top:0;height:var(--gallery-height,600px);display:flex;flex-direction:column;justify-content:center;min-width:0;padding:24px 0;box-sizing:border-box}
+.project-detail-copy h3{font-size:clamp(23px,3vw,40px);line-height:1.2;margin:0 0 20px;overflow-wrap:anywhere}
+.project-detail-copy p{font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-height:60%;overflow-y:auto;color:var(--site-text-muted,#94a3b8);overscroll-behavior:contain}
+.project-detail-photos{min-width:0}.project-detail-photo{height:var(--gallery-height,600px);display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:24px 0;scroll-snap-align:start}
+.project-detail-photo button{display:flex;justify-content:center;align-items:center;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:zoom-in}
+.project-detail-photo img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+#projectLightbox .lightbox-caption{background:transparent;color:var(--site-text-muted,#94a3b8)}
+#projectDetailZoom{position:absolute;inset:0 0 100px;display:flex;align-items:center;justify-content:center;background:var(--site-bg,#030712);overflow:hidden;z-index:12;touch-action:none;cursor:zoom-out}
+#projectDetailZoom[hidden]{display:none!important}#projectLightbox #lightboxImage{max-width:100%;max-height:100%;width:auto;height:auto;animation:none;pointer-events:none;box-shadow:none;border-radius:0}
+#projectLightbox .lightbox-nav{z-index:15}
+@media(max-width:600px){
+ #page3 .ss-project-tile{gap:16px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);margin-bottom:24px;padding-bottom:32px;min-height:75dvh}
+ #page3 .ss-project-tile .plate-media{top:100px;height:46dvh!important}
+ #page3 .ss-project-tile .plate-body{min-height:65dvh;padding:7dvh 0!important}
+ #page3 .ss-project-tile .plate-title{font-size:22px;margin-bottom:16px}
+ #page3 .ss-project-tile .plate-desc{font-size:12px;line-height:1.8}
+ #projectLightbox{padding:8px}#projectLightbox .lightbox-inner{height:calc(100dvh - 24px - env(safe-area-inset-bottom))}
+ .project-detail-track{grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:12px;padding:0 14px}
+ .project-detail-copy h3{font-size:20px}.project-detail-copy p{font-size:11px;line-height:1.7}
+ #projectLightbox .lightbox-nav{width:26px;height:30px;opacity:.65}.lightbox-nav.prev{left:0}.lightbox-nav.next{right:0}
+}
+</style>
+<script id="portfolio-photo-gestures">
+(()=>{
+ const viewport=document.getElementById('projectZoomViewport'),img=document.getElementById('lightboxImage');
+ const zoomLayer=document.createElement('div');zoomLayer.id='projectDetailZoom';zoomLayer.hidden=true;zoomLayer.append(img);document.querySelector('#projectLightbox .lightbox-inner').append(zoomLayer);
+ let track,height=1,scale=1,x=0,y=0,frame=0,down=null,multiple=false,distance=0;
+ const points=new Map();
+ function paint(){const bx=Math.max(0,(img.clientWidth*scale-zoomLayer.clientWidth)/2),by=Math.max(0,(img.clientHeight*scale-zoomLayer.clientHeight)/2);x=Math.max(-bx,Math.min(bx,x));y=Math.max(-by,Math.min(by,y));img.style.transform=`translate(${x}px,${y}px) scale(${scale})`;}
+ window.resetProjectZoom=()=>{zoomLayer.hidden=true;scale=1;x=y=0;points.clear();down=null;distance=0;viewport.style.overflowY='auto';paint();};
+ function sync(index){lightboxIndex=index;document.getElementById('lightboxCaption').textContent=`${document.getElementById('projectLightbox').dataset.title} • ${index+1} / ${lightboxImages.length}`;
+ document.querySelectorAll('#projectPhotoThumbs button').forEach((b,i)=>{b.setAttribute('aria-pressed',String(i===index));if(i===index){const row=b.parentElement;row.scrollLeft=Math.max(0,b.offsetLeft-row.offsetLeft-row.clientWidth/2+b.clientWidth/2);}});
+ document.querySelectorAll('#projectLightbox .lightbox-nav').forEach(b=>b.hidden=lightboxImages.length<2);}
+ function openZoom(index){sync(index);img.src=lightboxImages[index];img.alt=(document.getElementById('projectLightbox').dataset.title||'Project')+' — Photo '+(index+1);zoomLayer.hidden=false;viewport.style.overflowY='hidden';scale=2;x=y=0;paint();}
+ window.buildProjectScroll=card=>{
+ window.resetProjectZoom();viewport.replaceChildren();track=document.createElement('div');track.className='project-detail-track';const copy=document.createElement('div');copy.className='project-detail-copy';let data={};try{data=JSON.parse(card.dataset.project||'{}');}catch{}
+ const title=document.createElement('h3');title.textContent=card.dataset.projectTitle||'Project';const desc=document.createElement('p');desc.textContent=data.desc||'';desc.tabIndex=0;copy.append(title,desc);
+ const photos=document.createElement('div');photos.className='project-detail-photos';
+ lightboxImages.forEach((src,i)=>{const step=document.createElement('section');step.className='project-detail-photo';const button=document.createElement('button');button.type='button';button.setAttribute('aria-label','Zoom photo '+(i+1));const photo=document.createElement('img');photo.src=src;photo.alt=(card.dataset.projectTitle||'Project')+' — Photo '+(i+1);photo.loading=i===0?'eager':'lazy';photo.draggable=false;button.append(photo);button.onclick=()=>openZoom(i);step.append(button);photos.append(step);});
+ track.append(copy,photos);viewport.append(track);height=Math.max(1,viewport.clientHeight);viewport.style.setProperty('--gallery-height',height+'px');viewport.scrollTop=0;
+ };
+ window.scrollProjectPhoto=index=>{if(!track)return;window.resetProjectZoom();viewport.scrollTo({top:index*height,behavior:'instant'});sync(index);};
+ viewport.addEventListener('scroll',()=>{if(!zoomLayer.hidden||frame||!track)return;frame=requestAnimationFrame(()=>{frame=0;sync(Math.max(0,Math.min(lightboxImages.length-1,Math.floor((viewport.scrollTop+height*.5)/height))));});},{passive:true});
+ zoomLayer.addEventListener('pointerdown',e=>{if(e.button!==0)return;zoomLayer.setPointerCapture(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(points.size===1){multiple=false;down={x:e.clientX,y:e.clientY,moved:false};}else{multiple=true;const[a,b]=[...points.values()];distance=Math.hypot(a.x-b.x,a.y-b.y);}});
+ zoomLayer.addEventListener('pointermove',e=>{if(!points.has(e.pointerId))return;const old=points.get(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)down.moved=true;if(points.size===2){const[a,b]=[...points.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(distance)scale=Math.max(1,Math.min(5,scale*d/distance));distance=d;}else{x+=e.clientX-old.x;y+=e.clientY-old.y;}paint();});
+ zoomLayer.addEventListener('pointerup',e=>{points.delete(e.pointerId);if(down&&!down.moved&&!multiple)window.resetProjectZoom();if(!points.size){down=null;distance=0;}});
+ zoomLayer.addEventListener('pointercancel',()=>{points.clear();down=null;distance=0;});
+ zoomLayer.addEventListener('wheel',e=>{e.preventDefault();scale=Math.max(1,Math.min(5,scale*Math.exp(-e.deltaY*.002)));paint();},{passive:false});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!zoomLayer.hidden){e.preventDefault();e.stopImmediatePropagation();window.resetProjectZoom();}},true);
+ new ResizeObserver(()=>{if(!track||!viewport.clientHeight)return;height=viewport.clientHeight;viewport.style.setProperty('--gallery-height',height+'px');viewport.scrollTop=lightboxIndex*height;paint();}).observe(viewport);
+ img.addEventListener('load',paint);
+})();
+</script>
+
+<style id="selected-works-readable-text">
+/* Keep the side copy readable independently of cover/reveal animations. */
+#page3 .ss-project-tile{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)!important;gap:clamp(20px,4vw,48px);isolation:isolate;transform-style:flat;scroll-margin-top:var(--selected-sticky-top,100px)}
+#page3 .ss-project-tile .plate-body{display:block!important;position:relative!important;inset:auto!important;min-width:0;width:100%;max-width:100%;min-height:64dvh;padding:12px 0 40px!important;overflow:visible!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;clip-path:none!important;z-index:1;box-sizing:border-box}
+#page3 .ss-project-tile .plate-title,#page3 .ss-project-tile .plate-desc{opacity:1!important;visibility:visible!important;animation:none!important;transform:none!important;filter:none!important;clip-path:none!important;text-shadow:none!important;-webkit-text-fill-color:currentColor;overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap}
+#page3 .ss-project-tile .plate-title{color:var(--site-text)!important;font-size:clamp(24px,2.6vw,36px);line-height:1.35;letter-spacing:-.02em;margin:0 0 20px}
+#page3 .ss-project-tile .plate-desc,#page3 .ss-project-tile .plate-desc.ss-description-short{color:var(--site-text)!important;font-size:16px!important;font-weight:600!important;line-height:1.85!important;display:block!important;max-height:none!important;overflow:visible!important;-webkit-line-clamp:unset!important;margin:0}
+#page3 .ss-project-tile .plate-media{top:var(--selected-sticky-top,100px);min-width:0;color:var(--site-text)!important;z-index:0}
+#page3 .ss-project-tile .ss-no-cover{width:100%;min-height:180px;height:100%;box-sizing:border-box;border:1px dashed var(--site-text-muted);border-radius:12px;background:var(--site-surface-2);color:var(--site-text)!important;text-align:center}
+#page3 .ss-project-tile .ss-no-cover small{font-size:15px!important;line-height:1.5;color:var(--site-text)!important;opacity:1!important}
+#page3 .ss-project-tile::after,#page3 .ss-project-tile .arch-light-sweep{display:none!important}
+@media(max-width:600px){
+ #page3 .ss-project-tile{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)!important;gap:16px}
+ #page3 .ss-project-tile .plate-body{padding:8px 0 24px!important;min-height:55dvh}
+ #page3 .ss-project-tile .plate-title{font-size:21px;line-height:1.4;margin-bottom:16px}
+ #page3 .ss-project-tile .plate-desc,#page3 .ss-project-tile .plate-desc.ss-description-short{font-size:14px!important;line-height:1.8!important}
+ #page3 .ss-project-tile .ss-no-cover{padding:12px;min-height:150px}
+ #page3 .ss-project-tile .ss-no-cover small{font-size:12px!important}
+}
+</style>
+<script id="selected-works-header-offset">
+(()=>{const page=document.getElementById('page3'),bar=page?.querySelector('.site-topbar');if(!page||!bar)return;const update=()=>page.style.setProperty('--selected-sticky-top',Math.ceil(bar.getBoundingClientRect().height+20)+'px');new ResizeObserver(update).observe(bar);update();})();
+</script>
+
+<style id="selected-works-natural-flow">
+/* Dedicated classes avoid legacy card clamps and fixed card sizing. */
+#page3 .site-projects{display:block!important;width:100%;max-width:1120px;margin-inline:auto;overflow:visible;perspective:none}
+#page3 .site-projects .ss-work-row{display:flex;align-items:flex-start;gap:clamp(20px,4vw,48px);position:relative;width:100%;height:auto!important;min-height:72dvh;max-height:none!important;padding:28px 0 56px;margin:0 0 32px;border:0;border-bottom:1px solid var(--site-border);border-radius:0;box-sizing:border-box;overflow:visible!important;contain:none!important;content-visibility:visible;opacity:1!important;visibility:visible!important;transform:none!important;transform-style:flat;animation:none!important;transition:none;backdrop-filter:none;background:none;box-shadow:none;cursor:default;will-change:auto}
+#page3 .ss-work-row::before,#page3 .ss-work-row::after{display:none!important}
+#page3 .ss-work-copy{position:static;flex:1 1 0;min-width:0;max-width:100%;height:auto;max-height:none;padding:0 3px 20px;box-sizing:border-box;overflow:visible;align-self:flex-start;color:var(--site-text);user-select:text}
+#page3 .ss-work-title{display:block;position:static;margin:0 0 22px;padding:2px 0 4px;height:auto;max-height:none;overflow:visible;white-space:normal;overflow-wrap:anywhere;word-break:normal;font:800 clamp(23px,2.6vw,36px)/1.4 var(--font-head,Arial,sans-serif);letter-spacing:-.02em;color:var(--site-text);opacity:1;transform:none;animation:none}
+#page3 .ss-work-description{display:block;position:static;width:100%;height:auto;max-height:none;min-width:0;padding:0 0 8px;box-sizing:border-box;overflow:visible;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;font:600 16px/1.9 var(--font,Arial,sans-serif);letter-spacing:normal;color:var(--site-text);opacity:1;transform:none;animation:none;-webkit-line-clamp:unset;line-clamp:none;text-overflow:clip}
+#page3 .ss-work-cover{position:sticky;top:var(--selected-sticky-top,100px);flex:1 1 0;align-self:flex-start;display:flex;align-items:center;justify-content:center;min-width:0;height:min(62dvh,520px);max-height:calc(100dvh - var(--selected-sticky-top,100px) - 24px);padding:0;border:0;border-radius:0;background:transparent;color:var(--site-text);cursor:pointer;overflow:hidden}
+#page3 .ss-work-cover img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;transform:none!important}
+#page3 .ss-work-count{position:absolute;right:8px;top:8px;padding:5px 9px;background:#0f172acc;color:white;border-radius:7px;font-size:11px}
+#page3 .ss-work-empty{display:flex;align-items:center;justify-content:center;min-height:180px;width:100%;padding:20px;border:1px dashed var(--site-text-muted);border-radius:10px;background:var(--site-surface-2);color:var(--site-text);font-size:14px}
+#page3 .ss-work-cover:disabled{cursor:default;opacity:1}
+#page3 .ss-work-row .ss-card-tools{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+#page3 .ss-work-row .ss-card-tools img,#page3 .ss-work-row .ss-card-tools svg{width:24px;height:24px;object-fit:contain}
+#projectLightbox .project-detail-copy{justify-content:flex-start;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;padding:20px 4px 32px;min-height:0;box-sizing:border-box}
+#projectLightbox .project-detail-copy h3{flex:0 0 auto;white-space:normal;overflow-wrap:anywhere;padding:2px 0 5px}
+#projectLightbox .project-detail-copy p{flex:0 0 auto;max-height:none;height:auto;overflow:visible;padding-bottom:16px}
+@media(max-width:600px){#page3 .site-projects .ss-work-row{gap:14px;min-height:65dvh;padding:20px 0 36px;margin-bottom:24px}#page3 .ss-work-copy{flex:1.15 1 0;padding-inline:2px}#page3 .ss-work-title{font-size:21px;line-height:1.45;margin-bottom:16px}#page3 .ss-work-description{font-size:14px;line-height:1.9}#page3 .ss-work-cover{height:44dvh}#page3 .ss-work-count{font-size:10px;right:3px;top:3px;padding:4px 6px}}
 </style>
 </body></html>
