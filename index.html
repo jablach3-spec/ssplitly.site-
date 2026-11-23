@@ -98,6 +98,7 @@ body.night #undoBuilderBtn:disabled,body.night #redoBuilderBtn:disabled,
 
 </style>
 <script>
+window.__ssBootHash=location.hash;
 if(location.hash.startsWith('#/p/')){
  document.documentElement.classList.add('portfolio-opening');
  document.documentElement.dataset.openingMessage='Opening portfolio…';
@@ -717,6 +718,86 @@ hr{margin:16px 0;border:0;border-top:1px solid var(--border)}
 </style>
 </head>
 <body>
+<style id="ss-premium-loader">
+html.portfolio-opening::before,html.portfolio-opening::after{content:none!important;display:none!important}
+#ssLoader{display:none}
+html.portfolio-opening #ssLoader,html.ssl-leaving #ssLoader{display:block;position:fixed;inset:0;z-index:100000020;overflow:hidden;color:#e6f4ff;font-family:Inter,system-ui,sans-serif;pointer-events:none}
+html.portfolio-opening #ssLoader{pointer-events:auto}
+#ssLoader .ssl-curtain{position:absolute;left:0;right:0;height:50.5%;background:#060a13;transition:transform 1s cubic-bezier(.77,0,.18,1) .32s}
+#ssLoader .ssl-curtain.top{top:0;background:radial-gradient(ellipse 80% 120% at 50% 100%,#13243d 0,#060a13 70%)}
+#ssLoader .ssl-curtain.bottom{bottom:0;background:radial-gradient(ellipse 80% 120% at 50% 0,#13243d 0,#060a13 70%)}
+#ssLoader .ssl-grid{position:absolute;inset:-40px;background-image:linear-gradient(#7dd3fc0d 1px,transparent 1px),linear-gradient(90deg,#7dd3fc0d 1px,transparent 1px);background-size:40px 40px;animation:sslGrid 9s linear infinite;-webkit-mask:radial-gradient(circle at 50% 50%,#000 0,transparent 62%);mask:radial-gradient(circle at 50% 50%,#000 0,transparent 62%);transition:opacity .4s}
+#ssLoader .ssl-glow{position:absolute;left:50%;top:50%;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:radial-gradient(circle,#38bdf833 0,#818cf81a 35%,transparent 65%);animation:sslBreath 3.2s ease-in-out infinite;transition:opacity .4s}
+#ssLoader .ssl-core{position:absolute;left:50%;top:50%;width:min(300px,78vw);transform:translate(-50%,-50%);text-align:center;transition:opacity .4s ease,transform .6s cubic-bezier(.16,1,.3,1)}
+#ssLoader svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 0 10px #38bdf855)}
+#ssLoader svg path{fill:none;stroke:url(#sslStroke);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:sslDraw 1.05s cubic-bezier(.65,0,.35,1) forwards}
+#ssLoader svg .g{stroke:#7dd3fc55;stroke-width:1}
+#ssLoader svg .fill{fill:#38bdf814;stroke:none;opacity:0;animation:sslFill .7s ease 1.1s forwards}
+#ssLoader .ssl-word{display:flex;justify-content:center;gap:.42em;margin:26px 0 18px;font:600 13px/1 Sora,Inter,sans-serif;letter-spacing:.2em;color:#dbeafe}
+#ssLoader .ssl-word span{display:inline-block;opacity:0;transform:translateY(14px);filter:blur(6px);animation:sslLetter .7s cubic-bezier(.16,1,.3,1) forwards}
+#ssLoader .ssl-bar{position:relative;height:2px;border-radius:2px;background:#ffffff14;overflow:hidden}
+#ssLoader .ssl-bar i{position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--p,0));background:linear-gradient(90deg,#38bdf8,#818cf8,#e879f9);transition:transform .45s cubic-bezier(.16,1,.3,1)}
+#ssLoader .ssl-bar i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,#fff9,transparent);animation:sslShine 1.4s linear infinite}
+#ssLoader .ssl-meta{display:flex;justify-content:space-between;margin-top:12px;font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:.08em;color:#94a3b8}
+#ssLoader .ssl-meta b{color:#e0f2fe;font-weight:700;font-variant-numeric:tabular-nums}
+html.ssl-leaving #ssLoader .ssl-core{opacity:0;transform:translate(-50%,-58%) scale(.96)}
+html.ssl-leaving #ssLoader .ssl-grid,html.ssl-leaving #ssLoader .ssl-glow{opacity:0}
+html.ssl-leaving #ssLoader .ssl-curtain.top{transform:translateY(-101%)}
+html.ssl-leaving #ssLoader .ssl-curtain.bottom{transform:translateY(101%)}
+@keyframes sslDraw{to{stroke-dashoffset:0}}
+@keyframes sslFill{to{opacity:1}}
+@keyframes sslLetter{to{opacity:1;transform:none;filter:none}}
+@keyframes sslGrid{to{transform:translate(40px,40px)}}
+@keyframes sslBreath{50%{transform:scale(1.12);opacity:.75}}
+@keyframes sslShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){#ssLoader *{animation:none!important}#ssLoader svg path{stroke-dashoffset:0}#ssLoader .ssl-word span,#ssLoader svg .fill{opacity:1;transform:none;filter:none}#ssLoader .ssl-curtain{transition-duration:.01ms}}
+</style>
+<div id="ssLoader" aria-hidden="true">
+ <div class="ssl-curtain top"></div><div class="ssl-curtain bottom"></div>
+ <div class="ssl-grid"></div><div class="ssl-glow"></div>
+ <div class="ssl-core">
+  <svg viewBox="0 0 250 132" role="presentation">
+   <defs><linearGradient id="sslStroke" x1="0" x2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset=".55" stop-color="#a5b4fc"/><stop offset="1" stop-color="#f0abfc"/></linearGradient></defs>
+   <path class="fill" d="M160 52H195V108H160Z"/>
+   <path class="g" pathLength="1" d="M4 120H246" style="animation-delay:0s"/>
+   <path pathLength="1" d="M40 120V60H150V120" style="animation-delay:.06s"/>
+   <path pathLength="1" d="M34 60H156M34 53H156V60M34 53V60" style="animation-delay:.2s"/>
+   <path pathLength="1" d="M150 120V42H206V120" style="animation-delay:.14s"/>
+   <path pathLength="1" d="M145 42H211M145 35H211V42M145 35V42" style="animation-delay:.28s"/>
+   <path pathLength="1" d="M85 120V94A10 10 0 0 1 105 94V120" style="animation-delay:.34s"/>
+   <path pathLength="1" d="M52 84V73A7 7 0 0 1 66 73V84ZM124 84V73A7 7 0 0 1 138 73V84Z" style="animation-delay:.42s"/>
+   <path pathLength="1" d="M160 52H195V108H160ZM172 52V108M184 52V108" style="animation-delay:.48s"/>
+   <path pathLength="1" d="M228 120Q224 98 226 78M226 78Q212 72 204 80M226 78Q238 70 248 76M226 78Q220 64 212 61M226 78Q234 64 243 63" style="animation-delay:.56s"/>
+  </svg>
+  <div class="ssl-word"><span style="animation-delay:.2s">P</span><span style="animation-delay:.26s">O</span><span style="animation-delay:.32s">R</span><span style="animation-delay:.38s">T</span><span style="animation-delay:.44s">F</span><span style="animation-delay:.5s">O</span><span style="animation-delay:.56s">L</span><span style="animation-delay:.62s">I</span><span style="animation-delay:.68s">O</span></div>
+  <div class="ssl-bar"><i id="sslBar"></i></div>
+  <div class="ssl-meta"><span id="sslStatus">Preparing gallery</span><b id="sslPct">0%</b></div>
+ </div>
+</div>
+<script id="ss-premium-loader-js">
+(()=>{
+ const html=document.documentElement,start=performance.now();let p=0,done=false;
+ const bar=document.getElementById('sslBar'),pct=document.getElementById('sslPct'),status=document.getElementById('sslStatus');
+ const set=v=>{p=v;bar.style.setProperty('--p',v/100);pct.textContent=Math.round(v)+'%';};
+ const steps=[[25,'Loading projects'],[55,'Rendering scenes'],[80,'Final touches']];
+ const tick=setInterval(()=>{if(done||!html.classList.contains('portfolio-opening'))return clearInterval(tick);set(p+(92-p)*.07);const s=steps.filter(x=>p>=x[0]).pop();if(s)status.textContent=s[1];},120);
+ const ready=img=>img.complete&&img.naturalWidth?Promise.resolve():new Promise(r=>{img.addEventListener('load',r,{once:true});img.addEventListener('error',r,{once:true});});
+ window.__ssFinishPortfolioLoader=async()=>{
+  if(done)return;done=true;
+  const content=document.getElementById('portfolioSiteContent');
+  const imgs=[...(content?.querySelectorAll('.hero-frame img,.ss-work-cover img')||[])].slice(0,3);
+  status.textContent='Loading photos';set(Math.max(p,94));
+  await Promise.race([Promise.all(imgs.map(ready)),new Promise(r=>setTimeout(r,2500))]);
+  const wait=Math.max(0,1800-(performance.now()-start));if(wait)await new Promise(r=>setTimeout(r,wait));
+  set(100);status.textContent='Welcome';
+  await new Promise(r=>setTimeout(r,260));
+  html.classList.add('ssl-leaving');html.classList.remove('portfolio-opening');
+  const page=document.getElementById('page3');
+  if(page){page.classList.remove('portfolio-enter');void page.offsetWidth;page.classList.add('portfolio-enter');}
+  setTimeout(()=>{html.classList.remove('ssl-leaving');document.getElementById('ssLoader')?.remove();},1500);
+ };
+})();
+</script>
 
 <div id="loginOverlay">
     <div class="login-box">
@@ -1971,9 +2052,10 @@ function goBackFromPortfolio() {
     setNavState('page2', 'portfolio', 'replace');
 }
 let lastHandledBuilderURL='';
-function handleBuilderURLChange(){
+function handleBuilderURLChange(e){
+ if(e&&e.type==='popstate'&&(document.getElementById('projectLightbox')?.classList.contains('active')||'ssPhotoViewer' in (e.state||{})))return;
  if(lastHandledBuilderURL===location.href)return;lastHandledBuilderURL=location.href;
- if(/^#\/(?:p|portfolio)\//.test(location.hash)||isViewOnly){location.reload();return;}
+ if(/^#\/(?:p|portfolio)\//.test(location.hash)||isViewOnly){if(location.hash===window.__ssBootHash)return;location.reload();return;}
  const route=readBuilderRoute();if(!route)return;
  // Keep the destination URL while the existing account/login checks run.
  if(!window.__builderReadyUID)return;
@@ -6291,7 +6373,7 @@ function applySharingPreferences(p,legacy={}){
    box.append(message,retry);$('portfolioSiteContent').replaceChildren(box);
   }finally{
    clearTimeout(loadTimer);clearTimeout(window.__portfolioBootTimeout);
-   $('portfolioSiteContent').removeAttribute('aria-busy');document.documentElement.classList.remove('portfolio-opening');
+   $('portfolioSiteContent').removeAttribute('aria-busy');if(window.__ssFinishPortfolioLoader)window.__ssFinishPortfolioLoader();else document.documentElement.classList.remove('portfolio-opening');
   }
  };
  const originalBack=goBackFromPortfolio;goBackFromPortfolio=function(){if(!isViewOnly)originalBack();};
@@ -6834,6 +6916,112 @@ function toggleProjectDescription(button){const expanded=button.getAttribute('ar
  if(content)new MutationObserver(home).observe(content,{childList:true});
  if(gallery)new MutationObserver(photos).observe(gallery,{childList:true});
  home();photos();
+})();
+</script>
+<style id="ss-premium-motion-v1">
+@media(prefers-reduced-motion:no-preference){
+ /* Hero: name unveils, title glides in, gradient slowly breathes */
+ #page3.portfolio-enter .hero-copy h1{background-size:220% 100%!important;animation:ssH1In 1.15s cubic-bezier(.16,1,.3,1) .12s both,ssH1Shine 7s ease-in-out 1.3s infinite alternate!important}
+ @keyframes ssH1In{from{clip-path:inset(0 0 100% 0);translate:0 36px;filter:blur(10px);opacity:0}to{clip-path:inset(0 0 -10% 0);translate:0 0;filter:none;opacity:1}}
+ @keyframes ssH1Shine{to{background-position:100% 0}}
+ #page3.portfolio-enter .hero-frame{animation:ssFrameIn 1.2s cubic-bezier(.16,1,.3,1) both,ssProfileFloat 4.2s ease-in-out 1.2s infinite!important}
+ @keyframes ssFrameIn{from{clip-path:inset(50% 50% 50% 50% round 26px);scale:.85;opacity:0}to{clip-path:inset(-30% -30% -30% -30% round 26px);scale:1;opacity:1}}
+ #page3 .site-hero .hero-grid{transform:translate3d(0,calc(var(--ss-hero-p,0) * 70px),0);opacity:calc(1 - var(--ss-hero-p,0) * .75);will-change:transform,opacity}
+
+ /* Section headings: index ticks in, title wipes, rule line draws */
+ #page3 .site-section-head .rule-line{transform-origin:left;transform:scaleX(0);transition:transform 1.3s cubic-bezier(.16,1,.3,1) .25s}
+ #page3 .site-section-head.active .rule-line{transform:scaleX(1)}
+ #page3 .site-section-head h2{clip-path:inset(0 100% 0 0);transition:clip-path 1s cubic-bezier(.77,0,.18,1) .1s}
+ #page3 .site-section-head.active h2{clip-path:inset(-10% -5% -20% 0)}
+ #page3 .site-section-head .sec-index{opacity:0;translate:0 10px;transition:opacity .6s,translate .6s cubic-bezier(.16,1,.3,1)}
+ #page3 .site-section-head.active .sec-index{opacity:1;translate:0 0}
+
+ /* Skills pop in one by one */
+ #page3 .site-skills span{opacity:0;translate:0 14px;scale:.92;transition-property:opacity,translate,scale,transform,color,background,border-color,box-shadow;transition-duration:.6s;transition-timing-function:cubic-bezier(.16,1,.3,1)}
+ #page3 .site-skills.active span{opacity:1;translate:0 0;scale:1}
+
+ /* Experience dot ripple */
+ #page3 .exp-item.active .exp-dot{animation:ssDotPulse 2.4s ease-out .4s infinite}
+ @keyframes ssDotPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--site-primary) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px transparent}}
+
+ /* Selected works: cinematic wipe reveal */
+ #page3 .ss-work-cover.ss-wipe img{clip-path:inset(100% 0 0 0);scale:1.14;transition:clip-path 1.25s cubic-bezier(.77,0,.18,1),scale 1.6s cubic-bezier(.16,1,.3,1)}
+ #page3 .ss-work-cover.ss-wipe.ss-in img{clip-path:inset(0 0 0 0);scale:1}
+ #page3 .ss-work-copy .ss-work-title{transition:opacity .9s,translate .9s cubic-bezier(.16,1,.3,1)}
+ #page3 .ss-work-row.ss-wait .ss-work-title,#page3 .ss-work-row.ss-wait .ss-work-description,#page3 .ss-work-row.ss-wait .ss-card-tools{opacity:0!important;translate:0 26px}
+ #page3 .ss-work-row .ss-work-description,#page3 .ss-work-row .ss-card-tools{transition:opacity .9s .15s,translate .9s cubic-bezier(.16,1,.3,1) .15s}
+ #page3 .ss-work-row .ss-card-tools{transition-delay:.28s}
+
+ /* Footer headline shimmer */
+ #page3 .site-footer h2{background:linear-gradient(100deg,var(--site-text) 30%,var(--site-primary) 50%,var(--site-text) 70%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:ssFooterShine 5s linear infinite}
+ @keyframes ssFooterShine{from{background-position:100% 0}to{background-position:-150% 0}}
+
+ /* Photo viewer opens smoothly */
+ #projectLightbox.active{animation:ssViewerFade .35s ease both}
+ @keyframes ssViewerFade{from{opacity:0}to{opacity:1}}
+}
+
+/* Photos fade in sharp instead of popping (skeleton while loading) */
+#page3 .ss-work-cover.ss-img-wait,#projectLightbox .project-detail-photo.ss-img-wait{background:linear-gradient(100deg,var(--site-surface-2) 30%,color-mix(in srgb,var(--site-surface-2) 70%,#fff 30%) 50%,var(--site-surface-2) 70%) 0 0/250% 100%;animation:ssSkeleton 1.3s linear infinite}
+#page3 .ss-img-wait img,#projectLightbox .ss-img-wait img{opacity:0;filter:blur(14px)}
+#page3 .ss-work-cover img,#projectLightbox .project-detail-photo img{transition:opacity .7s ease,filter .9s ease,clip-path 1.25s cubic-bezier(.77,0,.18,1),scale 1.6s cubic-bezier(.16,1,.3,1)}
+@keyframes ssSkeleton{to{background-position:-150% 0}}
+
+/* Desktop only: 3D tilt + light glare on covers, magnetic buttons, cursor glow */
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ #page3 .ss-work-cover{transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.16,1,.3,1),box-shadow .3s}
+ #page3 .ss-work-cover.ss-tilting{transition:transform .08s linear,box-shadow .3s}
+ #page3 .ss-work-cover::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),#ffffff2e,transparent 45%);opacity:0;transition:opacity .35s}
+ #page3 .ss-work-cover:hover::after{opacity:1}
+ #page3 .site-btn,#page3 .hero-social a{transition:transform .35s cubic-bezier(.16,1,.3,1),background .3s,color .3s,box-shadow .3s}
+ #ssCursorGlow{position:fixed;left:0;top:0;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,color-mix(in srgb,var(--site-primary) 14%,transparent),transparent 62%);opacity:0;transition:opacity .5s;will-change:transform}
+ #page3.active:hover #ssCursorGlow{opacity:1}
+ #page3.light-mode #ssCursorGlow{background:radial-gradient(circle,color-mix(in srgb,var(--site-primary) 9%,transparent),transparent 62%)}
+}
+</style>
+<script id="ss-premium-motion-js">
+(()=>{
+ const page=document.getElementById('page3'),content=document.getElementById('portfolioSiteContent');
+ if(!page||!content)return;
+ const calm=matchMedia('(prefers-reduced-motion: reduce)').matches,fine=matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+ // Skeleton + blur-up for every photo (also when the viewer is opened)
+ function watchImg(img){const box=img.closest('.ss-work-cover,.project-detail-photo');if(!box||img.dataset.ssWatch)return;img.dataset.ssWatch='1';
+  if(img.complete&&img.naturalWidth)return;box.classList.add('ss-img-wait');
+  const ok=()=>box.classList.remove('ss-img-wait');img.addEventListener('load',ok,{once:true});img.addEventListener('error',ok,{once:true});}
+ const imgScan=root=>root.querySelectorAll('.ss-work-cover img,.project-detail-photo img').forEach(watchImg);
+ const viewer=document.getElementById('projectZoomViewport');
+ if(viewer)new MutationObserver(()=>imgScan(viewer)).observe(viewer,{childList:true,subtree:true});
+
+ // Cinematic reveal for project rows (plays once per render)
+ const rowObs=!calm&&window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const row=e.target;rowObs.unobserve(row);row.classList.remove('ss-wait');row.querySelector('.ss-work-cover.ss-wipe')?.classList.add('ss-in');}),{threshold:.18,rootMargin:'0px 0px -60px 0px'}):null;
+
+ function prepare(){
+  imgScan(content);
+  if(rowObs){rowObs.disconnect();content.querySelectorAll('.ss-work-row').forEach(row=>{row.classList.add('ss-wait');row.querySelector('.ss-work-cover')?.classList.add('ss-wipe');rowObs.observe(row);});}
+  if(fine&&!calm)content.querySelectorAll('.ss-work-cover').forEach(tilt);
+ }
+
+ function tilt(el){if(el.dataset.ssTilt)return;el.dataset.ssTilt='1';
+  el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;el.classList.add('ss-tilting');el.style.setProperty('--ry',((x-.5)*7).toFixed(2)+'deg');el.style.setProperty('--rx',((.5-y)*6).toFixed(2)+'deg');el.style.setProperty('--mx',(x*100)+'%');el.style.setProperty('--my',(y*100)+'%');});
+  el.addEventListener('pointerleave',()=>{el.classList.remove('ss-tilting');el.style.setProperty('--rx','0deg');el.style.setProperty('--ry','0deg');});}
+
+ new MutationObserver(prepare).observe(content,{childList:true});prepare();
+ if(calm)return;
+
+ // Hero parallax while scrolling
+ let ticking=false;
+ page.addEventListener('scroll',()=>{if(ticking)return;ticking=true;requestAnimationFrame(()=>{ticking=false;const hero=content.querySelector('.site-hero');if(!hero)return;const v=Math.min(1,Math.max(0,page.scrollTop/(hero.offsetHeight||1)));hero.style.setProperty('--ss-hero-p',v.toFixed(3));});},{passive:true});
+
+ if(!fine)return;
+ // Cursor glow + magnetic buttons (desktop)
+ const glow=document.createElement('div');glow.id='ssCursorGlow';page.prepend(glow);
+ let gx=0,gy=0,raf=0;
+ page.addEventListener('pointermove',e=>{gx=e.clientX;gy=e.clientY;if(!raf)raf=requestAnimationFrame(()=>{raf=0;glow.style.transform=`translate3d(${gx}px,${gy}px,0)`;});
+  const m=e.target.closest?.('.site-btn,.hero-social a');
+  page.querySelectorAll('.ss-magnet').forEach(b=>{if(b!==m){b.classList.remove('ss-magnet');b.style.transform='';}});
+  if(m){const r=m.getBoundingClientRect();m.classList.add('ss-magnet');m.style.transform=`translate(${((e.clientX-r.left-r.width/2)*.25).toFixed(1)}px,${((e.clientY-r.top-r.height/2)*.35).toFixed(1)}px)`;}
+ },{passive:true});
 })();
 </script>
 </body></html>
