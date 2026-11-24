@@ -7377,6 +7377,23 @@ body.app-dark .cvs-pop input{color-scheme:dark}
 .cvs-bottom button{width:48px;padding:0;justify-content:center;font-size:17px}
 .cvs-bottom .ur{width:42px;font-size:16px}
 @media(max-width:900px){.cvs-bottom{width:auto;justify-content:center;gap:2px}.cvs-bottom button{width:46px;min-height:44px}.cvs-bottom .ur{width:42px}}
+
+/* edit view = PDF view: empty optional fields stay hidden until you select that entry */
+.cvs-edit .cvs-entry:not(.esel):not(.cvs-blank) [data-p]:empty,
+.cvs-edit .cvs-entry:not(.esel):not(.cvs-blank) .cvs-date.empty{display:none!important}
+.cvs-edit:not(.hedit) .cvs-contacts:not(.all-empty) .cvs-ci:has(> [data-p]:empty){display:none}
+
+/* left tool rail: minimize / reopen */
+.cvs-rail{transition:padding .25s,border-radius .25s,left .25s,opacity .25s}
+.cvs-rail .cvs-rail-tog{height:26px;border-radius:10px;font-size:12px;color:var(--text-muted)}
+.cvs-rail.min{left:0;padding:6px 5px;border-radius:0 16px 16px 0;border-left:0;opacity:.92}
+.cvs-rail.min>button:not(.cvs-rail-tog),.cvs-rail.min>hr{display:none}
+.cvs-rail.min .cvs-rail-tog{width:26px;height:44px;color:var(--primary)}
+@media(max-width:900px){.cvs-rail.min{left:0}.cvs-rail .cvs-rail-tog{height:24px}}
+@media(max-width:900px){
+ .cvs-rail.min{padding:3px 2px;border-radius:0 10px 10px 0;box-shadow:0 4px 14px #0f172a22}
+ .cvs-rail.min .cvs-rail-tog{width:16px;height:30px;font-size:9px;border-radius:6px}
+}
 </style>
 <script id="cv-studio">
 (()=>{
@@ -7541,7 +7558,7 @@ function pageVars(){const s=doc.style;const bul={disc:'disc',dash:"'–  '",arro
  return `--a:${s.accent};--fs:${s.size}pt;--lh:${s.line};--gap:${s.gap}mm;--m:${s.margin}mm;--ph:${s.psize}mm;--font:'${s.font}';--hfont:'${s.hfont}';--bul:${bul};--a2:${s.a2||s.accent};--ws:${s.wsOn?(s.ws*0.04).toFixed(2)+'em':'0'};--ls:${s.lsOn?(s.ls*0.006).toFixed(3)+'em':'0'}${s.bg!=='none'?`;--pat:${patURL(s.bg,s.bgColor?s.accent:'#94a3b8')};--patb:${patURL(s.bg,s.bgColor?(s.a2||s.accent):'#94a3b8',true)}`:''}`;}
 function photoHTML(edit){const s=doc.style;if(!s.photo)return '';const src=window.croppedImageData||'';
  if(!src&&!edit)return '';return `<div class="cvs-photo"${edit?' data-act="photo" title="Change photo"':''}>${src?`<img src="${esc(src)}" alt="">`:'<i class="fas fa-camera" style="font-size:7mm"></i>'}</div>`;}
-function contactsHTML(edit){return `<div class="cvs-contacts">${CONTACTS.filter(c=>doc.style.show[c[0]]).map(([k,ic,ph,src])=>{const v=src==='form'?formVal(k):doc.header[k]||'';if(!edit&&!v.trim())return '';
+function contactsHTML(edit){const any=CONTACTS.filter(c=>doc.style.show[c[0]]).some(([k,,,src])=>(src==='form'?formVal(k):doc.header[k]||'').trim());return `<div class="cvs-contacts${any?'':' all-empty'}">${CONTACTS.filter(c=>doc.style.show[c[0]]).map(([k,ic,ph,src])=>{const v=src==='form'?formVal(k):doc.header[k]||'';if(!edit&&!v.trim())return '';
  const icon=ic.startsWith('fa-brands')?`<i class="${ic}"></i>`:`<i class="fas ${ic}"></i>`;
  return `<span class="cvs-ci">${icon}${E(src==='form'?'H.'+k:'X.'+k,v,'span','',ph,edit,true)||`<span>${esc(v)}</span>`}</span>`;}).join('')}</div>`;}
 function nameHTML(edit){return E('H.fullName',formVal('fullName'),'h1','cvs-name','Your Name',edit,true)+E('H.profTitle',formVal('profTitle'),'div','cvs-role','Professional Title',edit,true);}
@@ -7572,7 +7589,8 @@ function entryHTML(s,e,i,edit){const k=T[s.type].kind,ph=T[s.type].ph||{},P=`E.$
  }else if(k==='feature'){h=`<div class="cvs-feat-title"><i class="fas ${s.type==='strengths'?'fa-bolt':'fa-star'}"></i>${E(P+'title',e.title,'span','',ph.title,edit,true)}</div>${o.desc?E(P+'desc',e.desc,'div','cvs-e-desc',ph.desc,edit):''}`;
  }else if(k==='reference'){h=`${E(P+'name',e.name,'div','cvs-ref-name',ph.name,edit,true)}${E(P+'org',e.org,'div','cvs-ref-org',ph.org,edit,true)}${E(P+'contact',e.contact,'div','cvs-ref-contact',ph.contact,edit,true)}`;}
  if(!edit&&!h.replace(/<[^>]+>/g,'').trim())return '';
- return `<div class="cvs-entry" data-sid="${s.id}" data-ei="${i}">${edit?etoolsHTML(s,i):''}${h}</div>`;}
+ const blank=!Object.entries(e).some(([k,v])=>k!=='id'&&k!=='present'&&k!=='level'&&(Array.isArray(v)?v.some(x=>String(x).trim()):String(v??'').trim()));
+ return `<div class="cvs-entry${blank?' cvs-blank':''}" data-sid="${s.id}" data-ei="${i}">${edit?etoolsHTML(s,i):''}${h}</div>`;}
 function compactHTML(s,edit){const k=T[s.type].kind,ph=T[s.type].ph||{};const list=edit?s.entries:s.entries.filter(e=>(e.name||e.value||'').trim());
  if(k==='level')return `<div class="cvs-lvgrid">${list.map(e=>{const i=s.entries.indexOf(e);return `<div class="cvs-lv cvs-entry" data-sid="${s.id}" data-ei="${i}">${softIcon(s,e,edit)}${langIcon(s,e)}${E(`E.${s.id}.${i}.name`,e.name,'span','cvs-lv-name',ph.name,edit,true)}${levelHTML(s,e,edit)}</div>`;}).join('')}</div>`;
  if(k==='tags')return `<div class="cvs-tags">${list.map(e=>{const i=s.entries.indexOf(e);return edit?`<span class="cvs-tag cvs-entry" data-sid="${s.id}" data-ei="${i}" contenteditable="true" data-single="1" data-p="E.${s.id}.${i}.name" data-ph="${esc(ph.name)}">${esc(e.name)}</span>`:`<span class="cvs-tag">${esc(e.name)}</span>`;}).join('')}</div>`;
@@ -7612,7 +7630,7 @@ function paginate(edit){const B=buildBlocks(edit);
 
 function render(){if(!doc||!on)return;const box=$('cvsPages');if(!box)return;
  const pages=paginate(true);
- box.className='cvs-edit';box.innerHTML=pages.map((p,i)=>`<div class="cvs-pagewrap"><span class="cvs-pagenum">Page ${i+1} / ${pages.length}</span>${p}</div>`).join('');
+ box.className='cvs-edit'+(box.contains(document.activeElement)&&document.activeElement.closest?.('[data-p^="H."],[data-p^="X."]')?' hedit':'');box.innerHTML=pages.map((p,i)=>`<div class="cvs-pagewrap"><span class="cvs-pagenum">Page ${i+1} / ${pages.length}</span>${p}</div>`).join('');
  rendered=true;applySel();scale();renderPanel(true);markOverflow();}
 function markOverflow(){}
 function scale(){const cv=$('cvsCanvas'),box=$('cvsPages'),sz=$('cvsSizer');if(!cv||!box||!sz||!box.firstElementChild)return;
@@ -7801,7 +7819,7 @@ studio.innerHTML=`<div class="cvs-top"><button class="cvs-pill" id="cvsBack"><i 
 <button class="cvs-pill dl" id="cvsPDF"><i class="fas fa-download"></i> Download</button>
 <button class="cvs-pill" id="cvsTheme"><i class="fas fa-circle-half-stroke"></i> <span id="cvsThemeLbl">Day</span></button><button class="cvs-pill red" id="cvsLogout">Logout</button></div>
 <main class="cvs-canvas" id="cvsCanvas"><div id="cvsSizer"><div id="cvsPages" class="cvs-edit"></div></div></main>
-<nav class="cvs-rail" aria-label="CV tools"><button data-panel="add" data-tip="Add section"><i class="fas fa-circle-plus"></i></button><button data-panel="arrange" data-tip="Rearrange"><i class="fas fa-arrow-down-up-across-line"></i></button><button data-rail="photo" data-tip="Profile photo"><i class="fas fa-user-astronaut"></i></button><button data-rail="pdf" data-tip="Download PDF"><i class="fas fa-file-arrow-down"></i></button><hr><button data-panel="analyze" data-tip="Content analyzer"><i class="fas fa-wand-magic-sparkles"></i></button><button class="score" data-panel="analyze" id="cvsScore" data-tip="CV score">0</button></nav>
+<nav class="cvs-rail" id="cvsRail" aria-label="CV tools"><button class="cvs-rail-tog" id="cvsRailTog" title="Hide tools" aria-label="Hide tools" aria-expanded="true"><i class="fas fa-chevron-left"></i></button><button data-panel="add" data-tip="Add section"><i class="fas fa-circle-plus"></i></button><button data-panel="arrange" data-tip="Rearrange"><i class="fas fa-arrow-down-up-across-line"></i></button><button data-rail="photo" data-tip="Profile photo"><i class="fas fa-user-astronaut"></i></button><button data-rail="pdf" data-tip="Download PDF"><i class="fas fa-file-arrow-down"></i></button><hr><button data-panel="analyze" data-tip="Content analyzer"><i class="fas fa-wand-magic-sparkles"></i></button><button class="score" data-panel="analyze" id="cvsScore" data-tip="CV score">0</button></nav>
 <section class="cvs-card" aria-label="CV settings"><div class="cvs-card-head"><span id="cvsCardTitle">Layout</span><button class="cvs-x" id="cvsCardClose" aria-label="Close"><i class="fas fa-xmark"></i></button></div><div class="cvs-panel" id="cvsPanel"></div></section>
 <div class="cvs-bottom"><button class="ur" id="cvsUndo" title="Undo"><i class="fas fa-rotate-left"></i></button><button class="ur" id="cvsRedo" title="Redo"><i class="fas fa-rotate-right"></i></button><span class="sep"></span><button data-panel="layout" title="Layout" aria-label="Layout"><i class="fas fa-table-columns"></i><span>Layout</span></button><button data-panel="fonts" title="Fonts" aria-label="Fonts"><i class="fas fa-font"></i><span>Fonts</span></button><button data-panel="themes" title="Themes" aria-label="Themes"><i class="fas fa-paintbrush"></i><span>Themes</span></button><button data-panel="prefs" title="Preferences" aria-label="Preferences"><i class="fas fa-gear"></i><span>Preferences</span></button></div>
 <div class="cvs-zoom"><button id="cvsZOut" title="Zoom out"><i class="fas fa-minus"></i></button><span id="cvsZoomVal">100%</span><button id="cvsZIn" title="Zoom in"><i class="fas fa-plus"></i></button><button id="cvsZFit" title="Fit"><i class="fas fa-expand"></i></button></div>`;
@@ -7811,6 +7829,9 @@ let panelOpen=false;const openAcc={layout:'tpl',fonts:'style',themes:'colors',pr
 function openPanel(p){if(panelOpen&&panel===p){closeSheet();return;}panel=p;panelOpen=true;studio.classList.add('panel-open');renderPanel();}
 function openSheet(){panelOpen=true;studio.classList.add('panel-open');renderPanel();}
 function closeSheet(){panelOpen=false;studio.classList.remove('panel-open');document.querySelectorAll('#cvStudio [data-panel]').forEach(b=>b.classList.remove('on'));}
+function setRail(min,quiet){const rl=$('cvsRail'),t=$('cvsRailTog');if(!rl)return;rl.classList.toggle('min',min);if(t){t.innerHTML=`<i class="fas fa-chevron-${min?'right':'left'}"></i>`;t.title=min?'Show tools':'Hide tools';t.setAttribute('aria-label',t.title);t.setAttribute('aria-expanded',String(!min));}
+ if(!quiet)try{localStorage.setItem('cvsRailMin',min?'1':'0');}catch{}}
+try{setRail(localStorage.getItem('cvsRailMin')==='1',true);}catch{}
 function themeLbl(){const l=$('cvsThemeLbl');if(l)l.textContent=(typeof isNightMode!=='undefined'&&isNightMode)?'Night':'Day';}
 function applyExp(v){const order=v==='entry'?['summary','education','projects','experience']:['summary','experience','projects','education'];const rank=t=>{const i=order.indexOf(t);return i<0?99:i;};
  const idx=doc.sections.map((x,i)=>[x,i]);const keyed=idx.filter(([x])=>order.includes(x.type));const slots=keyed.map(([,i])=>i).sort((a,b)=>a-b);const sorted=keyed.map(([x])=>x).sort((a,b)=>rank(a.type)-rank(b.type));slots.forEach((slot,k)=>{doc.sections[slot]=sorted[k];});}
@@ -7825,6 +7846,7 @@ studio.addEventListener('click',e=>{
  if(e.target.closest('#cvsTheme')){if(typeof toggleBuilderTheme==='function')toggleBuilderTheme();themeLbl();return;}
  if(e.target.closest('#cvsUndo')){undo();return;}if(e.target.closest('#cvsRedo')){redo();return;}
  if(e.target.closest('#cvsCardClose')){closeSheet();return;}
+ if(e.target.closest('#cvsRailTog')){setRail(!$('cvsRail').classList.contains('min'));return;}
  if(e.target.closest('#cvsZIn')){zoom=Math.min(2.5,zoom+.15);scale();return;}if(e.target.closest('#cvsZOut')){zoom=Math.max(.4,zoom-.15);scale();return;}if(e.target.closest('#cvsZFit')){zoom=1;scale();return;}
  const ad=e.target.closest('[data-add]');if(ad){addSection(ad.dataset.add);return;}
  const pr=e.target.closest('[data-preset]');if(pr){const P=PRESETS[+pr.dataset.preset].s;Object.assign(doc.style,{icons:true,photo:true,a2:P.accent},P);loadFonts().then(()=>{changed(true);renderPanel();});return;}
@@ -7859,7 +7881,7 @@ studio.addEventListener('dragend',()=>{arrDrag=null;document.querySelectorAll('.
 const pagesEl=studio.querySelector('#cvsPages');
 pagesEl.addEventListener('mousedown',e=>{if(e.target.closest('.cvs-tools,.cvs-etools,[data-act]'))e.preventDefault();});
 pagesEl.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b){e.preventDefault();act(b,e);return;}const blk=e.target.closest('.cvs-blk[data-sid]');if(blk){const en=e.target.closest('.cvs-entry');select(blk.dataset.sid,en?+en.dataset.ei:null);}else select(null,null);});
-pagesEl.addEventListener('focusin',e=>{const blk=e.target.closest('.cvs-blk[data-sid]');if(blk){const en=e.target.closest('.cvs-entry');select(blk.dataset.sid,en?+en.dataset.ei:null);}});
+pagesEl.addEventListener('focusin',e=>{pagesEl.classList.toggle('hedit',!!e.target.closest?.('[data-p^="H."],[data-p^="X."]'));const blk=e.target.closest('.cvs-blk[data-sid]');if(blk){const en=e.target.closest('.cvs-entry');select(blk.dataset.sid,en?+en.dataset.ei:null);}});
 pagesEl.addEventListener('input',e=>{const el=e.target.closest('[data-p]');if(!el)return;let v=el.innerText.replace(/ /g,' ');if(el.dataset.single)v=v.replace(/\n/g,' ');if(!v.trim()&&el.innerHTML!==''){el.innerHTML='';v='';}setPath(el.dataset.p,el.dataset.single?v:v.replace(/\n$/,''));changed(false);});
 pagesEl.addEventListener('paste',e=>{const el=e.target.closest('[data-p]');if(!el)return;e.preventDefault();let t=(e.clipboardData||window.clipboardData).getData('text/plain');if(el.dataset.single)t=t.replace(/\s*\n\s*/g,' ');document.execCommand('insertText',false,t);});
 pagesEl.addEventListener('keydown',e=>{const el=e.target.closest('[data-p]');if(!el)return;const p=el.dataset.p.split('.');
