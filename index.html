@@ -8073,10 +8073,11 @@ if(sessionStorage.getItem('ssGoogleRedirect')){sessionStorage.removeItem('ssGoog
 
 /* ---------- keep a small summary for the admin report ---------- */
 let lastSummary=0;
-async function pushSummary(force){if(!isFree())return;const u=window.__auth?.currentUser;if(!u)return;if(!force&&Date.now()-lastSummary<45000)return;lastSummary=Date.now();
+async function pushSummary(force){if(!isFree())return;const u=window.__auth?.currentUser;if(!u)return;if(!force&&Date.now()-lastSummary<15000)return;lastSummary=Date.now();
  try{const fb=window.__firebase,D=await dbMod();const val=id=>String($(id)?.value||'').trim().slice(0,200);let score=null;try{score=window.cvStudio?.analyze?.()?.score??null;}catch{}
-  const data={title:val('profTitle'),location:val('location'),updatedAt:D.serverTimestamp(),lastActive:D.serverTimestamp()};if(Number.isFinite(score))data.score=Math.max(0,Math.min(100,Math.round(score)));
+  const nm=val('fullName');const data={...(nm&&!/\(sample\)/i.test(nm)?{name:nm}:{}),title:val('profTitle'),location:val('location'),updatedAt:D.serverTimestamp(),lastActive:D.serverTimestamp()};if(Number.isFinite(score))data.score=Math.max(0,Math.min(100,Math.round(score)));
   await fb.update(fb.ref(fb.db,'freeUsers/'+u.uid),data);}catch{}}
+let nmT=0;document.addEventListener('input',e=>{if(isFree()&&['fullName','profTitle','location'].includes(e.target?.id)){clearTimeout(nmT);nmT=setTimeout(()=>pushSummary(true),3000);}});
 const oSave=window.saveToFirebase;if(typeof oSave==='function'){saveToFirebase=async function(...a){const r=await oSave.apply(this,a);if(r)pushSummary();return r;};}
 document.addEventListener('click',e=>{if(!isFree())return;if(!e.target.closest?.('#cvsPDF,[data-rail="pdf"]'))return;const u=window.__auth?.currentUser;const fb=window.__firebase;if(!u||!fb)return;
  fb.runTransaction(fb.ref(fb.db,'freeUsers/'+u.uid+'/downloads'),n=>(Number(n)||0)+1).catch(()=>{});pushSummary(true);},true);
@@ -8344,6 +8345,11 @@ html.ss-free .logout-btn,html.ss-free #cvsLogout{display:none!important}
 .ssa-out{width:100%;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:12px;border:1px solid #ef444466;background:#ef44441a;color:#fca5a5;font-weight:800;cursor:pointer}
 .ssa-out:hover{background:#ef44442e}
 @media(max-width:600px){#ssAcctBtn{top:max(10px,env(safe-area-inset-top));right:12px;width:44px;height:44px}#ssAcctMenu{top:66px;right:12px}}
+
+.ssa-hint{font-size:11.5px;color:#64748b;margin-top:5px}
+.ssa-mail .ssa-lock{margin-left:auto;color:#64748b;font-size:12px}
+html.ss-free #email[readonly]{opacity:.75;cursor:not-allowed}
+.cvs-edit .ss-locked{cursor:not-allowed!important;background:none!important;box-shadow:none!important}
 </style>
 <script id="ss-acct">
 (()=>{
@@ -8351,35 +8357,29 @@ if(window.__ssAcctMenu)return;window.__ssAcctMenu=true;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isFree=()=>{try{return !!JSON.parse(sessionStorage.getItem('ssplitly_session')||'{}').free;}catch{return false;}};
+const cvName=()=>{const v=String($('fullName')?.value||'').trim();return /\(sample\)/i.test(v)?'':v;};
 let accName='';
 const user=()=>window.__auth?.currentUser||null;
 const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
 function cvPhoto(){const a=$('picPreviewSmall')?.getAttribute('src')||'';return /^(https?:|data:image\/|blob:)/.test(a)?a:(window.croppedImageData||'');}
-function avatarHTML(size){const u=user();const n=accName||u?.displayName||u?.email||'';const ph=cvPhoto()||u?.photoURL;
+function avatarHTML(size){const u=user();accName=cvName();const n=accName||u?.displayName||u?.email||'';const ph=cvPhoto()||u?.photoURL;
  return ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer" width="${size}" height="${size}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc(initials(n)).replace(/'/g,'')}'}))">`:`<span>${esc(initials(n))}</span>`;}
 
 const btn=document.createElement('button');btn.id='ssAcctBtn';btn.type='button';btn.setAttribute('aria-haspopup','dialog');btn.setAttribute('aria-label','Account');btn.hidden=true;
 const menu=document.createElement('div');menu.id='ssAcctMenu';menu.hidden=true;menu.setAttribute('role','dialog');menu.setAttribute('aria-label','Your account');
 function place(){const p1=$('page1');if(p1&&!btn.isConnected)p1.append(btn);if(!menu.isConnected)document.body.append(menu);}
 function paintBtn(){btn.innerHTML=avatarHTML(40);}
-function paintMenu(){const u=user();menu.innerHTML=`<div class="ssa-top"><div class="ssa-av">${avatarHTML(64)}</div><div class="ssa-who"><b>${esc(accName||u?.displayName||'Your account')}</b><small>${esc(u?.email||'')}</small></div><button class="ssa-x" data-a="close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
- <label class="ssa-l" for="ssaName">Name</label><div class="ssa-row"><input id="ssaName" maxlength="80" value="${esc(accName||u?.displayName||'')}" placeholder="Your name" autocomplete="name"><button data-a="save">Save</button></div><div class="ssa-msg" id="ssaMsg"></div>
- <label class="ssa-l">Email</label><div class="ssa-mail"><i class="fab fa-google"></i><span>${esc(u?.email||'')}</span></div>
+function paintMenu(){const u=user();accName=cvName();menu.innerHTML=`<div class="ssa-top"><div class="ssa-av">${avatarHTML(64)}</div><div class="ssa-who"><b>${esc(accName||u?.displayName||'Your account')}</b><small>Name &amp; photo from your CV</small></div><button class="ssa-x" data-a="close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+ <label class="ssa-l">Email</label><div class="ssa-mail"><i class="fab fa-google"></i><span>${esc(u?.email||'')}</span><i class="fas fa-lock ssa-lock"></i></div>
  <button class="ssa-out" data-a="logout"><i class="fas fa-right-from-bracket"></i> Log out</button>`;}
-async function loadName(){const u=user(),fb=window.__firebase;if(!u||!fb)return;try{const v=(await fb.get(fb.ref(fb.db,'freeUsers/'+u.uid+'/name'))).val();if(v)accName=String(v);}catch{}paintBtn();window.__ssAccountName=accName;document.dispatchEvent(new Event('ss-account-name'));}
-function open(){paintMenu();menu.hidden=false;btn.setAttribute('aria-expanded','true');setTimeout(()=>$('ssaName')?.focus({preventScroll:true}),50);}
+function loadName(){paintBtn();}
+function open(){paintMenu();menu.hidden=false;btn.setAttribute('aria-expanded','true');}
 function close(){menu.hidden=true;btn.setAttribute('aria-expanded','false');}
 btn.addEventListener('click',e=>{e.stopPropagation();menu.hidden?open():close();});
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden)close();});
-menu.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ssaName'){e.preventDefault();menu.querySelector('[data-a="save"]').click();}});
 menu.addEventListener('click',async e=>{const a=e.target.closest('[data-a]')?.dataset.a;if(!a)return;
  if(a==='close')close();
- if(a==='save'){const v=$('ssaName').value.trim().replace(/\s+/g,' ').slice(0,80);const msg=$('ssaMsg');if(!v){msg.textContent='Please enter a name.';msg.className='ssa-msg err';return;}
-  const u=user(),fb=window.__firebase;if(!u||!fb)return;e.target.disabled=true;
-  try{await fb.update(fb.ref(fb.db,'freeUsers/'+u.uid),{name:v});accName=v;try{const A=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js');await A.updateProfile(u,{displayName:v});}catch{}
-   paintBtn();menu.querySelector('.ssa-who b').textContent=v;menu.querySelector('.ssa-av').innerHTML=avatarHTML(64);msg.textContent='Saved ✓';msg.className='ssa-msg ok';window.__ssAccountName=v;document.dispatchEvent(new Event('ss-account-name'));}
-  catch(err){msg.textContent='Could not save. Please try again.';msg.className='ssa-msg err';}finally{e.target.disabled=false;}}
  if(a==='logout'){e.target.disabled=true;try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}sessionStorage.removeItem('ssplitly_nav');window.logout?.();}});
 
 /* free users always land back on the Google sign-in page after any sign-out */
@@ -8395,6 +8395,7 @@ try{if(localStorage.getItem('ssLastFree')==='1'&&!sessionStorage.getItem('ssplit
 let lastPh='';const repaint=()=>{if(btn.hidden)return;const p=cvPhoto();if(p===lastPh)return;lastPh=p;paintBtn();if(!menu.hidden){const av=menu.querySelector('.ssa-av');if(av)av.innerHTML=avatarHTML(64);}};
 const watchPic=()=>{const im=$('picPreviewSmall');if(!im)return setTimeout(watchPic,400);new MutationObserver(repaint).observe(im,{attributes:true,attributeFilter:['src']});};watchPic();
 setInterval(repaint,3000);
+let lastNm='';document.addEventListener('input',e=>{if(e.target?.id!=='fullName'||btn.hidden)return;const n=cvName();if(n===lastNm)return;lastNm=n;paintBtn();if(!menu.hidden)paintMenu();});
 
 /* free users: shrink big photos before cropping (fast on phones, small uploads) */
 const MAX=1600;
@@ -8412,7 +8413,17 @@ document.addEventListener('change',async e=>{const inp=e.target;if(inp?.id!=='pr
   if(typeof toast==='function')toast(`Photo optimised: ${Math.round(file.size/1024)} KB → ${Math.round(url.length*0.75/1024)} KB`);
  }catch(err){passThrough();}},true);
 
-function sync(){place();const on=isFree()&&!!user();try{if(user()&&sessionStorage.getItem('ssplitly_session'))localStorage.setItem('ssLastFree',isFree()?'1':'0');}catch{}btn.hidden=!on;if(on){paintBtn();loadName();}else close();}
+
+/* free users: CV email is fixed to the Google account */
+function lockEmail(){if(!isFree())return;const u=user();if(!u?.email)return;const inp=$('email');
+ if(inp){inp.readOnly=true;inp.title='Linked to your Google account';if(inp.value!==u.email){inp.value=u.email;inp.dispatchEvent(new Event('input',{bubbles:true}));}}
+ document.querySelectorAll('#cvsPages [data-p="H.email"]').forEach(el=>{if(el.getAttribute('contenteditable')!=='false'){el.setAttribute('contenteditable','false');el.title='Linked to your Google account';el.classList.add('ss-locked');}if(el.textContent!==u.email)el.textContent=u.email;});}
+document.addEventListener('beforeinput',e=>{if(isFree()&&e.target?.closest?.('[data-p="H.email"]'))e.preventDefault();},true);
+document.addEventListener('paste',e=>{if(isFree()&&e.target?.closest?.('[data-p="H.email"]'))e.preventDefault();},true);
+const watchPages=()=>{const pg=$('cvsPages');if(!pg)return setTimeout(watchPages,400);new MutationObserver(()=>lockEmail()).observe(pg,{childList:true,subtree:true});};watchPages();
+setInterval(lockEmail,2000);
+
+function sync(){place();const on=isFree()&&!!user();try{if(user()&&sessionStorage.getItem('ssplitly_session'))localStorage.setItem('ssLastFree',isFree()?'1':'0');}catch{}btn.hidden=!on;if(on){paintBtn();loadName();lockEmail();}else close();}
 const wait=setInterval(()=>{const a=window.__auth;if(!a)return;clearInterval(wait);a.onAuthStateChanged(()=>setTimeout(sync,50));},200);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',place);else place();
 new MutationObserver(()=>{if(isFree()&&user()&&btn.hidden)sync();}).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
