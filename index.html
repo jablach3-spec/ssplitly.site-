@@ -8075,7 +8075,7 @@ if(sessionStorage.getItem('ssGoogleRedirect')){sessionStorage.removeItem('ssGoog
 let lastSummary=0;
 async function pushSummary(force){if(!isFree())return;const u=window.__auth?.currentUser;if(!u)return;if(!force&&Date.now()-lastSummary<45000)return;lastSummary=Date.now();
  try{const fb=window.__firebase,D=await dbMod();const val=id=>String($(id)?.value||'').trim().slice(0,200);let score=null;try{score=window.cvStudio?.analyze?.()?.score??null;}catch{}
-  const data={name:val('fullName'),title:val('profTitle'),location:val('location'),updatedAt:D.serverTimestamp(),lastActive:D.serverTimestamp()};if(Number.isFinite(score))data.score=Math.max(0,Math.min(100,Math.round(score)));
+  const data={title:val('profTitle'),location:val('location'),updatedAt:D.serverTimestamp(),lastActive:D.serverTimestamp()};if(Number.isFinite(score))data.score=Math.max(0,Math.min(100,Math.round(score)));
   await fb.update(fb.ref(fb.db,'freeUsers/'+u.uid),data);}catch{}}
 const oSave=window.saveToFirebase;if(typeof oSave==='function'){saveToFirebase=async function(...a){const r=await oSave.apply(this,a);if(r)pushSummary();return r;};}
 document.addEventListener('click',e=>{if(!isFree())return;if(!e.target.closest?.('#cvsPDF,[data-rail="pdf"]'))return;const u=window.__auth?.currentUser;const fb=window.__firebase;if(!u||!fb)return;
@@ -8246,10 +8246,10 @@ function buildHome(){const lc=document.querySelector('#page1 .landing-content');
   <div class="ssh-trust"><span><i class="fas fa-check"></i> Auto-saved</span><span><i class="fas fa-check"></i> ATS-friendly PDF</span><span><i class="fas fa-check"></i> Works on phone &amp; desktop</span></div>
  </div><div class="ssh-right">${preview}</div></div>`;
  hello();}
-function hello(){const el=$('sshHello');if(!el)return;const n=String($('fullName')?.value||'').trim();const first=/sample|^your name$/i.test(n)?'':n.split(/\s+/)[0];
+function hello(){const el=$('sshHello');if(!el)return;const n=String(window.__ssAccountName||$('fullName')?.value||'').trim();const first=/sample|^your name$/i.test(n)?'':n.split(/\s+/)[0];
  const h=new Date().getHours();const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';el.innerHTML=first?`${g}, <b>${esc(first)}</b> 👋`:`${g} 👋`;}
 new MutationObserver(()=>{if($('page1')?.classList.contains('active'))hello();}).observe($('page1')||document.body,{attributes:true,attributeFilter:['class']});
-document.addEventListener('input',e=>{if(e.target?.id==='fullName')hello();});
+document.addEventListener('input',e=>{if(e.target?.id==='fullName')hello();});document.addEventListener('ss-account-name',hello);
 
 /* ---------- login screen ---------- */
 function buildLogin(){const ov=$('loginOverlay');if(!ov||ov.querySelector('.ssl-hero'))return;
@@ -8316,6 +8316,106 @@ const watchStudio=()=>{const st=$('cvStudio');if(!st)return setTimeout(watchStud
   else if(!open&&history.state?.ssPanel){history.back();}}).observe(st,{attributes:true,attributeFilter:['class']});};
 watchStudio();
 addEventListener('popstate',()=>{const st=$('cvStudio');if(st?.classList.contains('panel-open')&&!history.state?.ssPanel){panelWas=false;document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));}});
+})();
+</script>
+<style id="ss-acct-css">
+html.ss-free .logout-btn,html.ss-free #cvsLogout{display:none!important}
+#ssAcctBtn{position:absolute;top:22px;right:24px;z-index:40;width:48px;height:48px;padding:0;border-radius:50%;border:2px solid #ffffff40;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;cursor:pointer;overflow:hidden;box-shadow:0 10px 26px #0006,0 0 0 4px #38bdf81f;transition:transform .2s,box-shadow .2s}
+#ssAcctBtn:hover{transform:scale(1.06);box-shadow:0 12px 30px #0007,0 0 0 5px #38bdf833}
+#ssAcctBtn[hidden]{display:none}
+#ssAcctBtn img,#ssaAv img{width:100%;height:100%;object-fit:cover;display:block}
+#ssAcctBtn span{display:grid;place-items:center;width:100%;height:100%;font:800 16px/1 Inter,Manrope,sans-serif}
+#ssAcctMenu{position:fixed;top:80px;right:20px;z-index:10050;width:min(330px,calc(100vw - 24px));padding:16px;border-radius:20px;background:#0f172af2;border:1px solid #ffffff1f;color:#e2e8f0;backdrop-filter:blur(16px);box-shadow:0 24px 60px #000a;font:14px/1.4 Inter,Manrope,sans-serif;animation:ssaIn .22s cubic-bezier(.16,1,.3,1)}
+#ssAcctMenu[hidden]{display:none}
+@keyframes ssaIn{from{opacity:0;transform:translateY(-8px) scale(.98)}}
+.ssa-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.ssa-av{width:56px;height:56px;flex:none;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#38bdf8,#6366f1);display:grid;place-items:center;border:2px solid #ffffff33}
+.ssa-av img{width:100%;height:100%;object-fit:cover}.ssa-av span{font:800 20px/1 Inter,sans-serif;color:#fff}
+.ssa-who{flex:1;min-width:0}.ssa-who b{display:block;font-size:16px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ssa-who small{display:block;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ssa-x{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid #ffffff1f;background:#ffffff0d;color:#cbd5e1;cursor:pointer}
+.ssa-l{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin:10px 0 6px}
+.ssa-row{display:flex;gap:8px}
+.ssa-row input{flex:1;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid #ffffff26;background:#ffffff0d;color:#fff;font:inherit;outline:none}
+.ssa-row input:focus{border-color:#38bdf8;box-shadow:0 0 0 3px #38bdf833}
+.ssa-row button{border:0;border-radius:12px;padding:0 16px;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;font-weight:800;cursor:pointer}
+.ssa-msg{min-height:16px;font-size:12px;margin-top:5px}.ssa-msg.ok{color:#4ade80}.ssa-msg.err{color:#f87171}
+.ssa-mail{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff14;color:#cbd5e1;overflow:hidden}
+.ssa-mail span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ssa-out{width:100%;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:12px;border:1px solid #ef444466;background:#ef44441a;color:#fca5a5;font-weight:800;cursor:pointer}
+.ssa-out:hover{background:#ef44442e}
+@media(max-width:600px){#ssAcctBtn{top:max(10px,env(safe-area-inset-top));right:12px;width:44px;height:44px}#ssAcctMenu{top:66px;right:12px}}
+</style>
+<script id="ss-acct">
+(()=>{
+if(window.__ssAcctMenu)return;window.__ssAcctMenu=true;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isFree=()=>{try{return !!JSON.parse(sessionStorage.getItem('ssplitly_session')||'{}').free;}catch{return false;}};
+let accName='';
+const user=()=>window.__auth?.currentUser||null;
+const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+function cvPhoto(){const a=$('picPreviewSmall')?.getAttribute('src')||'';return /^(https?:|data:image\/|blob:)/.test(a)?a:(window.croppedImageData||'');}
+function avatarHTML(size){const u=user();const n=accName||u?.displayName||u?.email||'';const ph=cvPhoto()||u?.photoURL;
+ return ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer" width="${size}" height="${size}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc(initials(n)).replace(/'/g,'')}'}))">`:`<span>${esc(initials(n))}</span>`;}
+
+const btn=document.createElement('button');btn.id='ssAcctBtn';btn.type='button';btn.setAttribute('aria-haspopup','dialog');btn.setAttribute('aria-label','Account');btn.hidden=true;
+const menu=document.createElement('div');menu.id='ssAcctMenu';menu.hidden=true;menu.setAttribute('role','dialog');menu.setAttribute('aria-label','Your account');
+function place(){const p1=$('page1');if(p1&&!btn.isConnected)p1.append(btn);if(!menu.isConnected)document.body.append(menu);}
+function paintBtn(){btn.innerHTML=avatarHTML(40);}
+function paintMenu(){const u=user();menu.innerHTML=`<div class="ssa-top"><div class="ssa-av">${avatarHTML(64)}</div><div class="ssa-who"><b>${esc(accName||u?.displayName||'Your account')}</b><small>${esc(u?.email||'')}</small></div><button class="ssa-x" data-a="close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+ <label class="ssa-l" for="ssaName">Name</label><div class="ssa-row"><input id="ssaName" maxlength="80" value="${esc(accName||u?.displayName||'')}" placeholder="Your name" autocomplete="name"><button data-a="save">Save</button></div><div class="ssa-msg" id="ssaMsg"></div>
+ <label class="ssa-l">Email</label><div class="ssa-mail"><i class="fab fa-google"></i><span>${esc(u?.email||'')}</span></div>
+ <button class="ssa-out" data-a="logout"><i class="fas fa-right-from-bracket"></i> Log out</button>`;}
+async function loadName(){const u=user(),fb=window.__firebase;if(!u||!fb)return;try{const v=(await fb.get(fb.ref(fb.db,'freeUsers/'+u.uid+'/name'))).val();if(v)accName=String(v);}catch{}paintBtn();window.__ssAccountName=accName;document.dispatchEvent(new Event('ss-account-name'));}
+function open(){paintMenu();menu.hidden=false;btn.setAttribute('aria-expanded','true');setTimeout(()=>$('ssaName')?.focus({preventScroll:true}),50);}
+function close(){menu.hidden=true;btn.setAttribute('aria-expanded','false');}
+btn.addEventListener('click',e=>{e.stopPropagation();menu.hidden?open():close();});
+document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))close();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden)close();});
+menu.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ssaName'){e.preventDefault();menu.querySelector('[data-a="save"]').click();}});
+menu.addEventListener('click',async e=>{const a=e.target.closest('[data-a]')?.dataset.a;if(!a)return;
+ if(a==='close')close();
+ if(a==='save'){const v=$('ssaName').value.trim().replace(/\s+/g,' ').slice(0,80);const msg=$('ssaMsg');if(!v){msg.textContent='Please enter a name.';msg.className='ssa-msg err';return;}
+  const u=user(),fb=window.__firebase;if(!u||!fb)return;e.target.disabled=true;
+  try{await fb.update(fb.ref(fb.db,'freeUsers/'+u.uid),{name:v});accName=v;try{const A=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js');await A.updateProfile(u,{displayName:v});}catch{}
+   paintBtn();menu.querySelector('.ssa-who b').textContent=v;menu.querySelector('.ssa-av').innerHTML=avatarHTML(64);msg.textContent='Saved ✓';msg.className='ssa-msg ok';window.__ssAccountName=v;document.dispatchEvent(new Event('ss-account-name'));}
+  catch(err){msg.textContent='Could not save. Please try again.';msg.className='ssa-msg err';}finally{e.target.disabled=false;}}
+ if(a==='logout'){e.target.disabled=true;try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}sessionStorage.removeItem('ssplitly_nav');window.logout?.();}});
+
+/* free users always land back on the Google sign-in page after any sign-out */
+let oLogout=window.logout;
+const wrappedLogout=async function(...a){if(isFree()){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}return oLogout?.apply(this,a);};
+let outerLogout=null; // the save-before-logout wrapper installs itself on top of us
+Object.defineProperty(window,'logout',{configurable:true,get(){return outerLogout||wrappedLogout;},set(v){if(v&&v.__waitsForSave)outerLogout=v;else oLogout=v;}});
+/* signed out some other way (e.g. another device): still return to the Google page */
+try{if(localStorage.getItem('ssLastFree')==='1'&&!sessionStorage.getItem('ssplitly_session')&&!/^#\/(resume|p\/|portfolio\/)/.test(location.hash))history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}
+
+
+/* home avatar follows the CV profile photo */
+let lastPh='';const repaint=()=>{if(btn.hidden)return;const p=cvPhoto();if(p===lastPh)return;lastPh=p;paintBtn();if(!menu.hidden){const av=menu.querySelector('.ssa-av');if(av)av.innerHTML=avatarHTML(64);}};
+const watchPic=()=>{const im=$('picPreviewSmall');if(!im)return setTimeout(watchPic,400);new MutationObserver(repaint).observe(im,{attributes:true,attributeFilter:['src']});};watchPic();
+setInterval(repaint,3000);
+
+/* free users: shrink big photos before cropping (fast on phones, small uploads) */
+const MAX=1600;
+document.addEventListener('change',async e=>{const inp=e.target;if(inp?.id!=='profilePicInput'||!isFree()||inp.__ssPass)return;const file=inp.files?.[0];if(!file||!/^image\//.test(file.type))return;
+ e.stopPropagation();
+ const passThrough=()=>{inp.__ssPass=true;inp.dispatchEvent(new Event('change',{bubbles:true}));inp.__ssPass=false;};
+ try{let bmp;try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'});}catch{bmp=null;}
+  if(!bmp){passThrough();return;}
+  const k=Math.min(1,MAX/Math.max(bmp.width,bmp.height));
+  if(k===1&&file.size<700*1024){bmp.close?.();passThrough();return;}
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(bmp,0,0,c.width,c.height);bmp.close?.();
+  const url=c.toDataURL('image/jpeg',0.85);
+  const img=$('cropImage');img.onload=function(){if(window.cropper)window.cropper.destroy();try{cropper&&cropper.destroy();}catch{}cropper=new Cropper(img,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:0.8,cropBoxResizable:true,background:false});};
+  img.src=url;$('cropModal').classList.add('active');
+  if(typeof toast==='function')toast(`Photo optimised: ${Math.round(file.size/1024)} KB → ${Math.round(url.length*0.75/1024)} KB`);
+ }catch(err){passThrough();}},true);
+
+function sync(){place();const on=isFree()&&!!user();try{if(user()&&sessionStorage.getItem('ssplitly_session'))localStorage.setItem('ssLastFree',isFree()?'1':'0');}catch{}btn.hidden=!on;if(on){paintBtn();loadName();}else close();}
+const wait=setInterval(()=>{const a=window.__auth;if(!a)return;clearInterval(wait);a.onAuthStateChanged(()=>setTimeout(sync,50));},200);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',place);else place();
+new MutationObserver(()=>{if(isFree()&&user()&&btn.hidden)sync();}).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 </body></html>
