@@ -8063,7 +8063,7 @@ async function finishGoogle(user){
  $('loginOverlay').classList.remove('active');['page1','page2','page3'].forEach(id=>$(id)?.classList.toggle('active',id==='page1'));
  if(!await loadFromFirebase()){toast('Could not load your saved data. Reload before editing.','err');$('formPanel').inert=true;return;}
  if(fresh){const put=(id,val)=>{const el=$(id);if(el&&val&&(!el.value.trim()||/\(sample\)|example\.(com|org)|^demo/i.test(el.value))){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));}};put('fullName',user.displayName);put('email',user.email);window.cvStudio?.render?.();setTimeout(()=>pushSummary(true),1500);}
- applyBuilderRoute({page:'page2',tab:'cv'});setNavState('page2','cv','replace');
+ applyBuilderRoute({page:'page1',tab:'cv'});setNavState('page1','cv','replace');
  window.startSessionWatcher(user.uid,sessionId);window.startDataWatcher(user.uid,applyRemoteData);
  toast(fresh?'Welcome! Your CV is saved automatically.':'Welcome back!');
 }
