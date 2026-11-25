@@ -8350,6 +8350,8 @@ html.ss-free .logout-btn,html.ss-free #cvsLogout{display:none!important}
 .ssa-mail .ssa-lock{margin-left:auto;color:#64748b;font-size:12px}
 html.ss-free #email[readonly]{opacity:.75;cursor:not-allowed}
 .cvs-edit .ss-locked{cursor:not-allowed!important;background:none!important;box-shadow:none!important}
+
+.ssa-sp{flex:1}
 </style>
 <script id="ss-acct">
 (()=>{
@@ -8369,8 +8371,8 @@ const btn=document.createElement('button');btn.id='ssAcctBtn';btn.type='button';
 const menu=document.createElement('div');menu.id='ssAcctMenu';menu.hidden=true;menu.setAttribute('role','dialog');menu.setAttribute('aria-label','Your account');
 function place(){const p1=$('page1');if(p1&&!btn.isConnected)p1.append(btn);if(!menu.isConnected)document.body.append(menu);}
 function paintBtn(){btn.innerHTML=avatarHTML(40);}
-function paintMenu(){const u=user();accName=cvName();menu.innerHTML=`<div class="ssa-top"><div class="ssa-av">${avatarHTML(64)}</div><div class="ssa-who"><b>${esc(accName||u?.displayName||'Your account')}</b><small>Name &amp; photo from your CV</small></div><button class="ssa-x" data-a="close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
- <label class="ssa-l">Email</label><div class="ssa-mail"><i class="fab fa-google"></i><span>${esc(u?.email||'')}</span><i class="fas fa-lock ssa-lock"></i></div>
+function paintMenu(){const u=user();accName=cvName();menu.innerHTML=`<div class="ssa-top"><div class="ssa-av">${avatarHTML(64)}</div><div class="ssa-who"><b>${esc(cvName()||u?.displayName||'')}</b></div><button class="ssa-x" data-a="close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+ <label class="ssa-l">Email</label><div class="ssa-mail"><i class="fab fa-google"></i><span>${esc(u?.email||'')}</span></div>
  <button class="ssa-out" data-a="logout"><i class="fas fa-right-from-bracket"></i> Log out</button>`;}
 function loadName(){paintBtn();}
 function open(){paintMenu();menu.hidden=false;btn.setAttribute('aria-expanded','true');}
@@ -8382,9 +8384,16 @@ menu.addEventListener('click',async e=>{const a=e.target.closest('[data-a]')?.da
  if(a==='close')close();
  if(a==='logout'){e.target.disabled=true;try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}sessionStorage.removeItem('ssplitly_nav');window.logout?.();}});
 
+
+/* free users stay signed in: keep the session across tab close / browser restart */
+const FREE_KEY='ssFreeSession';
+try{const ls=localStorage.getItem(FREE_KEY);if(ls&&!sessionStorage.getItem('ssplitly_session')&&JSON.parse(ls).free)sessionStorage.setItem('ssplitly_session',ls);}catch{}
+async function keepSignedIn(){if(!isFree()||!user())return;try{localStorage.setItem(FREE_KEY,sessionStorage.getItem('ssplitly_session')||'');const A=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js');await A.setPersistence(window.__auth,A.browserLocalPersistence);}catch{}}
+(async()=>{try{await new Promise(r=>{const t=setInterval(()=>{if(window.__authReady){clearInterval(t);r();}},100);});await window.__authReady;if(!window.__auth?.currentUser)localStorage.removeItem(FREE_KEY);}catch{}})();
+
 /* free users always land back on the Google sign-in page after any sign-out */
 let oLogout=window.logout;
-const wrappedLogout=async function(...a){if(isFree()){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}return oLogout?.apply(this,a);};
+const wrappedLogout=async function(...a){try{localStorage.removeItem(FREE_KEY);}catch{}if(isFree()){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}return oLogout?.apply(this,a);};
 let outerLogout=null; // the save-before-logout wrapper installs itself on top of us
 Object.defineProperty(window,'logout',{configurable:true,get(){return outerLogout||wrappedLogout;},set(v){if(v&&v.__waitsForSave)outerLogout=v;else oLogout=v;}});
 /* signed out some other way (e.g. another device): still return to the Google page */
@@ -8423,7 +8432,7 @@ document.addEventListener('paste',e=>{if(isFree()&&e.target?.closest?.('[data-p=
 const watchPages=()=>{const pg=$('cvsPages');if(!pg)return setTimeout(watchPages,400);new MutationObserver(()=>lockEmail()).observe(pg,{childList:true,subtree:true});};watchPages();
 setInterval(lockEmail,2000);
 
-function sync(){place();const on=isFree()&&!!user();try{if(user()&&sessionStorage.getItem('ssplitly_session'))localStorage.setItem('ssLastFree',isFree()?'1':'0');}catch{}btn.hidden=!on;if(on){paintBtn();loadName();lockEmail();}else close();}
+function sync(){place();const on=isFree()&&!!user();try{if(user()&&sessionStorage.getItem('ssplitly_session'))localStorage.setItem('ssLastFree',isFree()?'1':'0');}catch{}btn.hidden=!on;if(on){paintBtn();loadName();lockEmail();keepSignedIn();}else close();}
 const wait=setInterval(()=>{const a=window.__auth;if(!a)return;clearInterval(wait);a.onAuthStateChanged(()=>setTimeout(sync,50));},200);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',place);else place();
 new MutationObserver(()=>{if(isFree()&&user()&&btn.hidden)sync();}).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
