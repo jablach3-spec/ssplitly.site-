@@ -1050,7 +1050,7 @@ html.ssl-leaving #ssLoader .ssl-curtain.bottom{transform:translateY(101%)}
             <button data-tab="terms" onclick="openSsplitlyInfo('terms')">Terms</button>
         </div>
         <div class="ssplitly-info-panel" data-panel="about"><h3>About Ssplitly</h3><p>Create your CV, cover letter and portfolio in one place.</p></div>
-        <div class="ssplitly-info-panel" data-panel="contact"><h3>Contact Us</h3><p>Need help with Ssplitly? Get in touch.</p><div class="ss-contact-links"><a href="mailto:salihchnr65@gmail.com" aria-label="Email Ssplitly support"><i class="fas fa-envelope" aria-hidden="true"></i><span>Email us<small>salihchnr65@gmail.com</small></span></a><a class="wa" href="https://wa.me/971566412245" target="_blank" rel="noopener noreferrer" aria-label="Contact Ssplitly on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span>WhatsApp<small>+971 56 641 2245</small></span></a></div></div>
+        <div class="ssplitly-info-panel" data-panel="contact"><h3>Contact Us</h3><p>Need help with Ssplitly? Message me on Instagram or send an email.</p><div class="ss-contact-links"><a href="mailto:salihchnr65@gmail.com" aria-label="Email Ssplitly support"><i class="fas fa-envelope" aria-hidden="true"></i><span>Email us<small>salihchnr65@gmail.com</small></span></a><a class="ig" href="https://www.instagram.com/muhammed_sw.alih?fqnt=Y2pvbnhpYjduczEx" target="_blank" rel="noopener noreferrer" aria-label="Ssplitly on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i><span>Instagram<small>@muhammed_sw.alih</small></span></a></div></div>
         <div class="ssplitly-info-panel" data-panel="terms"><h3>Terms &amp; Conditions</h3><ul><li>Use Ssplitly responsibly.</li><li>Upload only content you own.</li></ul></div>
     </div>
 </div>
@@ -7934,6 +7934,388 @@ const oReset=resetBuilderState;resetBuilderState=function(...a){const r=oReset.a
 new MutationObserver(themeLbl).observe(document.body,{attributes:true,attributeFilter:['class']});
 window.cvStudio={render:()=>{if(on)render();},get doc(){return doc;},hydrate,exportPDF,analyze:()=>doc&&analyze()};
 updateMode();
+})();
+</script>
+<style id="ss-free-css">
+#ssGoogleBox{display:none}
+html.ss-resume-mode #ssGoogleBox{display:block;margin-top:6px}
+html.ss-resume-mode #loginOverlay .form-group,html.ss-resume-mode #loginBtn,html.ss-resume-mode #loginError,html.ss-resume-mode #loginOverlay .login-box>p[style]{display:none!important}
+.ss-gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;min-height:50px;padding:0 18px;border-radius:14px;border:1px solid var(--border,#dadce0);background:#fff;color:#1f1f1f;font:600 15px/1 Inter,Roboto,system-ui,sans-serif;cursor:pointer;box-shadow:0 2px 8px #0f172a14;transition:box-shadow .2s,transform .2s}
+.ss-gbtn:hover{box-shadow:0 6px 18px #0f172a24;transform:translateY(-1px)}
+.ss-gbtn:disabled{opacity:.6;cursor:wait;transform:none}
+.ss-gerr{min-height:18px;margin-top:10px;font-size:13px;color:#ef4444;text-align:center;white-space:pre-line}
+.ss-gnote{margin:8px 0 0;font-size:12px;color:var(--text-muted,#64748b);text-align:center;line-height:1.5}
+/* free users: CV + Cover letter only */
+html.ss-free [data-tab="portfolio"],html.ss-free button[onclick*="goToBuilder('portfolio')"],html.ss-free #ssAIDock,html.ss-free #ssReportBtn,html.ss-free #accountAdminButton{display:none!important}
+/* admin report */
+#ssReportBtn{position:absolute;top:22px;right:96px;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:60px;height:68px;border:1px solid #a5b4fc55;border-radius:20px;background:linear-gradient(145deg,#0f766ee6,#1e3a8ae6);color:#e0f2fe;font:700 10px/1 Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 12px 30px #0f172a40}
+#ssReportBtn i{font-size:20px}
+#ssReportBtn[hidden]{display:none}
+@media(max-width:600px){#ssReportBtn{top:16px;right:74px;width:50px;height:58px;border-radius:16px}}
+#ssReportDialog{margin:auto;inset:0;width:1100px;max-width:calc(100vw - 20px);max-height:90dvh;overflow:auto;padding:22px;border:1px solid var(--border,#e2e8f0);border-radius:20px;background:var(--surface,#fff);color:var(--text,#0f172a);font:14px/1.45 Inter,system-ui,sans-serif}
+#ssReportDialog::backdrop{background:#0f172a99;backdrop-filter:blur(3px)}
+.ssr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.ssr-head h3{margin:2px 0 0;font-size:22px}
+.ssr-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary,#2563eb)}
+.ssr-x{width:38px;height:38px;border-radius:50%;border:1px solid var(--border,#e2e8f0);background:var(--surface-2,#f8fafc);color:inherit;cursor:pointer}
+.ssr-link{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0;padding:10px 12px;border-radius:12px;background:var(--surface-2,#f8fafc);border:1px solid var(--border,#e2e8f0);font-size:13px}
+.ssr-link code{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--primary,#2563eb);font-weight:700}
+.ssr-link button,.ssr-tools button{border:0;border-radius:10px;padding:8px 14px;background:var(--primary,#2563eb);color:#fff;font-weight:700;cursor:pointer}
+.ssr-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.ssr-kpi{padding:14px;border-radius:14px;border:1px solid var(--border,#e2e8f0);background:var(--surface-2,#f8fafc);display:flex;flex-direction:column;gap:2px}
+.ssr-kpi i{color:var(--primary,#2563eb)}
+.ssr-kpi b{font-size:24px;line-height:1.2}
+.ssr-kpi span{font-size:12px;color:var(--text-muted,#64748b);font-weight:600}
+.ssr-chart{margin:14px 0;padding:14px;border-radius:14px;border:1px solid var(--border,#e2e8f0)}
+.ssr-chart-t{font-size:12px;font-weight:700;color:var(--text-muted,#64748b);margin-bottom:8px}
+.ssr-bars{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;height:110px;align-items:end}
+.ssr-bar{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.ssr-bar i{display:block;width:100%;max-width:26px;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,#60a5fa,#2563eb)}
+.ssr-bar span{position:absolute;top:-2px;font-size:10px;font-weight:700}
+.ssr-bar small{font-size:10px;color:var(--text-muted,#64748b);margin-top:3px}
+.ssr-tools{display:flex;gap:10px;margin-bottom:10px}
+.ssr-tools input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--border,#e2e8f0);background:var(--surface,#fff);color:inherit;font:inherit}
+.ssr-tablewrap{overflow:auto;border:1px solid var(--border,#e2e8f0);border-radius:14px}
+.ssr-table{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
+.ssr-table th{position:sticky;top:0;background:var(--surface-2,#f8fafc);text-align:left;padding:10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted,#64748b)}
+.ssr-table td{padding:10px;border-top:1px solid var(--border,#e2e8f0);vertical-align:top}
+.ssr-table td small{display:block;color:var(--text-muted,#64748b);font-size:12px}
+.ssr-table tr.blocked td{opacity:.55}
+.ssr-table td button{border:1px solid var(--border,#e2e8f0);background:var(--surface,#fff);color:inherit;border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer}
+.ssr-table td button.danger{color:#ef4444;border-color:#fecaca}
+.ssr-score{display:inline-block;width:50px;height:6px;border-radius:4px;background:var(--border,#e2e8f0);vertical-align:middle;overflow:hidden}
+.ssr-score i{display:block;height:100%}
+.ssr-tag{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;background:var(--surface-2,#f1f5f9);color:var(--text-muted,#64748b)}
+.ssr-tag.green{background:#dcfce7;color:#15803d}.ssr-tag.red{background:#fee2e2;color:#b91c1c}
+.ssr-empty{text-align:center;color:var(--text-muted,#64748b);padding:20px}
+@media(max-width:800px){.ssr-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#ssReportDialog{padding:16px}}
+</style>
+<script id="ss-free-mode">
+(()=>{
+if(window.__ssFreeMode)return;window.__ssFreeMode=true;
+const ADMIN='mr8e4TJmXhXYAkCO4yviTkLqqXj1';
+const FV='12.18.0';
+const $=id=>document.getElementById(id);
+const html=document.documentElement;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sess=()=>{try{return JSON.parse(sessionStorage.getItem('ssplitly_session'))||{};}catch{return {};}};
+const isFree=()=>!!sess().free;
+const isResumeLink=()=>/^#\/resume\b/.test(location.hash);
+let authP=null;const authMod=()=>authP||(authP=import(`https://www.gstatic.com/firebasejs/${FV}/firebase-auth.js`));
+let dbP=null;const dbMod=()=>dbP||(dbP=import(`https://www.gstatic.com/firebasejs/${FV}/firebase-database.js`));
+if(isFree())html.classList.add('ss-free');
+
+/* ---------- account check for free users (replaces paid/trial check only for them) ---------- */
+let origEnsure=window.ensureAccountAccess,freeStop=null;
+async function ensureFree(uid){
+ const fb=window.__firebase,u=window.__auth?.currentUser;
+ if(!fb||!u||u.uid!==uid)throw Object.assign(new Error('Please sign in with Google again.'),{code:'account/disabled'});
+ const v=(await fb.get(fb.ref(fb.db,'freeUsers/'+uid))).val();
+ if(!v)throw Object.assign(new Error('Account not found. Please sign in with Google again.'),{code:'account/disabled'});
+ if(v.blocked===true)throw Object.assign(new Error('Your account access has been stopped.'),{code:'account/disabled'});
+ window.__accountPlan={type:'free'};html.classList.add('ss-free');
+ freeStop?.();freeStop=fb.onValue(fb.ref(fb.db,'freeUsers/'+uid+'/blocked'),s=>{if(s.val()===true){alert('Your account access has been stopped.');window.logout?.();}});
+}
+Object.defineProperty(window,'ensureAccountAccess',{configurable:true,get(){return async function(uid){return isFree()?ensureFree(uid):origEnsure(uid);};},set(v){origEnsure=v;}});
+
+/* ---------- block portfolio for free users ---------- */
+const guard=(name,fix)=>{const o=window[name];if(typeof o!=='function')return;window[name]=function(...a){if(isFree())a=fix(a);return o.apply(this,a);};};
+guard('switchTab',a=>a[0]==='portfolio'?['cv']:a);
+guard('goToBuilder',a=>a[0]==='portfolio'?['cv']:a);
+guard('applyBuilderTab',a=>a[0]==='portfolio'?['cv']:a);
+guard('navigateTo',a=>a[0]==='page3'?['page2']:a);
+
+/* ---------- Google sign-in screen for #/resume ---------- */
+const box=document.createElement('div');box.id='ssGoogleBox';
+box.innerHTML=`<button type="button" id="ssGoogleBtn" class="ss-gbtn"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Continue with Google</span></button><div class="ss-gerr" id="ssGErr" role="alert"></div><p class="ss-gnote">Free CV &amp; Cover Letter builder. Your CV is saved to your Google account here — only you can see and edit it.</p>`;
+function applyResumeMode(){const ov=$('loginOverlay');if(!ov)return;const on=isResumeLink()&&!sess().serial;html.classList.toggle('ss-resume-mode',on);
+ const lb=ov.querySelector('.login-box');if(!lb)return;if(!box.isConnected)lb.querySelector('h2')?.parentNode.insertBefore(box,lb.querySelector('.form-group'));
+ const h2=lb.querySelector('h2'),p=h2?.nextElementSibling;if(h2){h2.dataset.orig??=h2.textContent;h2.textContent=on?'Create your CV — free':h2.dataset.orig;}
+ if(p&&p.tagName==='P'){p.dataset.orig??=p.textContent;p.textContent=on?'Sign in with Google to build, save and download your CV and cover letter.':p.dataset.orig;}
+ if(on)authMod().catch(()=>{});}
+addEventListener('hashchange',applyResumeMode);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyResumeMode);else applyResumeMode();
+
+const friendly={'auth/popup-closed-by-user':'Sign-in window was closed. Please try again.','auth/cancelled-popup-request':'Sign-in was cancelled. Please try again.','auth/operation-not-allowed':'Google sign-in is not enabled yet. (Admin: enable Google in Firebase Authentication.)','auth/unauthorized-domain':'This website is not allowed for Google sign-in yet. (Admin: add the domain in Firebase → Authentication → Authorized domains.)','auth/network-request-failed':'No connection. Check your internet and try again.','PERMISSION_DENIED':'Signed in, but the database refused access. (Admin: update the Firebase rules.)','permission-denied':'Signed in, but the database refused access. (Admin: update the Firebase rules.)','account/disabled':'Your account access has been stopped.'};
+async function googleLogin(){const btn=$('ssGoogleBtn'),err=$('ssGErr');if(btn.disabled)return;btn.disabled=true;err.textContent='';$('loginLoader')?.classList.add('active');
+ try{const A=await authMod();await window.__authReady;const provider=new A.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});
+  let cred;try{cred=await A.signInWithPopup(window.__auth,provider);}
+  catch(e){if(['auth/popup-blocked','auth/operation-not-supported-in-environment','auth/web-storage-unsupported'].includes(e.code)){sessionStorage.setItem('ssGoogleRedirect','1');await A.signInWithRedirect(window.__auth,provider);return;}throw e;}
+  await finishGoogle(cred.user);
+ }catch(e){const code=String(e?.code||'').replace(/[^a-zA-Z0-9_/-]/g,'');err.textContent=friendly[code]||e.message||'Sign-in failed. Please try again.';
+  if(code!=='auth/popup-closed-by-user'&&code!=='auth/cancelled-popup-request'){try{(await authMod()).signOut(window.__auth);}catch{}}sessionStorage.removeItem('ssplitly_session');html.classList.remove('ss-free');}
+ finally{btn.disabled=false;$('loginLoader')?.classList.remove('active');}}
+box.querySelector('#ssGoogleBtn').addEventListener('click',googleLogin);
+
+async function finishGoogle(user){
+ if(!user)throw new Error('Sign-in failed.');
+ if(!(user.providerData||[]).some(p=>p.providerId==='google.com'))throw new Error('Please use Google sign-in on this page.');
+ const fb=window.__firebase,D=await dbMod();const node=fb.ref(fb.db,'freeUsers/'+user.uid);
+ let v=(await fb.get(node)).val(),fresh=false;
+ if(v?.blocked===true)throw Object.assign(new Error('Your account access has been stopped.'),{code:'account/disabled'});
+ if(!v){await fb.set(node,{createdAt:D.serverTimestamp(),email:String(user.email||'').slice(0,200),name:String(user.displayName||'').slice(0,120),provider:'google',lastActive:D.serverTimestamp()});fresh=true;}
+ else await fb.update(node,{lastActive:D.serverTimestamp()});
+ const sessionId=crypto.randomUUID();
+ await fb.update(fb.ref(fb.db,'users/'+user.uid),{active:true,lastActive:Date.now(),lockOwner:sessionId});
+ sessionStorage.setItem('ssplitly_session',JSON.stringify({serial:user.uid,accountSerial:user.email||'',sessionId,loginTime:Date.now(),free:true}));
+ html.classList.add('ss-free');html.classList.remove('ss-resume-mode');
+ await window.ensureAccountAccess(user.uid);
+ $('loginOverlay').classList.remove('active');['page1','page2','page3'].forEach(id=>$(id)?.classList.toggle('active',id==='page1'));
+ if(!await loadFromFirebase()){toast('Could not load your saved data. Reload before editing.','err');$('formPanel').inert=true;return;}
+ if(fresh){const put=(id,val)=>{const el=$(id);if(el&&val&&(!el.value.trim()||/\(sample\)|example\.(com|org)|^demo/i.test(el.value))){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));}};put('fullName',user.displayName);put('email',user.email);window.cvStudio?.render?.();setTimeout(()=>pushSummary(true),1500);}
+ applyBuilderRoute({page:'page2',tab:'cv'});setNavState('page2','cv','replace');
+ window.startSessionWatcher(user.uid,sessionId);window.startDataWatcher(user.uid,applyRemoteData);
+ toast(fresh?'Welcome! Your CV is saved automatically.':'Welcome back!');
+}
+window.__ssFreeFinish=finishGoogle;
+// finish a redirect sign-in (used when the browser blocks pop-ups)
+if(sessionStorage.getItem('ssGoogleRedirect')){sessionStorage.removeItem('ssGoogleRedirect');(async()=>{try{const A=await authMod();await window.__authReady;const r=await A.getRedirectResult(window.__auth);if(r?.user)await finishGoogle(r.user);}catch(e){const err=$('ssGErr');if(err)err.textContent=friendly[e?.code]||e.message||'Sign-in failed.';}})();}
+
+/* ---------- keep a small summary for the admin report ---------- */
+let lastSummary=0;
+async function pushSummary(force){if(!isFree())return;const u=window.__auth?.currentUser;if(!u)return;if(!force&&Date.now()-lastSummary<45000)return;lastSummary=Date.now();
+ try{const fb=window.__firebase,D=await dbMod();const val=id=>String($(id)?.value||'').trim().slice(0,200);let score=null;try{score=window.cvStudio?.analyze?.()?.score??null;}catch{}
+  const data={name:val('fullName'),title:val('profTitle'),location:val('location'),updatedAt:D.serverTimestamp(),lastActive:D.serverTimestamp()};if(Number.isFinite(score))data.score=Math.max(0,Math.min(100,Math.round(score)));
+  await fb.update(fb.ref(fb.db,'freeUsers/'+u.uid),data);}catch{}}
+const oSave=window.saveToFirebase;if(typeof oSave==='function'){saveToFirebase=async function(...a){const r=await oSave.apply(this,a);if(r)pushSummary();return r;};}
+document.addEventListener('click',e=>{if(!isFree())return;if(!e.target.closest?.('#cvsPDF,[data-rail="pdf"]'))return;const u=window.__auth?.currentUser;const fb=window.__firebase;if(!u||!fb)return;
+ fb.runTransaction(fb.ref(fb.db,'freeUsers/'+u.uid+'/downloads'),n=>(Number(n)||0)+1).catch(()=>{});pushSummary(true);},true);
+
+/* ---------- admin: users report ---------- */
+let watchStops=[],users={},presence={},filter='';
+const rb=document.createElement('button');rb.id='ssReportBtn';rb.type='button';rb.title='Users report';rb.innerHTML='<i class="fas fa-chart-column"></i><span>Users</span>';rb.hidden=true;
+const dlg=document.createElement('dialog');dlg.id='ssReportDialog';dlg.setAttribute('aria-label','Users report');
+dlg.innerHTML=`<div class="ssr-head"><div><span class="ssr-eyebrow">SSPLITLY · ADMIN</span><h3>Free users report</h3></div><button class="ssr-x" data-r="close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+<div class="ssr-link"><span><i class="fas fa-link"></i> Public link</span><code id="ssrLink"></code><button data-r="copy">Copy</button></div>
+<div class="ssr-kpis" id="ssrKpis"></div><div class="ssr-chart"><div class="ssr-chart-t">New sign-ups · last 14 days</div><div class="ssr-bars" id="ssrBars"></div></div>
+<div class="ssr-tools"><input id="ssrSearch" type="search" placeholder="Search name, email, title, location…"><button data-r="csv"><i class="fas fa-file-csv"></i> Download CSV</button></div>
+<div class="ssr-tablewrap"><table class="ssr-table"><thead><tr><th>User</th><th>Joined</th><th>Last active</th><th>Title / location</th><th>CV score</th><th>PDFs</th><th>Status</th><th></th></tr></thead><tbody id="ssrBody"></tbody></table></div><p class="ssr-empty" id="ssrEmpty" hidden>No free users yet. Share the public link to get started.</p>`;
+function placeReport(){const p1=$('page1');if(p1&&!rb.isConnected)p1.append(rb);if(!dlg.isConnected)document.body.append(dlg);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',placeReport);else placeReport();
+const fmt=t=>Number.isFinite(t)?new Date(t).toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):'—';
+const ago=t=>{if(!Number.isFinite(t))return '—';const m=Math.round((Date.now()-t)/60000);if(m<1)return 'just now';if(m<60)return m+' min ago';const h=Math.round(m/60);if(h<24)return h+' h ago';const d=Math.round(h/24);return d<30?d+' d ago':fmt(t);};
+const online=uid=>Object.values(presence[uid]||{}).some(s=>s?.online===true&&Date.now()-(s.lastSeen||0)<3*60000);
+const rows=()=>Object.entries(users).map(([uid,u])=>({uid,...u})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+function renderReport(){const all=rows();const day=86400000,now=Date.now();
+ const kp=[['Total users',all.length,'fa-users'],['New · 7 days',all.filter(u=>now-(u.createdAt||0)<7*day).length,'fa-user-plus'],['Active today',all.filter(u=>now-(u.lastActive||0)<day).length,'fa-bolt'],['Online now',all.filter(u=>online(u.uid)).length,'fa-signal'],['Avg CV score',(()=>{const s=all.filter(u=>Number.isFinite(u.score));return s.length?Math.round(s.reduce((a,u)=>a+u.score,0)/s.length):'—';})(),'fa-gauge-high'],['PDF downloads',all.reduce((a,u)=>a+(Number(u.downloads)||0),0),'fa-file-arrow-down']];
+ $('ssrKpis').innerHTML=kp.map(([l,v,i])=>`<div class="ssr-kpi"><i class="fas ${i}"></i><b>${esc(v)}</b><span>${l}</span></div>`).join('');
+ const days=[...Array(14)].map((_,k)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-13+k);return d;});const counts=days.map(d=>all.filter(u=>u.createdAt>=d.getTime()&&u.createdAt<d.getTime()+day).length);const max=Math.max(1,...counts);
+ $('ssrBars').innerHTML=days.map((d,k)=>`<div class="ssr-bar" title="${d.toLocaleDateString(undefined,{day:'numeric',month:'short'})}: ${counts[k]}"><i style="height:${Math.max(4,counts[k]/max*100)}%"></i><span>${counts[k]||''}</span><small>${d.getDate()}</small></div>`).join('');
+ const q=filter.toLowerCase();const list=all.filter(u=>!q||[u.name,u.email,u.title,u.location].join(' ').toLowerCase().includes(q));
+ $('ssrBody').innerHTML=list.map(u=>{const sc=Number.isFinite(u.score)?u.score:null;const col=sc==null?'#94a3b8':sc>=80?'#22c55e':sc>=60?'#f59e0b':'#ef4444';
+  return `<tr class="${u.blocked?'blocked':''}"><td><b>${esc(u.name||'(no name)')}</b><small>${esc(u.email||'')}</small></td><td>${fmt(u.createdAt)}</td><td>${ago(u.lastActive)}</td><td>${esc(u.title||'—')}<small>${esc(u.location||'')}</small></td><td>${sc==null?'—':`<span class="ssr-score"><i style="width:${sc}%;background:${col}"></i></span> ${sc}`}</td><td>${Number(u.downloads)||0}</td><td>${u.blocked?'<span class="ssr-tag red">Blocked</span>':online(u.uid)?'<span class="ssr-tag green">Online</span>':'<span class="ssr-tag">Offline</span>'}</td><td><button data-block="${esc(u.uid)}" class="${u.blocked?'':'danger'}">${u.blocked?'Unblock':'Block'}</button></td></tr>`;}).join('');
+ $('ssrEmpty').hidden=all.length>0;}
+function csv(){const head=['Name','Email','Joined','Last active','Title','Location','CV score','PDF downloads','Status'];const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const lines=[head.map(q).join(',')].concat(rows().map(u=>[u.name,u.email,u.createdAt?new Date(u.createdAt).toISOString():'',u.lastActive?new Date(u.lastActive).toISOString():'',u.title,u.location,u.score??'',u.downloads||0,u.blocked?'Blocked':'Active'].map(q).join(',')));
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));a.download='ssplitly-users-'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);}
+rb.addEventListener('click',()=>{$('ssrLink').textContent=location.origin+location.pathname+'#/resume';renderReport();dlg.showModal();});
+dlg.addEventListener('click',async e=>{const r=e.target.closest('[data-r]')?.dataset.r;if(r==='close')dlg.close();if(r==='csv')csv();
+ if(r==='copy'){try{await navigator.clipboard.writeText($('ssrLink').textContent);e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy',1500);}catch{}}
+ const b=e.target.closest('[data-block]');if(b){const uid=b.dataset.block,u=users[uid];if(!u)return;const to=!u.blocked;if(!confirm((to?'Block ':'Unblock ')+(u.name||u.email||uid)+'?'))return;const fb=window.__firebase;try{await fb.set(fb.ref(fb.db,'freeUsers/'+uid+'/blocked'),to);}catch(err){alert('Could not update: '+err.message);}}});
+dlg.addEventListener('input',e=>{if(e.target.id==='ssrSearch'){filter=e.target.value;renderReport();}});
+setInterval(()=>{if(dlg.open)renderReport();},60000);
+function watchAdmin(isAdmin){watchStops.forEach(f=>f());watchStops=[];rb.hidden=!isAdmin;if(!isAdmin){if(dlg.open)dlg.close();return;}
+ const fb=window.__firebase;watchStops.push(fb.onValue(fb.ref(fb.db,'freeUsers'),s=>{users=s.val()||{};if(dlg.open)renderReport();},()=>{}));
+ watchStops.push(fb.onValue(fb.ref(fb.db,'accountPresence'),s=>{presence=s.val()||{};if(dlg.open)renderReport();},()=>{}));}
+const waitAuth=setInterval(()=>{const a=window.__auth;if(!a||!window.__firebase)return;clearInterval(waitAuth);a.onAuthStateChanged(u=>watchAdmin(u?.uid===ADMIN&&!/^#\/p\//.test(location.hash)));},200);
+})();
+</script>
+<style id="ss-home-v2-css">
+/* ===== shared animated CV preview ===== */
+.ssh-stage{position:relative;width:340px;height:430px;margin:0 auto;perspective:1200px}
+.ssh-sheet{position:absolute;inset:20px 30px 20px 30px;border-radius:14px;background:#fff;display:grid;grid-template-columns:34% 1fr;overflow:hidden;box-shadow:0 40px 80px #02061799,0 0 0 1px #ffffff20;transform:rotateY(-14deg) rotateX(6deg) rotateZ(-2deg);animation:sshFloat 7s ease-in-out infinite}
+.ssh-sheet.back{background:linear-gradient(160deg,#6366f1,#0ea5e9);opacity:.5;transform:rotateY(-14deg) rotateX(6deg) rotateZ(5deg) translate(26px,-10px);filter:blur(1px);animation:sshFloat 7s ease-in-out -1.5s infinite;display:block}
+@keyframes sshFloat{50%{translate:0 -12px}}
+.ssh-sh-side{background:linear-gradient(170deg,#1e3a8a,#0e7490);padding:18px 12px;display:flex;flex-direction:column;gap:7px}
+.ssh-sh-main{padding:20px 16px;display:flex;flex-direction:column;gap:7px}
+.ssh-sheet i{display:block;height:6px;border-radius:4px;background:#e2e8f0;width:100%}
+.ssh-sh-side i{background:#ffffff55}
+.ssh-sheet i.av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#fde68a,#f59e0b);margin:0 auto 8px;box-shadow:0 0 0 3px #ffffff40}
+.ssh-sheet i.nm{height:14px;width:75%;background:#0f172a}
+.ssh-sheet i.acc{background:#38bdf8}.ssh-sheet i.dark{background:#334155}
+.ssh-sheet .w40{width:40%}.ssh-sheet .w50{width:50%}.ssh-sheet .w60{width:60%}.ssh-sheet .w70{width:70%}.ssh-sheet .w80{width:80%}.ssh-sheet .w90{width:90%}
+.ssh-sheet b{display:block;height:6px}
+.ssh-sheet .dots{display:flex;gap:4px}.ssh-sheet .dots em{width:7px;height:7px;border-radius:50%;background:#fff}.ssh-sheet .dots em.off{background:#ffffff40}
+.ssh-chip{position:absolute;display:flex;align-items:center;gap:10px;padding:10px 14px 10px 10px;border-radius:16px;background:#0f172acc;border:1px solid #ffffff22;color:#fff;backdrop-filter:blur(12px);box-shadow:0 16px 40px #0007;font:600 12px/1.25 Inter,Manrope,sans-serif;animation:sshFloat 6s ease-in-out infinite}
+.ssh-chip strong{display:block;font-size:13px}.ssh-chip small{color:#94a3b8;font-weight:500}
+.ssh-chip>i{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px}
+.ssh-chip.c1{left:-26px;top:70px;animation-delay:-2s}
+.ssh-chip.c2{right:-30px;top:190px;animation-delay:-4s}.ssh-chip.c2>i{background:#ef444426;color:#fca5a5}
+.ssh-chip.c3{left:-10px;bottom:40px;animation-delay:-1s}.ssh-chip.c3>i{background:#22c55e26;color:#86efac}
+.ssh-chip .ring{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#22c55e 92%,#ffffff22 0);position:relative}
+.ssh-chip .ring::before{content:'';position:absolute;inset:4px;border-radius:50%;background:#0f172a}
+.ssh-chip .ring b{position:relative;font-size:12px}
+/* ===== home page ===== */
+.ssh-aurora{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+.ssh-aurora i{position:absolute;width:560px;height:560px;border-radius:50%;filter:blur(100px);opacity:.42;animation:sshAurora 16s ease-in-out infinite alternate}
+.ssh-aurora i:nth-child(1){left:-160px;top:-160px;background:#2563eb}
+.ssh-aurora i:nth-child(2){right:-180px;bottom:-200px;background:#9333ea;animation-delay:-8s}
+.ssh-aurora i:nth-child(3){left:45%;top:30%;width:340px;height:340px;background:#0891b2;opacity:.22;animation-delay:-4s}
+@keyframes sshAurora{to{transform:translate(110px,70px) scale(1.15)}}
+#page1 .landing-content.ssh-on{max-width:1180px;width:100%;text-align:left;padding:90px 28px 24px}
+.ssh-wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:40px;align-items:center}
+.ssh-left>*{animation:premiumEnter .8s both}
+.ssh-left>*:nth-child(2){animation-delay:.06s}.ssh-left>*:nth-child(3){animation-delay:.12s}.ssh-left>*:nth-child(4){animation-delay:.18s}.ssh-left>*:nth-child(5){animation-delay:.24s}.ssh-left>*:nth-child(6){animation-delay:.3s}
+.ssh-right{animation:premiumEnter 1s .2s both}
+.ssh-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:30px;background:#ffffff0d;border:1px solid #ffffff1f;color:#7dd3fc;font:800 10.5px/1 Inter,sans-serif;letter-spacing:.16em}
+.ssh-pulse{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 #22c55e;animation:sshPulse 2s infinite}
+@keyframes sshPulse{70%{box-shadow:0 0 0 8px #22c55e00}}
+.ssh-hello{margin:22px 0 6px;color:#cbd5e1;font-size:16px}.ssh-hello b{color:#fff}
+#page1 .landing-content.ssh-on h1.ssh-title{font-size:clamp(34px,5.2vw,62px);line-height:1.05;letter-spacing:-.045em;margin:0 0 16px;color:#fff;text-align:left;text-wrap:balance}
+#page1 .landing-content.ssh-on h1.ssh-title span{background:linear-gradient(100deg,#38bdf8,#818cf8 55%,#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ssh-sub{color:#94a3b8;font-size:16px;line-height:1.7;max-width:520px;margin-bottom:26px}
+.ssh-cards{display:flex;flex-direction:column;gap:12px;max-width:520px}
+.ssh-card{display:flex;align-items:center;gap:14px;width:100%;padding:14px 18px 14px 14px;border-radius:18px;border:1px solid #ffffff1a;background:linear-gradient(135deg,#ffffff0f,#ffffff05);backdrop-filter:blur(12px);color:#fff;text-align:left;cursor:pointer;transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,background .3s,box-shadow .3s}
+.ssh-card:hover{transform:translateX(6px);border-color:#38bdf8aa;background:linear-gradient(135deg,#38bdf81a,#818cf80d);box-shadow:0 14px 40px #0006}
+.ssh-card .ic{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:19px;background:#ffffff12;color:#7dd3fc}
+.ssh-card.main .ic{background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;box-shadow:0 10px 24px #6366f155}
+.ssh-card.main{border-color:#38bdf866;background:linear-gradient(135deg,#38bdf826,#6366f112)}
+.ssh-card .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ssh-card .tx b{font-size:16px}.ssh-card .tx small{font-size:12.5px;color:#94a3b8}
+.ssh-card .go{color:#64748b;transition:transform .3s,color .3s}
+.ssh-card:hover .go{transform:translateX(4px);color:#7dd3fc}
+.ssh-trust{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px;color:#94a3b8;font-size:12.5px;font-weight:600}
+.ssh-trust i{color:#22c55e;margin-right:4px}
+@media(max-width:900px){
+ #page1 .landing-content.ssh-on{padding:78px 16px 12px}
+ .ssh-wrap{grid-template-columns:1fr;gap:6px}
+ .ssh-right{order:-1;height:200px;overflow:hidden;-webkit-mask:linear-gradient(#000 70%,transparent);mask:linear-gradient(#000 70%,transparent)}
+ .ssh-right .ssh-stage{transform:scale(.56);transform-origin:top center;margin-top:-6px}
+ .ssh-hello{margin-top:4px}
+ #page1 .landing-content.ssh-on h1.ssh-title{font-size:clamp(28px,8.4vw,40px)}
+ .ssh-sub{font-size:14px;margin-bottom:18px}
+ .ssh-card{padding:12px 14px 12px 12px}.ssh-card .ic{width:42px;height:42px}
+ .ssh-trust{font-size:11.5px;gap:6px 12px;margin-top:14px}
+}
+@media(max-height:700px) and (max-width:900px){.ssh-right{display:none}}
+/* ===== login screen ===== */
+#loginOverlay.active{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);align-items:center;justify-items:center;gap:20px;padding:24px 40px;overflow:auto;background:radial-gradient(ellipse at 10% 10%,#1e3a8a88,transparent 50%),radial-gradient(ellipse at 90% 90%,#6b21a888,transparent 50%),#050a18}
+.ssl-hero{color:#fff;max-width:560px;width:100%;font-family:Manrope,Inter,sans-serif;animation:premiumEnter .8s both}
+.ssl-brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;margin-bottom:28px}
+.ssl-logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#38bdf8,#6366f1 60%,#c026d3);font-size:18px}
+.ssl-h{font-size:clamp(30px,4vw,50px);line-height:1.08;letter-spacing:-.04em;margin:0 0 26px;text-wrap:balance}
+.ssl-h em{font-style:normal;background:linear-gradient(100deg,#38bdf8,#818cf8 55%,#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ssl-t-free{display:none}html.ss-resume-mode .ssl-t-free{display:inline}html.ss-resume-mode .ssl-t-paid{display:none}
+.ssl-points{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:14px}
+.ssl-points li{display:flex;gap:14px;align-items:flex-start}
+.ssl-points li>i{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;background:#ffffff10;border:1px solid #ffffff1a;color:#7dd3fc}
+.ssl-points b{display:block;font-size:15px}.ssl-points span{color:#94a3b8;font-size:13.5px}
+.ssl-preview{display:none}
+#loginOverlay .login-box{width:100%;max-width:420px;border-radius:26px;box-shadow:0 30px 80px #000a,0 0 0 1px #ffffff14}
+@media(max-width:900px){
+ #loginOverlay.active{grid-template-columns:1fr;align-content:start;padding:18px 14px 30px;gap:14px}
+ .ssl-hero{text-align:center}
+ .ssl-brand{justify-content:center;margin-bottom:12px;font-size:18px}
+ .ssl-h{font-size:clamp(24px,7.5vw,32px);margin-bottom:12px}
+ .ssl-points{flex-direction:row;justify-content:center;gap:8px;margin:0}
+ .ssl-points li{flex-direction:column;align-items:center;gap:6px;flex:1;max-width:110px}
+ .ssl-points li>i{width:36px;height:36px}
+ .ssl-points b{font-size:11.5px;line-height:1.3}.ssl-points span span,.ssl-points li span{font-size:0}.ssl-points li span b{font-size:11.5px}
+}
+@media(prefers-reduced-motion:reduce){.ssh-sheet,.ssh-chip,.ssh-aurora i,.ssh-pulse{animation:none!important}}
+</style>
+<script id="ss-home-v2">
+(()=>{
+if(window.__ssHomeV2)return;window.__ssHomeV2=true;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const preview=`<div class="ssh-stage" aria-hidden="true">
+ <div class="ssh-sheet back"></div>
+ <div class="ssh-sheet">
+  <div class="ssh-sh-side"><i class="av"></i><i class="l w70"></i><i class="l w50"></i><b></b><i class="l w80"></i><i class="l w60"></i><i class="l w70"></i><b></b><span class="dots"><em></em><em></em><em></em><em></em><em class="off"></em></span><span class="dots"><em></em><em></em><em></em><em class="off"></em><em class="off"></em></span></div>
+  <div class="ssh-sh-main"><i class="nm"></i><i class="l w60 acc"></i><b></b><i class="l"></i><i class="l w90"></i><i class="l w70"></i><b></b><i class="l w50 dark"></i><i class="l w40 acc"></i><i class="l"></i><i class="l w80"></i><i class="l w90"></i><b></b><i class="l w50 dark"></i><i class="l w40 acc"></i><i class="l w70"></i></div>
+ </div>
+ <div class="ssh-chip c1"><span class="ring"><b>92</b></span><div><strong>CV score</strong><small>Ready to send</small></div></div>
+ <div class="ssh-chip c2"><i class="fas fa-file-pdf"></i><div><strong>PDF ready</strong><small>ATS-friendly</small></div></div>
+ <div class="ssh-chip c3"><i class="fas fa-cloud-arrow-up"></i><div><strong>Saved</strong><small>Synced to cloud</small></div></div>
+</div>`;
+
+/* ---------- home page (after login) ---------- */
+function buildHome(){const lc=document.querySelector('#page1 .landing-content');if(!lc||lc.classList.contains('ssh-on'))return;
+ lc.classList.add('ssh-on');const p1=$('page1');if(p1&&!p1.querySelector('.ssh-aurora')){const a=document.createElement('div');a.className='ssh-aurora';a.setAttribute('aria-hidden','true');a.innerHTML='<i></i><i></i><i></i>';p1.prepend(a);}
+ lc.innerHTML=`<div class="ssh-wrap"><div class="ssh-left">
+  <div class="ssh-badge"><span class="ssh-pulse"></span>NEXT-GEN CAREER BUILDER</div>
+  <div class="ssh-hello" id="sshHello"></div>
+  <h1 class="ssh-title">Build your career with <span>precision &amp; style</span></h1>
+  <div class="ssh-sub">Create a stunning CV and a compelling cover letter — edit right on the page, check your score, download a clean PDF.</div>
+  <div class="ssh-cards">
+   <button class="ssh-card main" onclick="goToBuilder('cv')"><span class="ic"><i class="fas fa-file-lines"></i></span><span class="tx"><b>CV Studio</b><small>Edit on the page · 4 layouts · score analyzer</small></span><i class="fas fa-arrow-right go"></i></button>
+   <button class="ssh-card" onclick="goToBuilder('cover')"><span class="ic"><i class="fas fa-envelope-open-text"></i></span><span class="tx"><b>Cover Letter</b><small>A tailored letter for every job</small></span><i class="fas fa-arrow-right go"></i></button>
+   <button class="ssh-card" onclick="goToBuilder('portfolio')"><span class="ic"><i class="fas fa-images"></i></span><span class="tx"><b>Portfolio</b><small>Your own website for your projects</small></span><i class="fas fa-arrow-right go"></i></button>
+  </div>
+  <div class="ssh-trust"><span><i class="fas fa-check"></i> Auto-saved</span><span><i class="fas fa-check"></i> ATS-friendly PDF</span><span><i class="fas fa-check"></i> Works on phone &amp; desktop</span></div>
+ </div><div class="ssh-right">${preview}</div></div>`;
+ hello();}
+function hello(){const el=$('sshHello');if(!el)return;const n=String($('fullName')?.value||'').trim();const first=/sample|^your name$/i.test(n)?'':n.split(/\s+/)[0];
+ const h=new Date().getHours();const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';el.innerHTML=first?`${g}, <b>${esc(first)}</b> 👋`:`${g} 👋`;}
+new MutationObserver(()=>{if($('page1')?.classList.contains('active'))hello();}).observe($('page1')||document.body,{attributes:true,attributeFilter:['class']});
+document.addEventListener('input',e=>{if(e.target?.id==='fullName')hello();});
+
+/* ---------- login screen ---------- */
+function buildLogin(){const ov=$('loginOverlay');if(!ov||ov.querySelector('.ssl-hero'))return;
+ const hero=document.createElement('div');hero.className='ssl-hero';
+ hero.innerHTML=`<div class="ssl-brand"><span class="ssl-logo">S</span>Ssplitly</div>
+  <h1 class="ssl-h"><span class="ssl-t-paid">Your CV, cover letter &amp; portfolio — <em>beautifully done.</em></span><span class="ssl-t-free">Create a professional CV <em>in minutes — free.</em></span></h1>
+  <ul class="ssl-points"><li><i class="fas fa-wand-magic-sparkles"></i><span><b>Edit right on the page</b>Click any line on your CV and type.</span></li><li><i class="fas fa-gauge-high"></i><span><b>Content analyzer</b>Get a score and tips before you apply.</span></li><li><i class="fas fa-file-arrow-down"></i><span><b>Clean PDF download</b>ATS-friendly, ready for UAE &amp; India jobs.</span></li></ul>`;
+ ov.prepend(hero);}
+function init(){buildHome();buildLogin();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style id="ss-nav-v2-css">
+/* home page on phones: scroll instead of squeezing the footer over the cards */
+@media(max-width:900px),(max-height:760px){
+ #page1.active{overflow-y:auto!important;overflow-x:hidden;justify-content:flex-start!important;-webkit-overflow-scrolling:touch}
+ #page1 .landing-content.ssh-on{flex:0 0 auto!important;min-height:auto!important}
+ #page1 .landing-footer{position:static!important;flex:0 0 auto!important;margin:22px auto 0!important;padding:14px 0 calc(18px + env(safe-area-inset-bottom))!important}
+}
+.ss-contact-links a.ig{background:linear-gradient(135deg,#f9ce34,#ee2a7b 50%,#6228d7);color:#fff;border-color:transparent}
+.ss-contact-links a.ig i,.ss-contact-links a.ig small{color:#fff}
+.ss-contact-links a.ig i{background:#ffffff33!important;color:#fff!important}.ss-contact-links a.ig span{color:#fff}
+
+/* same background all the way down when the home page scrolls */
+#page1 .ssh-aurora{position:fixed!important;inset:0!important}
+#page1::before{position:fixed!important}
+#page1.active{background-attachment:fixed}
+</style>
+<script id="ss-nav-v2">
+(()=>{
+if(window.__ssNavV2)return;window.__ssNavV2=true;
+const $=id=>document.getElementById(id);
+const depth=()=>Number(history.state?.depth)||0;
+let seeded=false;
+/* history entries carry a depth so the in-app Back button can step back instead of piling up new entries */
+setNavState=function(page,tab,mode='push'){
+ if(isViewOnly)return;tab=tab||activeTab||'cv';const url=builderRouteURL(page,tab),d=depth();
+ try{
+  if(mode==='replace'||location.hash===url){
+   if(!seeded&&mode==='replace'&&page!=='page1'&&d===0){seeded=true;history.replaceState({ssplitly:true,page:'page1',tab:'cv',depth:0},'',builderRouteURL('page1','cv'));history.pushState({ssplitly:true,page,tab,depth:1},'',url);}
+   else history.replaceState({ssplitly:true,page,tab,depth:d},'',url);
+  }else history.pushState({ssplitly:true,page,tab,depth:d+1},'',url);
+ }catch(e){}
+ seeded=true;saveBuilderLocation(page,tab);lastHandledBuilderURL=location.href;
+};
+/* switching CV / Cover / Portfolio tabs no longer adds history steps */
+switchTab=function(tab){if(tab===activeTab)return;applyBuilderTab(tab);if(!__restoringNav)setNavState('page2',activeTab,'replace');};
+goToLanding=function(){if(depth()>0&&history.state?.page&&history.state.page!=='page1'){history.back();return;}navigateTo('page1');setNavState('page1','cv','replace');};
+const oBackPf=goBackFromPortfolio;
+goBackFromPortfolio=function(){if(depth()>0&&history.state?.page==='page3'){history.back();return;}return oBackPf();};
+
+/* About / Contact / Terms: phone Back closes the window */
+const oOpen=openSsplitlyInfo,oClose=closeSsplitlyInfo;
+openSsplitlyInfo=function(tab){const was=$('ssplitlyInfoModal')?.classList.contains('active');oOpen(tab);if(!was){try{history.pushState({...(history.state||{}),ssModal:true},'',location.href);}catch(e){}}};
+closeSsplitlyInfo=function(){if(history.state?.ssModal&&$('ssplitlyInfoModal')?.classList.contains('active')){history.back();return;}oClose();};
+addEventListener('popstate',()=>{if($('ssplitlyInfoModal')?.classList.contains('active')&&!history.state?.ssModal)oClose();});
+
+/* CV Studio settings panel on phones: phone Back closes the panel */
+const mob=()=>matchMedia('(max-width:900px)').matches;
+let panelWas=false;
+const watchStudio=()=>{const st=$('cvStudio');if(!st)return setTimeout(watchStudio,300);
+ new MutationObserver(()=>{const open=st.classList.contains('panel-open');if(open===panelWas)return;panelWas=open;
+  if(open&&mob()&&!history.state?.ssPanel){try{history.pushState({...(history.state||{}),ssPanel:true},'',location.href);}catch(e){}}
+  else if(!open&&history.state?.ssPanel){history.back();}}).observe(st,{attributes:true,attributeFilter:['class']});};
+watchStudio();
+addEventListener('popstate',()=>{const st=$('cvStudio');if(st?.classList.contains('panel-open')&&!history.state?.ssPanel){panelWas=false;document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));}});
 })();
 </script>
 </body></html>
