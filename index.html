@@ -21,6 +21,7 @@
 <meta name="twitter:description" content="Your Career. Your Control.">
 <meta name="twitter:image" content="https://ssplitly.site/ssplitly-thumbnail.png">
 
+<style id="ss-boot-login-css">html.ss-boot-login #page1,html.ss-boot-login #page2,html.ss-boot-login #page3{display:none!important}</style>
 <style id="portfolio-loading-style">
 html.portfolio-opening::before{content:attr(data-opening-message);position:fixed;inset:0;z-index:100000010;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#172b46,transparent 65%),#080d18;color:#c7ecff;font:600 17px/1.6 system-ui,sans-serif;letter-spacing:.3px;pointer-events:none}
 html.portfolio-opening::after{content:'';position:fixed;z-index:100000011;top:calc(50% + 35px);left:calc(50% - 64px);width:128px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#7dd3fc,#a5b4fc,transparent);animation:portfolioOpening 1.5s ease-in-out infinite;pointer-events:none}
@@ -86,6 +87,13 @@ body.night #undoBuilderBtn:disabled,body.night #redoBuilderBtn:disabled,
 
 </style>
 <script>
+/* show the right first screen at once: no flash of the home page before the sign-in screen */
+(function(){try{var h=location.hash,d=document.documentElement;if(/^#\/(p|portfolio)\//.test(h))return;
+ var ss=null;try{ss=JSON.parse(sessionStorage.getItem('ssplitly_session')||'null');}catch(e){}
+ var resume=/^#\/resume\b/.test(h);if(resume&&ss&&!ss.free)ss=null;
+ var free=null;try{free=localStorage.getItem('ssFreeSession');}catch(e){}
+ if(!ss&&!free){d.classList.add('ss-boot-login');if(resume)d.classList.add('ss-resume-mode');}
+}catch(e){}})();
 window.__ssBootHash=location.hash;
 if(location.hash.startsWith('#/p/')){
  document.documentElement.classList.add('portfolio-opening');
@@ -1977,6 +1985,8 @@ html.ss-free #email[readonly]{opacity:.75;cursor:not-allowed}
     </div>
 </div>
 
+<script>(function(){var o=document.getElementById('loginOverlay'),d=document.documentElement;if(!o||!d.classList.contains('ss-boot-login'))return;o.classList.add('active');
+ new MutationObserver(function(){if(!o.classList.contains('active'))d.classList.remove('ss-boot-login');}).observe(o,{attributes:true,attributeFilter:['class']});})();</script>
 <div id="page1" class="page active">
     <button class="ssplitly-home-brand" onclick="openSsplitlyInfo('about')">
         <span class="ssplitly-logo-mark"><span>S</span><span>S</span></span>
