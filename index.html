@@ -8235,7 +8235,7 @@ function applyResumeMode(){const ov=$('loginOverlay');if(!ov)return;const on=isR
 addEventListener('hashchange',applyResumeMode);
 // whenever the sign-in screen appears for a free user (expired sign-in, other device), show the Google page — never serial/password
 function onLoginShown(){const ov=$('loginOverlay');if(!ov?.classList.contains('active'))return;let lf=null;try{lf=localStorage.getItem('ssLastFree');}catch{}
- if(!isResumeLink()&&lf==='1'&&!/^#\/(p\/|portfolio\/)/.test(location.hash)){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}
+ if(!isResumeLink()&&lf==='1'&&/^#\/(home|cv|cover-letter|portfolio|portfolio-preview)$/.test(location.hash)){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}
  applyResumeMode();}
 const watchOv=()=>{const ov=$('loginOverlay');if(!ov)return setTimeout(watchOv,200);new MutationObserver(onLoginShown).observe(ov,{attributes:true,attributeFilter:['class']});onLoginShown();};watchOv();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyResumeMode);else applyResumeMode();
