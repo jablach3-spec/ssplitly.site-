@@ -87,12 +87,17 @@ body.night #undoBuilderBtn:disabled,body.night #redoBuilderBtn:disabled,
 
 </style>
 <script>
-/* show the right first screen at once: no flash of the home page before the sign-in screen */
-(function(){try{var h=location.hash,d=document.documentElement;if(/^#\/(p|portfolio)\//.test(h))return;
+/* show the right first screen at once: no flash of the home page before the sign-in screen.
+   Serial/password sign-in only on the private owner link; every other address uses Google sign-in. */
+(function(){try{var h=location.hash,d=document.documentElement;window.__ssAdminRoute='#/admin-kwdoxsqyazjv';if(/^#\/(p|portfolio)\//.test(h))return;
+ if(h===window.__ssAdminRoute){
+  try{localStorage.removeItem('ssFreeSession');localStorage.removeItem('ssLastFree');}catch(e){}
+  try{sessionStorage.removeItem('ssplitly_session');sessionStorage.removeItem('ssplitly_nav');}catch(e){}
+  d.classList.add('ss-boot-login');return;}
  var ss=null;try{ss=JSON.parse(sessionStorage.getItem('ssplitly_session')||'null');}catch(e){}
  var resume=/^#\/resume\b/.test(h);if(resume&&ss&&!ss.free)ss=null;
  var free=null;try{free=localStorage.getItem('ssFreeSession');}catch(e){}
- if(!ss&&!free){d.classList.add('ss-boot-login');if(resume)d.classList.add('ss-resume-mode');}
+ if(!ss&&!free){d.classList.add('ss-boot-login','ss-resume-mode');if(!resume){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch(e){}}}
 }catch(e){}})();
 window.__ssBootHash=location.hash;
 if(location.hash.startsWith('#/p/')){
@@ -8198,6 +8203,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const sess=()=>{try{return JSON.parse(sessionStorage.getItem('ssplitly_session'))||{};}catch{return {};}};
 const isFree=()=>!!sess().free;
 const isResumeLink=()=>/^#\/resume\b/.test(location.hash);
+const isAdminLink=()=>!!window.__ssAdminRoute&&location.hash===window.__ssAdminRoute;
+addEventListener('hashchange',()=>{if(isAdminLink())location.reload();});
 let authP=null;const authMod=()=>authP||(authP=import(`https://www.gstatic.com/firebasejs/${FV}/firebase-auth.js`));
 let dbP=null;const dbMod=()=>dbP||(dbP=import(`https://www.gstatic.com/firebasejs/${FV}/firebase-database.js`));
 if(isFree())html.classList.add('ss-free');
@@ -8235,7 +8242,7 @@ function applyResumeMode(){const ov=$('loginOverlay');if(!ov)return;const on=isR
 addEventListener('hashchange',applyResumeMode);
 // whenever the sign-in screen appears for a free user (expired sign-in, other device), show the Google page — never serial/password
 function onLoginShown(){const ov=$('loginOverlay');if(!ov?.classList.contains('active'))return;let lf=null;try{lf=localStorage.getItem('ssLastFree');}catch{}
- if(!isResumeLink()&&lf==='1'&&/^#\/(home|cv|cover-letter|portfolio|portfolio-preview)$/.test(location.hash)){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}
+ if(!isAdminLink()&&!isResumeLink()&&!/^#\/(p|portfolio)\//.test(location.hash)){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}
  applyResumeMode();}
 const watchOv=()=>{const ov=$('loginOverlay');if(!ov)return setTimeout(watchOv,200);new MutationObserver(onLoginShown).observe(ov,{attributes:true,attributeFilter:['class']});onLoginShown();};watchOv();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyResumeMode);else applyResumeMode();
@@ -8453,7 +8460,7 @@ async function keepSignedIn(){if(!isFree()||!user())return;try{localStorage.setI
 
 /* free users always land back on the Google sign-in page after any sign-out */
 let oLogout=window.logout;
-const wrappedLogout=async function(...a){try{localStorage.removeItem(FREE_KEY);}catch{}if(isFree()){try{history.replaceState(null,'',location.pathname+location.search+'#/resume');}catch{}}return oLogout?.apply(this,a);};
+const wrappedLogout=async function(...a){try{localStorage.removeItem(FREE_KEY);}catch{}const to=isFree()||!window.__ssAdminRoute?'#/resume':window.__ssAdminRoute;try{history.replaceState(null,'',location.pathname+location.search+to);}catch{}return oLogout?.apply(this,a);};
 let outerLogout=null; // the save-before-logout wrapper installs itself on top of us
 Object.defineProperty(window,'logout',{configurable:true,get(){return outerLogout||wrappedLogout;},set(v){if(v&&v.__waitsForSave)outerLogout=v;else oLogout=v;}});
 /* signed out some other way (e.g. another device): still return to the Google page */
