@@ -2052,8 +2052,8 @@ html.ss-guest #ssgCvsChip{display:inline-flex;align-items:center;gap:6px}
 html.ss-guest #ssgCvsChip svg{width:16px;height:16px}
 @media(max-width:600px){html.ss-guest #ssgHomeChip{top:max(10px,env(safe-area-inset-top));right:12px;padding:9px 13px;font-size:13px}}
 
-#ssGuestSheet{position:fixed;inset:0;z-index:10000003;display:none;align-items:center;justify-content:center;padding:18px;background:#020617b3;backdrop-filter:blur(6px)}
-#ssGuestSheet.on{display:flex;animation:ssgFade .25s ease}
+#ssGuestSheet,#ssGuestChoose{position:fixed;inset:0;z-index:10000003;display:none;align-items:center;justify-content:center;padding:18px;background:#020617b3;backdrop-filter:blur(6px)}
+#ssGuestSheet.on,#ssGuestChoose.on{display:flex;animation:ssgFade .25s ease}
 @keyframes ssgFade{from{opacity:0}}
 .ssg-card{width:min(400px,100%);background:#fff;color:#0f172a;border-radius:24px;padding:28px 24px 18px;text-align:center;box-shadow:0 30px 80px #0009;animation:ssgUp .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes ssgUp{from{transform:translateY(24px) scale(.97);opacity:0}}
@@ -2069,6 +2069,8 @@ html.ss-guest #ssgCvsChip svg{width:16px;height:16px}
 .ssg-note i{color:#6366f1;margin-top:3px}
 .ssg-later{background:none;border:0;color:#64748b;font:600 14px Inter,sans-serif;padding:10px 14px;cursor:pointer;border-radius:10px}
 .ssg-later:hover{background:#f1f5f9;color:#0f172a}
+.ssg-primary{background:linear-gradient(135deg,#4f46e5,#7c3aed)!important;color:#fff!important;border:0!important}
+.ssg-alt{display:block;width:100%;margin-top:8px;border:1px solid #e2e8f0!important;padding:13px!important}
 </style>
 </head>
 <body>
@@ -8518,11 +8520,11 @@ async function finishGoogle(user){
  const sessionId=crypto.randomUUID();
  await fb.update(fb.ref(fb.db,'users/'+user.uid),{active:true,lastActive:Date.now(),lockOwner:sessionId});
  sessionStorage.setItem('ssplitly_session',JSON.stringify({serial:user.uid,accountSerial:user.email||'',sessionId,loginTime:Date.now(),free:true}));
- html.classList.add('ss-free');html.classList.remove('ss-resume-mode');
+ html.classList.add('ss-free');
  await window.ensureAccountAccess(user.uid);
- $('loginOverlay').classList.remove('active');['page1','page2','page3'].forEach(id=>$(id)?.classList.toggle('active',id==='page1'));
+ const first=draft?'page2':'page1';$('loginOverlay').classList.remove('active');html.classList.remove('ss-resume-mode');['page1','page2','page3'].forEach(id=>$(id)?.classList.toggle('active',id===first));
  if(draft&&typeof draft==='object'&&'fullName' in draft){const bref=fb.ref(fb.db,'users/'+user.uid+'/builderData');const had=(await fb.get(bref)).val();
-  if(!had||fresh||confirm('Use the CV you just made?\n\nOK = keep the new CV\nCancel = keep the CV already saved in your account')){const nd={...draft,lastSavedAt:Date.now()};delete nd.profilePic;if(had?.profilePic)nd.profilePic=had.profilePic;await fb.set(bref,nd);}}
+  if(!had||fresh||await (G?.choose?G.choose():Promise.resolve(confirm('Keep the CV you just made?')))){const nd={...draft,lastSavedAt:Date.now()};delete nd.profilePic;if(had?.profilePic)nd.profilePic=had.profilePic;await fb.set(bref,nd);}}
  if(!await loadFromFirebase()){toast('Could not load your saved data. Reload before editing.','err');$('formPanel').inert=true;return;}
  G?.clear();
  if(fresh){const put=(id,val)=>{const el=$(id);if(el&&val&&(!el.value.trim()||/\(sample\)|example\.(com|org)|^demo/i.test(el.value))){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));}};put('fullName',user.displayName);put('email',user.email);window.cvStudio?.render?.();setTimeout(()=>pushSummary(true),1500);}
@@ -8833,7 +8835,14 @@ async function start(){
 function end(){if(!active)return readDraft();const draft=readDraft();active=false;if(real)window.__firebase=real;
  d.classList.remove('ss-guest');sessionStorage.removeItem('ssplitly_session');stopClock();closeSheet();return draft;}
 function clear(){ls.del(FLAG);ls.del(DRAFT);ls.del(PROMPTED);}
-window.__ssGuest={start,end,clear,get active(){return active;},get flagged(){return ls.get(FLAG)==='1';}};
+/* ask which CV to keep when the account already has one (returns true = keep the new one) */
+function choose(){return new Promise(res=>{const w=document.createElement('div');w.id='ssGuestChoose';w.className='on';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-labelledby','ssgcT');
+ w.innerHTML=`<div class="ssg-card"><span class="ssplitly-logo-mark ssg-logo" aria-hidden="true"><span>S</span><span>S</span></span><h2 id="ssgcT">You already have a saved CV</h2><p>Which CV do you want to keep in your account?</p>
+ <button type="button" class="ssg-google ssg-primary" data-k="new"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Keep the CV I just made</span></button>
+ <button type="button" class="ssg-later ssg-alt" data-k="old">Keep my saved CV</button></div>`;
+ document.body.append(w);setTimeout(()=>w.querySelector('[data-k="new"]').focus(),50);
+ w.addEventListener('click',e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;w.remove();res(k==='new');});});}
+window.__ssGuest={start,end,clear,choose,get active(){return active;},get flagged(){return ls.get(FLAG)==='1';}};
 
 /* ---------- sign-in sheet ---------- */
 const G='<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
